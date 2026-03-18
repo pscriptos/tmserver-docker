@@ -13,11 +13,13 @@ Im Internet-Modus ist der Server über das Trackmania-Masterserver-Netzwerk erre
 
 ### Konfiguration
 
-```yaml
-environment:
-  - SERVER_MODE=internet
-  - SERVER_LOGIN=dein_login
-  - SERVER_VALIDATION_KEY=dein_key
+In der `.env`-Datei:
+
+```bash
+SERVER_MODE=internet
+SERVER_LOGIN=dein_login
+SERVER_LOGIN_PASSWORD=dein_passwort
+SERVER_VALIDATION_KEY=dein_key
 ```
 
 Wenn `SERVER_LOGIN` oder `SERVER_VALIDATION_KEY` nicht gesetzt sind, bricht der Server mit einer Fehlermeldung ab.
@@ -35,19 +37,22 @@ Im LAN-Modus ist der Server nur im lokalen Netzwerk erreichbar. Es werden keine 
 
 ### Konfiguration
 
-```yaml
-environment:
-  - SERVER_MODE=lan
+In der `.env`-Datei:
+
+```bash
+SERVER_MODE=lan
 ```
 
 Oder per Docker-Run:
 
 ```bash
 docker run -d \
+  --env-file .env \
   -e SERVER_MODE=lan \
   -p 2350:2350/tcp \
   -p 2350:2350/udp \
   -p 3450:3450/tcp \
   -p 80:80/tcp \
-  --name tm-server lduriez/tmserver
+  -v ./data/GameData:/opt/tmserver/GameData \
+  --name tmserver tmserver:latest
 ```

@@ -26,4 +26,4 @@ Die Server-Verwaltungsoberfläche basiert auf [AdminServ](https://github.com/Chr
 
 Die Admin-Stufen können unter `http://<host-server-des-containers>/config` geändert werden.
 
-> **Hinweis:** Es wird empfohlen, die Standard-Passwörter über die [Umgebungsvariablen](umgebungsvariablen.md) `SERVER_SA_PASSWORD` und `SERVER_ADM_PASSWORD` zu ändern.
+> **Hinweis:** Es wird empfohlen, die Standard-Passwörter über die `.env`-Datei (`SERVER_SA_PASSWORD`, `SERVER_ADM_PASSWORD`) zu ändern. Siehe [Umgebungsvariablen](umgebungsvariablen.md).

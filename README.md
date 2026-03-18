@@ -4,37 +4,47 @@ Trackmania Nations Forever Docker Server
 
 > **Hinweis:** Dieses Projekt ist ein Fork von [lduriez/tmserver-docker](https://github.com/lduriez/tmserver-docker?tab=readme-ov-file).
 
-Das Docker-Image ist auf Docker Hub verfügbar: [lduriez/tmserver](https://hub.docker.com/r/lduriez/tmserver)
-
 Der Server unterstützt sowohl den **Internet-Dedicated-Modus** (Standard) als auch den **LAN-Dedicated-Modus**.
 
 ## Schnellstart
 
-### Internet-Modus (Standard)
-
-Voraussetzung: Ein Server-Account auf [players.trackmaniaforever.com](https://players.trackmaniaforever.com).
+### 1. Umgebungsvariablen einrichten
 
 ```bash
-docker run -d \
-  -p 2350:2350/tcp \
-  -p 2350:2350/udp \
-  -p 3450:3450/tcp \
-  -p 80:80/tcp \
-  -e SERVER_LOGIN=dein_login \
-  -e SERVER_VALIDATION_KEY=dein_key \
-  --name tm-server lduriez/tmserver
+cp .env.example .env
 ```
 
-### LAN-Modus
+Passe die Werte in der `.env`-Datei an deine Umgebung an (Passwörter, Masterserver-Account, etc.).
+
+### 2. Server starten
 
 ```bash
-docker run -d \
-  -p 2350:2350/tcp \
-  -p 2350:2350/udp \
-  -p 3450:3450/tcp \
-  -p 80:80/tcp \
-  -e SERVER_MODE=lan \
-  --name tm-server lduriez/tmserver
+docker compose up -d --build
+```
+
+### 3. AdminServ öffnen
+
+Die Verwaltungsoberfläche ist unter `http://<host-ip>` erreichbar.
+
+> **Hinweis:** Für den Internet-Modus müssen `SERVER_LOGIN` und `SERVER_VALIDATION_KEY` in der `.env`-Datei gesetzt sein. Einen Server-Account kannst du auf [players.trackmaniaforever.com](https://players.trackmaniaforever.com) erstellen. Für den LAN-Modus setze `SERVER_MODE=lan`.
+
+## Projektstruktur
+
+```
+├── assets/
+│   ├── bin/                         # Binaries und Startscript
+│   │   ├── AdminServ_v2.1.1.zip    # AdminServ Web-UI
+│   │   ├── RunTrackmaniaServer.sh   # Container-Startscript
+│   │   └── TrackmaniaServer_*.zip   # Trackmania Server Binary
+│   └── config/
+│       ├── custom_game_settings.txt # MatchSettings (Spielmodus, Map-Rotation)
+│       └── dedicated_cfg.txt        # Server-Config-Template (mit Platzhaltern)
+├── docs/                            # Dokumentation
+├── docker-compose.yml               # Docker Compose Konfiguration
+├── Dockerfile                       # Docker Build-Definition
+├── .env.example                     # Vorlage fuer Umgebungsvariablen
+├── .env                             # Lokale Umgebungsvariablen (nicht im Git!)
+└── data/GameData/                   # Persistente Serverdaten (zur Laufzeit)
 ```
 
 ## Dokumentation
@@ -42,6 +52,7 @@ docker run -d \
 Die vollständige Dokumentation befindet sich im Ordner [`docs/`](docs/README.md):
 
 - [Schnellstart](docs/schnellstart.md) – Erste Schritte und minimale Konfiguration
+- [Konfiguration](docs/konfiguration.md) – Persistente Serverkonfiguration (dedicated_cfg.txt)
 - [Umgebungsvariablen](docs/umgebungsvariablen.md) – Alle verfügbaren Umgebungsvariablen
 - [Server-Modi](docs/server-modi.md) – LAN- und Internet-Dedicated-Modus
 - [AdminServ](docs/adminserv.md) – Einrichtung der Server-Verwaltungsoberfläche

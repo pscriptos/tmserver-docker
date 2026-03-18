@@ -2,27 +2,18 @@ services:
   tmserver:
     build:
       context: .
-      args:
-        SERVER_NAME: "Trackmania Server"
-        SERVER_DESC: "This is a Trackmania Server"
-        SERVER_SA_PASSWORD: "SuperAdmin"
-        SERVER_ADM_PASSWORD: "Admin"
     container_name: tmserver
     restart: unless-stopped
     ports:
-      - "2350:2350/tcp"
-      - "2350:2350/udp"
-      - "3450:3450/tcp"
-      - "5000:5000/tcp"
+      - "${SERVER_PORT:-2350}:2350/tcp"
+      - "${SERVER_PORT:-2350}:2350/udp"
+      - "${SERVER_P2P_PORT:-3450}:3450/tcp"
+      - "${SERVER_XMLRPC_PORT:-5000}:5000/tcp"
       - "80:80/tcp"
-    environment:
-      - SERVER_NAME=Trackmania Server
-      - SERVER_DESC=This is a Trackmania Server
-      - SERVER_SA_PASSWORD=SuperAdmin
-      - SERVER_ADM_PASSWORD=Admin
-      - SERVER_MODE=internet
-      - SERVER_LOGIN=
-      - SERVER_VALIDATION_KEY=
+    env_file:
+      - .env
+    volumes:
+      - ./data/GameData:/opt/tmserver/GameData
     networks:
       tmserver_net:
         ipv4_address: 172.20.60.10

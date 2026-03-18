@@ -14,10 +14,12 @@ Für den reinen Spielbetrieb ohne Verwaltungsoberfläche reichen die Ports 2350 
 
 ```bash
 docker run -d \
+  --env-file .env \
   -p 2350:2350/tcp \
   -p 2350:2350/udp \
   -p 3450:3450/tcp \
-  --name tm-server lduriez/tmserver
+  -v ./data/GameData:/opt/tmserver/GameData \
+  --name tmserver tmserver:latest
 ```
 
 > **Hinweis:** Port 5000 (XML-RPC) wird intern von AdminServ verwendet und muss in der Regel nicht nach außen freigegeben werden.
