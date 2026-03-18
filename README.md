@@ -46,7 +46,6 @@ Die vollständige Dokumentation befindet sich im Ordner [`docs/`](docs/README.md
 - [Server-Modi](docs/server-modi.md) – LAN- und Internet-Dedicated-Modus
 - [AdminServ](docs/adminserv.md) – Einrichtung der Server-Verwaltungsoberfläche
 - [Ports](docs/ports.md) – Freigegebene Ports und deren Verwendung
-- [Commit-Konvention](docs/commit-konvention.md) – Regeln für Commit-Nachrichten
 
 ---
 
