@@ -1,0 +1,9 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+
+# Docs
+README.md
