@@ -49,9 +49,9 @@ Die vollständige Dokumentation befindet sich im Ordner [`docs/`](docs/README.md
 
 ---
 
-📝 **Blog:** [www.cleveradmin.de](https://www.cleveradmin.de)
-🌐 **Webseite:** [www.patrick-asmus.de](https://www.patrick-asmus.de)
-📧 **E-Mail:** [support@techniverse.net](mailto:support@techniverse.net)
+📝 **Blog:** [www.cleveradmin.de](https://www.cleveradmin.de)  
+🌐 **Webseite:** [www.patrick-asmus.de](https://www.patrick-asmus.de)  
+📧 **E-Mail:** [support@techniverse.net](mailto:support@techniverse.net)  
 
 <p align="center">
   <img src="https://assets.techniverse.net/f1/git/graphics/gray0-catonline.svg" alt="">
