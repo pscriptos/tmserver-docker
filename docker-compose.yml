@@ -20,3 +20,6 @@ services:
       - SERVER_DESC=This is a Trackmania Server
       - SERVER_SA_PASSWORD=SuperAdmin
       - SERVER_ADM_PASSWORD=Admin
+      - SERVER_MODE=internet
+      - SERVER_LOGIN=
+      - SERVER_VALIDATION_KEY=

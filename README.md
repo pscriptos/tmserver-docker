@@ -6,77 +6,47 @@ Trackmania Nations Forever Docker Server
 
 Das Docker-Image ist auf Docker Hub verfügbar: [lduriez/tmserver](https://hub.docker.com/r/lduriez/tmserver)
 
-Derzeit ist nur der LAN-Dedicated-Modus aktiviert (Internet-Dedicated wird in einer zukünftigen Version hinzugefügt).
+Der Server unterstützt sowohl den **Internet-Dedicated-Modus** (Standard) als auch den **LAN-Dedicated-Modus**.
 
-Die Server-Verwaltungsoberfläche basiert auf [AdminServ](https://github.com/Chris92de/AdminServ).
+## Schnellstart
 
-## Starten
+### Internet-Modus (Standard)
 
-In einer Docker-Umgebung einfach folgenden Befehl ausführen:
+Voraussetzung: Ein Server-Account auf [players.trackmaniaforever.com](https://players.trackmaniaforever.com).
 
 ```bash
-docker run -d -p 2350:2350 -p 3450:3450 -p 80:80 --name tm-server lduriez/tmserver
+docker run -d \
+  -p 2350:2350/tcp \
+  -p 2350:2350/udp \
+  -p 3450:3450/tcp \
+  -p 80:80/tcp \
+  -e SERVER_LOGIN=dein_login \
+  -e SERVER_VALIDATION_KEY=dein_key \
+  --name tm-server lduriez/tmserver
 ```
 
-Über Umgebungsvariablen können die Standardwerte angepasst werden: [Umgebungsvariablen](#umgebungsvariablen)
+### LAN-Modus
 
-### Server-Verwaltungsoberfläche einrichten
+```bash
+docker run -d \
+  -p 2350:2350/tcp \
+  -p 2350:2350/udp \
+  -p 3450:3450/tcp \
+  -p 80:80/tcp \
+  -e SERVER_MODE=lan \
+  --name tm-server lduriez/tmserver
+```
 
-Rufe `http:<host-server-des-containers>` auf und starte die Konfiguration, indem du ein Passwort deiner Wahl festlegst.
-Dieses Passwort wird als AdminServ-Passwort für die Konfiguration (TM-Server hinzufügen) verwendet.
+## Dokumentation
 
-Trage anschließend die TM-Server-Informationen ein (die Standardwerte können beibehalten werden). Stelle sicher, dass `Address` auf `localhost` gesetzt ist, um den eingebetteten Server zu verwalten.
+Die vollständige Dokumentation befindet sich im Ordner [`docs/`](docs/README.md):
 
-Nach dem Speichern kannst du über den Button „Servers" zur Serverliste navigieren und über den Button „Back" zur Verwaltungsübersicht gelangen.
-
-Du solltest den hinzugefügten Server sehen. Im oberen Banner kannst du zur Verwaltungsumgebung wechseln.
-Wähle den Server aus, den du verwalten möchtest, die gewünschte Admin-Stufe und gib das zugehörige Passwort ein.
-
-Standardmäßig ist das `SuperAdmin`-Passwort `SuperAdmin`, das `Admin`-Passwort `Admin` und das `User`-Passwort `User`. (Die Admin-Stufen können in den Konfigurationseinstellungen unter `http:<host-server-des-containers>/config` geändert werden.)
-
-Herzlichen Glückwunsch – du kannst jetzt deinen TM-Server verwalten.
-
-Viel Spaß beim Spielen!
-
-## Freigegebene Ports
-
-* 2350/tcp – Gameserver-Port
-* 2350/udp – Gameserver-Port
-* 3450/tcp – P2P-Gameserver-Port
-* 80/tcp – Port der Server-Verwaltungsoberfläche
-
-## Umgebungsvariablen
-
-* `SERVER_NAME` – Name deines Servers (Standard: `Trackmania Server`)
-* `SERVER_DESC` – Beschreibung deines Servers (Standard: `This is a Trackmania Server`)
-* `SERVER_SA_PASSWORD` – SuperAdmin-Verwaltungspasswort (Standard: `SuperAdmin`)
-* `SERVER_ADM_PASSWORD` – Admin-Verwaltungspasswort (Standard: `Admin`)
-
-## Commit-Konvention
-
-Format: `<typ>(<bereich>): <beschreibung>`
-
-### Typ
-
-* `build` – Änderungen am Build-System oder an externen Abhängigkeiten (npm, make …)
-* `ci` – Änderungen an CI-Konfigurationsdateien und -Skripten (Travis, Ansible, BrowserStack …)
-* `feat` – Hinzufügen eines neuen Features
-* `fix` – Behebung eines Fehlers
-* `perf` – Verbesserung der Performance
-* `refactor` – Änderung, die weder ein neues Feature noch eine Performance-Verbesserung bringt
-* `style` – Änderung ohne funktionale oder semantische Auswirkung (Einrückung, Formatierung, Leerzeichen, Umbenennung einer Variable …)
-* `docs` – Erstellung oder Aktualisierung von Dokumentation
-* `test` – Hinzufügen oder Ändern von Tests
-* `revert` – Einen vorherigen Commit rückgängig machen (Format: `revert <Betreff des rückgängig gemachten Commits> <Hash>`)
-
-### Beschreibung
-
-* `add` – Hinzufügen
-* `change` – Ändern
-* `update` – Aktualisieren
-* `remove` – Entfernen
-
-[Quelle](https://buzut.net/git-bien-nommer-ses-commits/)
+- [Schnellstart](docs/schnellstart.md) – Erste Schritte und minimale Konfiguration
+- [Umgebungsvariablen](docs/umgebungsvariablen.md) – Alle verfügbaren Umgebungsvariablen
+- [Server-Modi](docs/server-modi.md) – LAN- und Internet-Dedicated-Modus
+- [AdminServ](docs/adminserv.md) – Einrichtung der Server-Verwaltungsoberfläche
+- [Ports](docs/ports.md) – Freigegebene Ports und deren Verwendung
+- [Commit-Konvention](docs/commit-konvention.md) – Regeln für Commit-Nachrichten
 
 ---
 
