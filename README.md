@@ -1,77 +1,93 @@
 # tmserver-docker
 
-Trackmania Nation Forever Docker Server
+Trackmania Nations Forever Docker Server
 
-You can find it on Docker Hub [lduriez/tmserver](https://hub.docker.com/r/lduriez/tmserver)
+> **Hinweis:** Dieses Projekt ist ein Fork von [lduriez/tmserver-docker](https://github.com/lduriez/tmserver-docker?tab=readme-ov-file).
 
-Only lan dedicated is enable (internet dedicated will be added in future version)
+Das Docker-Image ist auf Docker Hub verfügbar: [lduriez/tmserver](https://hub.docker.com/r/lduriez/tmserver)
 
-Server management webui provided base on [AdminServ](https://github.com/Chris92de/AdminServ)
+Derzeit ist nur der LAN-Dedicated-Modus aktiviert (Internet-Dedicated wird in einer zukünftigen Version hinzugefügt).
 
-## Running
+Die Server-Verwaltungsoberfläche basiert auf [AdminServ](https://github.com/Chris92de/AdminServ).
 
-On a docker environment simply do the following
+## Starten
+
+In einer Docker-Umgebung einfach folgenden Befehl ausführen:
 
 ```bash
 docker run -d -p 2350:2350 -p 3450:3450 -p 80:80 --name tm-server lduriez/tmserver
 ```
 
-You can add environment variable to modify default values : [#Environment variables](#environment-variables)
+Über Umgebungsvariablen können die Standardwerte angepasst werden: [Umgebungsvariablen](#umgebungsvariablen)
 
-### Configure Server Management Webui
+### Server-Verwaltungsoberfläche einrichten
 
-Visit `http:<host-server-of-the-conntainer>` and start configuration by setting the password of your choice.
-This password will be the AdminServ password for configurations (add TM server)
+Rufe `http:<host-server-des-containers>` auf und starte die Konfiguration, indem du ein Passwort deiner Wahl festlegst.
+Dieses Passwort wird als AdminServ-Passwort für die Konfiguration (TM-Server hinzufügen) verwendet.
 
-Then add TM server information (you can let all by default). Be sure that `Address` is set to `localhost` in order to manage our embed server.
+Trage anschließend die TM-Server-Informationen ein (die Standardwerte können beibehalten werden). Stelle sicher, dass `Address` auf `localhost` gesetzt ist, um den eingebetteten Server zu verwalten.
 
-Once you saved, you can go to Servers list by pushing "Servers" button and then go to management server list with button "Back".
+Nach dem Speichern kannst du über den Button „Servers" zur Serverliste navigieren und über den Button „Back" zur Verwaltungsübersicht gelangen.
 
-You should see the server you added, in the to banner you ca go to the management environment.
-Select the server you want to manage, the admin level you want to go in, and tape the password of this admion level.
+Du solltest den hinzugefügten Server sehen. Im oberen Banner kannst du zur Verwaltungsumgebung wechseln.
+Wähle den Server aus, den du verwalten möchtest, die gewünschte Admin-Stufe und gib das zugehörige Passwort ein.
 
-By default `SuperAdmin` password is `SuperAdmin`, `Admin` password is `Admin`, `User` password is `User`. (You can modify the admin level in configuration settings `http:<host-server-of-the-conntainer>/config`)
+Standardmäßig ist das `SuperAdmin`-Passwort `SuperAdmin`, das `Admin`-Passwort `Admin` und das `User`-Passwort `User`. (Die Admin-Stufen können in den Konfigurationseinstellungen unter `http:<host-server-des-containers>/config` geändert werden.)
 
-Congratulation you can now manage your TM server.
+Herzlichen Glückwunsch – du kannst jetzt deinen TM-Server verwalten.
 
-Enjoy your game.
+Viel Spaß beim Spielen!
 
-## Exposed ports
+## Freigegebene Ports
 
-* 2350/tcp game server port
-* 2350/udp game server port
-* 3450/tcp p2p game server port
-* 80/tcp  server management webui port
+* 2350/tcp – Gameserver-Port
+* 2350/udp – Gameserver-Port
+* 3450/tcp – P2P-Gameserver-Port
+* 80/tcp – Port der Server-Verwaltungsoberfläche
 
-## Environment variables
+## Umgebungsvariablen
 
-* SERVER_NAME name of your server (default is 'Trackmania Server')
-* SERVER_DESC description of your server (default is 'This is a Trackmania Server')
-* SERVER_SA_PASSWORD superadmin management password  (default is 'SuperAdmin')
-* SERVER_ADM_PASSWORD admin management password (default is 'Admin')
+* `SERVER_NAME` – Name deines Servers (Standard: `Trackmania Server`)
+* `SERVER_DESC` – Beschreibung deines Servers (Standard: `This is a Trackmania Server`)
+* `SERVER_SA_PASSWORD` – SuperAdmin-Verwaltungspasswort (Standard: `SuperAdmin`)
+* `SERVER_ADM_PASSWORD` – Admin-Verwaltungspasswort (Standard: `Admin`)
 
-## Commit convention
+## Commit-Konvention
 
-Format : `<type>(<portée>): <sujet>`
+Format: `<typ>(<bereich>): <beschreibung>`
 
-### type
+### Typ
 
-* `build` : changements qui affectent le système de build ou des dépendances externes (npm, make…)
-* `ci` : changements concernant les fichiers et scripts d’intégration ou de configuration (Travis, Ansible, BrowserStack…)
-* `feat` : ajout d’une nouvelle fonctionnalité
-* `fix` : correction d’un bug
-* `perf` : amélioration des performances
-* `refactor` : modification qui n’apporte ni nouvelle fonctionnalité ni d’amélioration de performances
-* `style` : changement qui n’apporte aucune altération fonctionnelle ou sémantique (indentation, mise en forme, ajout d’espace, renommante d’une variable…)
-* `docs` : rédaction ou mise à jour de documentation
-* `test` : ajout ou modification de tests
-* `revert` : annuler un précédent commit, forme `revert sujet du commit annulé hash du commit annulé`
+* `build` – Änderungen am Build-System oder an externen Abhängigkeiten (npm, make …)
+* `ci` – Änderungen an CI-Konfigurationsdateien und -Skripten (Travis, Ansible, BrowserStack …)
+* `feat` – Hinzufügen eines neuen Features
+* `fix` – Behebung eines Fehlers
+* `perf` – Verbesserung der Performance
+* `refactor` – Änderung, die weder ein neues Feature noch eine Performance-Verbesserung bringt
+* `style` – Änderung ohne funktionale oder semantische Auswirkung (Einrückung, Formatierung, Leerzeichen, Umbenennung einer Variable …)
+* `docs` – Erstellung oder Aktualisierung von Dokumentation
+* `test` – Hinzufügen oder Ändern von Tests
+* `revert` – Einen vorherigen Commit rückgängig machen (Format: `revert <Betreff des rückgängig gemachten Commits> <Hash>`)
 
-### sujet
+### Beschreibung
 
-* `add`
-* `change`
-* `update`
-* `remove`
+* `add` – Hinzufügen
+* `change` – Ändern
+* `update` – Aktualisieren
+* `remove` – Entfernen
 
-[source](https://buzut.net/git-bien-nommer-ses-commits/)
+[Quelle](https://buzut.net/git-bien-nommer-ses-commits/)
+
+---
+
+📝 **Blog:** [www.cleveradmin.de](https://www.cleveradmin.de)
+🌐 **Webseite:** [www.patrick-asmus.de](https://www.patrick-asmus.de)
+📧 **E-Mail:** [support@techniverse.net](mailto:support@techniverse.net)
+
+<p align="center">
+  <img src="https://assets.techniverse.net/f1/git/graphics/gray0-catonline.svg" alt="">
+</p>
+
+<p align="center">
+<img src="https://assets.techniverse.net/f1/logos/small/license.png" alt="License" width="15" height="15"> <a href="./LICENSE">License</a> | <img src="https://assets.techniverse.net/f1/logos/small/matrix2.svg" alt="Matrix" width="15" height="15"> <a href="https://matrix.to/#/#community:techniverse.net">Matrix</a> | <img src="https://assets.techniverse.net/f1/logos/small/mastodon2.svg" alt="Mastodon" width="15" height="15"> <a href="https://social.techniverse.net/@donnerwolke">Mastodon</a>
+</p>
