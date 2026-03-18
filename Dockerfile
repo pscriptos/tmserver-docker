@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     php \
     php-zip \
     php-xml \
+    php-mbstring \
     && rm -rf /var/lib/apt/lists/*
 
 COPY assets/bin/TrackmaniaServer_2011-02-21.zip /opt/tmserver
@@ -32,7 +33,18 @@ COPY assets/bin/AdminServ_v2.1.1.zip /var/www/html
 RUN unzip /var/www/html/AdminServ_v2.1.1.zip -d /var/www/html \
     && rm -f /var/www/html/AdminServ_v2.1.1.zip \
     && chmod -R 777 /var/www/html/ \
-    && rm -f /var/www/html/index.html
+    && rm -f /var/www/html/index.html \
+    && mkdir -p /var/www/html/logs \
+    && chmod 777 /var/www/html/logs
+
+# PHP 8 Kompatibilitaets-Patches fuer AdminServ
+# stristr() akzeptiert seit PHP 8 keine Arrays mehr – is_string()-Check hinzufuegen
+RUN sed -i \
+    's|if(stristr($value, "../"))|if(is_string($value) \&\& stristr($value, "../"))|g' \
+    /var/www/html/index.php
+
+# PHP-Debug-Konfiguration: wird zur Laufzeit vom Startup-Script gesetzt
+# (kein Rebuild noetig – nur Container neustarten)
 
 # --- Umgebungsvariablen ---
 # Sensible Werte (Passwoerter, Keys) werden NICHT im Image hinterlegt,
@@ -56,6 +68,9 @@ ENV SERVER_DOWNLOAD_RATE=8192
 # Server-Modus und Config-Steuerung
 ENV SERVER_MODE=internet
 ENV FORCE_CONFIG_UPDATE=false
+
+# Debugging
+ENV PHP_DISPLAY_ERRORS=false
 
 # Volume fuer persistente GameData (Config, Tracks, Skins, Scores, etc.)
 VOLUME /opt/tmserver/GameData

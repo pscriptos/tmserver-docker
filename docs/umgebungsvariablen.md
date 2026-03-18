@@ -64,6 +64,14 @@ nano .env
 | `SERVER_MODE` | Server-Modus (`internet` oder `lan`) | `internet` |
 | `FORCE_CONFIG_UPDATE` | Erzwingt erneutes Anwenden aller Umgebungsvariablen auf die Config | `false` |
 
+## Debugging
+
+| Variable | Beschreibung | Standard |
+|----------|-------------|----------|
+| `PHP_DISPLAY_ERRORS` | Zeigt PHP-Fehlermeldungen im Browser an (nur zur Fehlersuche!) | `false` |
+
+> **Hinweis:** Der Debug-Modus erfordert **keinen** Rebuild des Images. Es genügt, die Variable in der `.env`-Datei zu ändern und den Container neu zu starten (`docker compose restart`). Im Produktivbetrieb sollte `PHP_DISPLAY_ERRORS` immer auf `false` stehen.
+
 > **Hinweis:** Bei `FORCE_CONFIG_UPDATE=true` wird die `dedicated_cfg.txt` aus dem Template neu erzeugt und alle Platzhalter mit den aktuellen Umgebungsvariablen ersetzt. Manuelle Änderungen gehen dabei verloren! Nach dem Update sollte `FORCE_CONFIG_UPDATE` wieder auf `false` gesetzt werden.
 
 ## Beispiel

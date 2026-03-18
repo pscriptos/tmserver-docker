@@ -1,5 +1,29 @@
 #!/bin/sh
 
+# ============================================================
+# PHP-Debug-Modus konfigurieren (per Umgebungsvariable)
+# ============================================================
+PHP_DISPLAY_ERRORS="${PHP_DISPLAY_ERRORS:-false}"
+PHP_INI_DIR=$(find /etc/php -type d -name "conf.d" -path "*/apache2/*" | head -1)
+
+if [ "$PHP_DISPLAY_ERRORS" = "true" ]; then
+    echo "==> PHP-Debug-Modus AKTIVIERT (PHP_DISPLAY_ERRORS=true)"
+    cat > "$PHP_INI_DIR/99-adminserv-debug.ini" <<EOF
+display_errors = On
+error_reporting = E_ALL
+log_errors = On
+error_log = /var/log/php_errors.log
+EOF
+else
+    echo "==> PHP-Debug-Modus deaktiviert"
+    cat > "$PHP_INI_DIR/99-adminserv-debug.ini" <<EOF
+display_errors = Off
+error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT
+log_errors = On
+error_log = /var/log/php_errors.log
+EOF
+fi
+
 echo "Starting apache server"
 service apache2 start
 
