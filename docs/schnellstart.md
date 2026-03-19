@@ -45,8 +45,7 @@ docker run -d \
   -p 2350:2350/udp \
   -p 3450:3450/tcp \
   -p 80:80/tcp \
-  -v ./data/GameData:/opt/tmserver/GameData \
-  --name tmserver tmserver:latest
+  -v ./data/GameData:/opt/tmserver/GameData \  -v ./data/AdminServ:/var/www/html \  --name tmserver tmserver:latest
 ```
 
 ### LAN-Modus (docker run)
@@ -62,6 +61,7 @@ docker run -d \
   -p 3450:3450/tcp \
   -p 80:80/tcp \
   -v ./data/GameData:/opt/tmserver/GameData \
+  -v ./data/AdminServ:/var/www/html \
   --name tmserver tmserver:latest
 ```
 
@@ -71,6 +71,13 @@ Die Verwaltungsoberfläche ist unter `http://<host-ip>` erreichbar. Weitere Deta
 
 ## Persistente Konfiguration
 
-Die gesamten Server-Daten (`GameData/`) werden über einen Bind-Mount (`./data/GameData`) persistent auf dem Host gespeichert. Beim ersten Start wird das gesamte GameData-Verzeichnis automatisch aus dem Image erzeugt und die Umgebungsvariablen aus der `.env`-Datei angewendet. Bei weiteren Starts bleibt alles erhalten.
+Alle Server- und AdminServ-Daten werden über Bind-Mounts persistent auf dem Host gespeichert:
+
+| Host-Pfad | Container-Pfad | Beschreibung |
+|-----------|----------------|-------------|
+| `./data/GameData` | `/opt/tmserver/GameData` | TM-Server-Daten (Config, Tracks, Skins, etc.) |
+| `./data/AdminServ` | `/var/www/html` | AdminServ-Daten (Passwort, Server-Einträge, Logs) |
+
+Beim ersten Start werden die Verzeichnisse automatisch aus dem Image erzeugt und die Umgebungsvariablen aus der `.env`-Datei angewendet. Bei weiteren Starts bleibt alles erhalten.
 
 Weitere Details unter [Konfiguration](konfiguration.md).

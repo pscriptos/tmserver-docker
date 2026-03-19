@@ -5,15 +5,16 @@ services:
     container_name: tmserver
     restart: unless-stopped
     ports:
-      - "${SERVER_PORT:-2350}:2350/tcp"
-      - "${SERVER_PORT:-2350}:2350/udp"
-      - "${SERVER_P2P_PORT:-3450}:3450/tcp"
-      - "${SERVER_XMLRPC_PORT:-5000}:5000/tcp"
+      - "${SERVER_PORT:-2350}:${SERVER_PORT:-2350}/tcp"
+      - "${SERVER_PORT:-2350}:${SERVER_PORT:-2350}/udp"
+      - "${SERVER_P2P_PORT:-3450}:${SERVER_P2P_PORT:-3450}/tcp"
+      - "${SERVER_XMLRPC_PORT:-5000}:${SERVER_XMLRPC_PORT:-5000}/tcp"
       - "80:80/tcp"
     env_file:
       - .env
     volumes:
       - ./data/GameData:/opt/tmserver/GameData
+      - ./data/AdminServ:/var/www/html
     networks:
       tmserver_net:
         ipv4_address: 172.20.60.10

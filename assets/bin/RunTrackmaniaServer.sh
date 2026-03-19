@@ -24,6 +24,58 @@ error_log = /var/log/php_errors.log
 EOF
 fi
 
+# ============================================================
+# AdminServ: First-Run-Logik
+# ============================================================
+# Beim ersten Start (leeres Volume) werden die AdminServ-Dateien
+# aus dem Default-Template ins Volume kopiert.
+# Bei weiteren Starts bleiben vorhandene Daten (Passwort,
+# Server-Eintraege, etc.) erhalten.
+# ============================================================
+
+ADMINSERV_DIR="/var/www/html"
+DEFAULT_ADMINSERV="/opt/tmserver/default-adminserv"
+
+if [ ! -f "$ADMINSERV_DIR/index.php" ]; then
+    echo "==> Erster Start erkannt: Kopiere AdminServ-Dateien ins Volume..."
+    cp -r "$DEFAULT_ADMINSERV"/* "$ADMINSERV_DIR/"
+    chmod -R 777 "$ADMINSERV_DIR/logs/"
+    chmod 666 "$ADMINSERV_DIR/config/adminlevel.cfg.php"
+    chmod 666 "$ADMINSERV_DIR/config/servers.cfg.php"
+    chmod 666 "$ADMINSERV_DIR/config/adminserv.cfg.php"
+    chown -R www-data:www-data "$ADMINSERV_DIR/"
+
+    # AdminServ-Server-Eintrag automatisch konfigurieren
+    XMLRPC_PORT="${SERVER_XMLRPC_PORT:-5000}"
+    # Servernamen fuer PHP-Single-Quotes escapen
+    SAFE_NAME=$(printf '%s' "${SERVER_NAME:-Trackmania Server}" | sed "s/'/\\\\'/g")
+    # ds_pw: Passwort fuer DisplayServ (Serverstatusanzeige auf der Login-Seite)
+    DS_PW=$(printf '%s' "${SERVER_USER_PASSWORD:-User}" | sed "s/'/\\\\'/g")
+    cat > "$ADMINSERV_DIR/config/servers.cfg.php" <<EOPHP
+<?php
+class ServerConfig {
+    public static \$SERVERS = array(
+        '${SAFE_NAME}' => array(
+            'address'       => '127.0.0.1',
+            'port'          => ${XMLRPC_PORT},
+            'mapsbasepath'  => '',
+            'matchsettings' => 'MatchSettings/',
+            'adminlevel'    => array('SuperAdmin' => 'all', 'Admin' => 'all', 'User' => 'all'),
+            'ds_pw'         => '${DS_PW}'
+        ),
+    );
+}
+?>
+EOPHP
+    chmod 666 "$ADMINSERV_DIR/config/servers.cfg.php"
+    chown www-data:www-data "$ADMINSERV_DIR/config/servers.cfg.php"
+    echo "    AdminServ-Server-Eintrag automatisch konfiguriert (Port: ${XMLRPC_PORT})."
+
+    echo "    AdminServ-Dateien erfolgreich kopiert."
+else
+    echo "==> Vorhandene AdminServ-Daten gefunden. Keine Aenderungen."
+fi
+
 echo "Starting apache server"
 service apache2 start
 
@@ -47,6 +99,9 @@ FORCE_CONFIG_UPDATE="${FORCE_CONFIG_UPDATE:-false}"
 if [ ! -f "$CONFIG" ]; then
     echo "==> Erster Start erkannt: Kopiere Default-GameData ins Volume..."
     cp -r "$DEFAULT_GAMEDATA"/* "$GAMEDATA_DIR/"
+    chmod -R 777 "$GAMEDATA_DIR/Config/"
+    mkdir -p "$GAMEDATA_DIR/Config/AdminServ/ServerOptions"
+    chown -R www-data:www-data "$GAMEDATA_DIR/Config/AdminServ"
     APPLY_ENV=true
 elif [ "$FORCE_CONFIG_UPDATE" = "true" ]; then
     echo "==> FORCE_CONFIG_UPDATE ist aktiv: Umgebungsvariablen werden erneut angewendet..."

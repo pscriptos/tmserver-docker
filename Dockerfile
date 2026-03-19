@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim
+FROM debian:bullseye-slim
 
 RUN mkdir /opt/tmserver
 
@@ -22,6 +22,17 @@ RUN unzip /opt/tmserver/TrackmaniaServer_2011-02-21.zip -d /opt/tmserver \
 COPY assets/config/dedicated_cfg.txt /opt/tmserver/GameData/Config/dedicated_cfg.txt
 COPY assets/config/custom_game_settings.txt /opt/tmserver/GameData/Tracks/MatchSettings/
 
+# Config-Verzeichnis rekursiv beschreibbar machen (Server benoetigt Schreibzugriff)
+RUN chmod -R 777 /opt/tmserver/GameData/Config/
+
+# Tracks-Verzeichnis fuer AdminServ beschreibbar machen (Maps-Upload/Download)
+RUN chown -R www-data:www-data /opt/tmserver/GameData/Tracks/ \
+    && chmod -R 755 /opt/tmserver/GameData/Tracks/
+
+# AdminServ-Verzeichnisse im Config-Ordner anlegen
+RUN mkdir -p /opt/tmserver/GameData/Config/AdminServ/ServerOptions \
+    && chown -R www-data:www-data /opt/tmserver/GameData/Config/AdminServ
+
 # Gesamtes GameData als Default-Template sichern (wird beim ersten Start ins Volume kopiert)
 RUN cp -r /opt/tmserver/GameData /opt/tmserver/default-gamedata
 
@@ -32,16 +43,16 @@ RUN sed -i 's/\r$//' /opt/tmserver/RunTrackmaniaServer.sh \
 COPY assets/bin/AdminServ_v2.1.1.zip /var/www/html
 RUN unzip /var/www/html/AdminServ_v2.1.1.zip -d /var/www/html \
     && rm -f /var/www/html/AdminServ_v2.1.1.zip \
-    && chmod -R 777 /var/www/html/ \
     && rm -f /var/www/html/index.html \
     && mkdir -p /var/www/html/logs \
-    && chmod 777 /var/www/html/logs
+    && chmod -R 777 /var/www/html/logs \
+    && chmod 666 /var/www/html/config/adminlevel.cfg.php \
+    && chmod 666 /var/www/html/config/servers.cfg.php \
+    && chmod 666 /var/www/html/config/adminserv.cfg.php \
+    && chown -R www-data:www-data /var/www/html/
 
-# PHP 8 Kompatibilitaets-Patches fuer AdminServ
-# stristr() akzeptiert seit PHP 8 keine Arrays mehr – is_string()-Check hinzufuegen
-RUN sed -i \
-    's|if(stristr($value, "../"))|if(is_string($value) \&\& stristr($value, "../"))|g' \
-    /var/www/html/index.php
+# AdminServ-Dateien als Default-Template sichern (wird beim ersten Start ins Volume kopiert)
+RUN cp -r /var/www/html /opt/tmserver/default-adminserv
 
 # PHP-Debug-Konfiguration: wird zur Laufzeit vom Startup-Script gesetzt
 # (kein Rebuild noetig – nur Container neustarten)
@@ -72,8 +83,9 @@ ENV FORCE_CONFIG_UPDATE=false
 # Debugging
 ENV PHP_DISPLAY_ERRORS=false
 
-# Volume fuer persistente GameData (Config, Tracks, Skins, Scores, etc.)
+# Volumes fuer persistente Daten
 VOLUME /opt/tmserver/GameData
+VOLUME /var/www/html
 
 EXPOSE 5000/tcp
 EXPOSE 2350/tcp

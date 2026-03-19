@@ -12,11 +12,12 @@ Das gesamte **GameData-Verzeichnis** wird über ein Bind-Mount (`./data/GameData
 - Manuelle Änderungen gehen nicht verloren, auch wenn der Container neu erstellt wird
 - Dateien können direkt auf dem Host bearbeitet werden
 
-### Volume-Pfad
+### Volume-Pfade
 
 | Host-Pfad | Container-Pfad | Beschreibung |
 |-----------|----------------|-------------|
 | `./data/GameData` | `/opt/tmserver/GameData` | Gesamtes GameData-Verzeichnis |
+| `./data/AdminServ` | `/var/www/html` | AdminServ-Daten (Passwort, Server-Einträge, Logs) |
 
 ### Enthaltene Unterordner
 
