@@ -16,14 +16,14 @@ services:
     env_file:
       - .env
     volumes:
-      - ./data/GameData:/opt/tmserver/GameData
-      - ./data/AdminServ:/var/www/html
+      - ./data/gamedata:/opt/tmserver/GameData
+      - ./data/controlpanel:/var/www/html
     networks:
       tmserver_net:
         ipv4_address: 172.20.60.10
 
   mariadb:
-    image: mariadb:10.11
+    image: mariadb:11.4
     container_name: tmserver-mariadb
     restart: unless-stopped
     env_file:
@@ -34,7 +34,7 @@ services:
       MYSQL_USER: ${REMOTECP_DB_USER:-remotecp}
       MYSQL_PASSWORD: ${REMOTECP_DB_PASSWORD}
     volumes:
-      - ./data/MariaDB:/var/lib/mysql
+      - ./data/mariadb:/var/lib/mysql
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s

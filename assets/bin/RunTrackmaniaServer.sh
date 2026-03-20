@@ -34,11 +34,11 @@ fi
 # ============================================================
 
 ADMINSERV_DIR="/var/www/html"
-DEFAULT_ADMINSERV="/opt/tmserver/default-adminserv"
+DEFAULT_CONTROLPANEL="/opt/tmserver/default-controlpanel"
 
 if [ ! -f "$ADMINSERV_DIR/index.php" ]; then
     echo "==> Erster Start erkannt: Kopiere AdminServ-Dateien ins Volume..."
-    cp -r "$DEFAULT_ADMINSERV"/* "$ADMINSERV_DIR/"
+    cp -r "$DEFAULT_CONTROLPANEL"/* "$ADMINSERV_DIR/"
     chmod -R 777 "$ADMINSERV_DIR/logs/"
     chmod 666 "$ADMINSERV_DIR/config/adminlevel.cfg.php"
     chmod 666 "$ADMINSERV_DIR/config/servers.cfg.php"

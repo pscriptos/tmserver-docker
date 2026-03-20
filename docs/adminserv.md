@@ -30,13 +30,13 @@ Die Admin-Stufen können unter `http://<host-server-des-containers>/config` geä
 
 ## Persistente Speicherung
 
-Alle AdminServ-Daten (Passwort, Server-Einträge, Konfiguration, Logs) werden über einen Bind-Mount (`./data/AdminServ`) persistent auf dem Host gespeichert. Beim ersten Start werden die Dateien automatisch aus dem Image ins Volume kopiert.
+Alle AdminServ-Daten (Passwort, Server-Einträge, Konfiguration, Logs) werden über einen Bind-Mount (`./data/controlpanel`) persistent auf dem Host gespeichert. Beim ersten Start werden die Dateien automatisch aus dem Image ins Volume kopiert.
 
 | Host-Pfad | Container-Pfad | Beschreibung |
 |-----------|----------------|-------------|
-| `./data/AdminServ` | `/var/www/html` | AdminServ- und RemoteCP-Installation |
+| `./data/controlpanel` | `/var/www/html` | AdminServ- und RemoteCP-Installation |
 
-> **Hinweis:** Im selben Volume befindet sich auch [RemoteCP](remotecp.md) unter `./data/AdminServ/remotecp/`.
+> **Hinweis:** Im selben Volume befindet sich auch [RemoteCP](remotecp.md) unter `./data/controlpanel/remotecp/`.
 
 ## Fehlerbehebung
 
@@ -61,7 +61,7 @@ Falls AdminServ in einen inkonsistenten Zustand geraten ist:
 
 ```bash
 # AdminServ-Daten auf dem Host löschen
-rm -rf ./data/AdminServ/*
+rm -rf ./data/controlpanel/*
 
 # Container neu starten – AdminServ wird frisch initialisiert
 docker compose up -d

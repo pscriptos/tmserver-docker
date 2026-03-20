@@ -70,7 +70,7 @@ RUN unzip /var/www/html/remoteCP_v4.0.3.5.zip -d /var/www/html \
     && chown -R www-data:www-data /var/www/html/remotecp/
 
 # AdminServ- und RemoteCP-Dateien als Default-Template sichern (wird beim ersten Start ins Volume kopiert)
-RUN cp -r /var/www/html /opt/tmserver/default-adminserv
+RUN cp -r /var/www/html /opt/tmserver/default-controlpanel
 
 # PHP-Debug-Konfiguration: wird zur Laufzeit vom Startup-Script gesetzt
 # (kein Rebuild noetig – nur Container neustarten)
