@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     php-xml \
     php-mbstring \
     php-mysql \
+    php-curl \
     default-mysql-client \
     && rm -rf /var/lib/apt/lists/*
 
@@ -72,6 +73,43 @@ RUN unzip /var/www/html/remoteCP_v4.0.3.5.zip -d /var/www/html \
 # AdminServ- und RemoteCP-Dateien als Default-Template sichern (wird beim ersten Start ins Volume kopiert)
 RUN cp -r /var/www/html /opt/tmserver/default-controlpanel
 
+# XAseco installieren
+COPY assets/bin/xaseco_v1.16.zip /opt/tmserver/
+RUN unzip /opt/tmserver/xaseco_v1.16.zip -d /opt/tmserver/ \
+    && rm -f /opt/tmserver/xaseco_v1.16.zip \
+    # newinstall-Dateien in den Hauptordner verschieben
+    && cp /opt/tmserver/xaseco/newinstall/access.xml /opt/tmserver/xaseco/ \
+    && cp /opt/tmserver/xaseco/newinstall/adminops.xml /opt/tmserver/xaseco/ \
+    && cp /opt/tmserver/xaseco/newinstall/Aseco.sh /opt/tmserver/xaseco/ \
+    && cp /opt/tmserver/xaseco/newinstall/AsecoF.sh /opt/tmserver/xaseco/ \
+    && cp /opt/tmserver/xaseco/newinstall/autotime.xml /opt/tmserver/xaseco/ \
+    && cp /opt/tmserver/xaseco/newinstall/bannedips.xml /opt/tmserver/xaseco/ \
+    && cp /opt/tmserver/xaseco/newinstall/config.xml /opt/tmserver/xaseco/ \
+    && cp /opt/tmserver/xaseco/newinstall/dedimania.xml /opt/tmserver/xaseco/ \
+    && cp /opt/tmserver/xaseco/newinstall/html.tpl /opt/tmserver/xaseco/ \
+    && cp /opt/tmserver/xaseco/newinstall/localdatabase.xml /opt/tmserver/xaseco/ \
+    && cp /opt/tmserver/xaseco/newinstall/matchsave.xml /opt/tmserver/xaseco/ \
+    && cp /opt/tmserver/xaseco/newinstall/musicserver.xml /opt/tmserver/xaseco/ \
+    && cp /opt/tmserver/xaseco/newinstall/plugins.xml /opt/tmserver/xaseco/ \
+    && cp /opt/tmserver/xaseco/newinstall/rasp.xml /opt/tmserver/xaseco/ \
+    && cp /opt/tmserver/xaseco/newinstall/text.tpl /opt/tmserver/xaseco/ \
+    # Die drei PHP-Dateien nach includes/
+    && cp /opt/tmserver/xaseco/newinstall/jfreu.config.php /opt/tmserver/xaseco/includes/ \
+    && cp /opt/tmserver/xaseco/newinstall/rasp.settings.php /opt/tmserver/xaseco/includes/ \
+    && cp /opt/tmserver/xaseco/newinstall/votes.config.php /opt/tmserver/xaseco/includes/ \
+    # Start-Scripte ausfuehrbar machen
+    && chmod +x /opt/tmserver/xaseco/Aseco.sh \
+    && chmod +x /opt/tmserver/xaseco/AsecoF.sh \
+    # newinstall-Ordner aufraeumen
+    && rm -rf /opt/tmserver/xaseco/newinstall
+
+# Nicht mehr verfuegbare Plugins deaktivieren (freezone entfernen, teamspeak3 auskommentieren)
+RUN sed -i '/<plugin>plugin\.freezone\.php<\/plugin>/d' /opt/tmserver/xaseco/plugins.xml \
+    && sed -i 's/<plugin>plugin\.teamspeak3\.php<\/plugin>/<!-- <plugin>plugin.teamspeak3.php<\/plugin> -->/' /opt/tmserver/xaseco/plugins.xml
+
+# XAseco als Default-Template sichern (wird beim ersten Start ins Volume kopiert)
+RUN cp -r /opt/tmserver/xaseco /opt/tmserver/default-xaseco
+
 # PHP-Debug-Konfiguration: wird zur Laufzeit vom Startup-Script gesetzt
 # (kein Rebuild noetig – nur Container neustarten)
 
@@ -103,12 +141,21 @@ ENV REMOTECP_DB_HOST=mariadb
 ENV REMOTECP_DB_NAME=remotecp
 ENV REMOTECP_DB_USER=remotecp
 
+# XAseco
+ENV XASECO_ENABLED=true
+ENV XASECO_MASTERADMIN_LOGIN=""
+ENV XASECO_DB_HOST=mariadb
+ENV XASECO_DB_NAME=xaseco
+ENV XASECO_DB_USER=xaseco
+ENV XASECO_DEDIMANIA_NATION=DEU
+
 # Debugging
 ENV PHP_DISPLAY_ERRORS=false
 
 # Volumes fuer persistente Daten
 VOLUME /opt/tmserver/GameData
 VOLUME /var/www/html
+VOLUME /opt/tmserver/xaseco
 
 EXPOSE 5000/tcp
 EXPOSE 2350/tcp

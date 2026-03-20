@@ -18,7 +18,8 @@ docker run -d \
   -p 2350:2350/tcp \
   -p 2350:2350/udp \
   -p 3450:3450/tcp \
-  -v ./data/GameData:/opt/tmserver/GameData \
+  -v ./data/gamedata:/opt/tmserver/GameData \
+  -v ./data/xaseco:/opt/tmserver/xaseco \
   --name tmserver tmserver:latest
 ```
 

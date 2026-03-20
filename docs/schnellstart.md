@@ -14,6 +14,8 @@ cp .env.example .env
 
 Bearbeite die `.env`-Datei und setze mindestens die gewünschten Passwörter. Für den Internet-Modus müssen zusätzlich `SERVER_LOGIN` und `SERVER_VALIDATION_KEY` gesetzt werden.
 
+> **⚠ Sicherheitshinweis:** Die `.env.example` enthält **vorgenerierte Beispiel-Passwörter**. Diese dienen nur als Platzhalter und sind öffentlich einsehbar! **Ändere unbedingt alle Passwörter**, bevor du den Server produktiv einsetzt.
+
 > **Wichtig:** Die `.env`-Datei enthält sensible Daten (Passwörter, Keys) und wird über die `.gitignore` vom Einchecken ausgeschlossen.
 
 ## 2. Docker Image bauen
@@ -45,7 +47,10 @@ docker run -d \
   -p 2350:2350/udp \
   -p 3450:3450/tcp \
   -p 80:80/tcp \
-  -v ./data/GameData:/opt/tmserver/GameData \  -v ./data/AdminServ:/var/www/html \  --name tmserver tmserver:latest
+  -v ./data/gamedata:/opt/tmserver/GameData \
+  -v ./data/controlpanel:/var/www/html \
+  -v ./data/xaseco:/opt/tmserver/xaseco \
+  --name tmserver tmserver:latest
 ```
 
 ### LAN-Modus (docker run)
@@ -60,8 +65,9 @@ docker run -d \
   -p 2350:2350/udp \
   -p 3450:3450/tcp \
   -p 80:80/tcp \
-  -v ./data/GameData:/opt/tmserver/GameData \
-  -v ./data/AdminServ:/var/www/html \
+  -v ./data/gamedata:/opt/tmserver/GameData \
+  -v ./data/controlpanel:/var/www/html \
+  -v ./data/xaseco:/opt/tmserver/xaseco \
   --name tmserver tmserver:latest
 ```
 
@@ -80,9 +86,10 @@ Alle Server- und AdminServ-Daten werden über Bind-Mounts persistent auf dem Hos
 
 | Host-Pfad | Container-Pfad | Beschreibung |
 |-----------|----------------|-------------|
-| `./data/GameData` | `/opt/tmserver/GameData` | TM-Server-Daten (Config, Tracks, Skins, etc.) |
-| `./data/AdminServ` | `/var/www/html` | AdminServ- und RemoteCP-Daten |
-| `./data/MariaDB` | `/var/lib/mysql` | MariaDB-Datenbankdateien |
+| `./data/gamedata` | `/opt/tmserver/GameData` | TM-Server-Daten (Config, Tracks, Skins, etc.) |
+| `./data/controlpanel` | `/var/www/html` | AdminServ- und RemoteCP-Daten |
+| `./data/xaseco` | `/opt/tmserver/xaseco` | XAseco-Konfiguration und Logs |
+| `./data/mariadb` | `/var/lib/mysql` | MariaDB-Datenbankdateien |
 
 Beim ersten Start werden die Verzeichnisse automatisch aus dem Image erzeugt und die Umgebungsvariablen aus der `.env`-Datei angewendet. Bei weiteren Starts bleibt alles erhalten.
 

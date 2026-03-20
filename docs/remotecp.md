@@ -64,7 +64,7 @@ Die MariaDB-Daten werden über ein eigenes Bind-Mount persistent gespeichert:
 
 | Host-Pfad | Container-Pfad | Beschreibung |
 |-----------|----------------|-------------|
-| `./data/MariaDB` | `/var/lib/mysql` | MariaDB-Datenbankdateien |
+| `./data/mariadb` | `/var/lib/mysql` | MariaDB-Datenbankdateien |
 
 > **Hinweis:** Der MariaDB-Container kann auch für weitere Tools genutzt werden. Zusätzliche Datenbanken und Benutzer können über den Root-Zugang (`MARIADB_ROOT_PASSWORD`) erstellt werden.
 
@@ -83,9 +83,9 @@ RemoteCP wird im gleichen Volume wie AdminServ gespeichert:
 
 | Host-Pfad | Container-Pfad | Beschreibung |
 |-----------|----------------|-------------|
-| `./data/AdminServ/remotecp` | `/var/www/html/remotecp` | RemoteCP-Installation |
+| `./data/controlpanel/remotecp` | `/var/www/html/remotecp` | RemoteCP-Installation |
 
-Die Konfigurationsdateien befinden sich unter `./data/AdminServ/remotecp/xml/`:
+Die Konfigurationsdateien befinden sich unter `./data/controlpanel/remotecp/xml/`:
 
 | Datei | Beschreibung |
 |-------|-------------|

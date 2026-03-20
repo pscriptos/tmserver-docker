@@ -1,4 +1,4 @@
-MIT License
+MIT-Lizenz
 
 Copyright © 2019 lduriez (Original: https://github.com/lduriez/tmserver-docker)
 Copyright © 2026 Patrick Asmus
@@ -14,20 +14,75 @@ Blog:    https://www.cleveradmin.de
 
 ---
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Hiermit wird jeder Person, die eine Kopie dieser Software und der zugehörigen
+Dokumentationsdateien (die „Software") erhält, kostenlos die Erlaubnis erteilt,
+uneingeschränkt mit der Software zu handeln, einschließlich und ohne
+Einschränkung der Rechte, die Software zu verwenden, zu kopieren, zu
+verändern, zusammenzuführen, zu veröffentlichen, zu verbreiten,
+unterzulizenzieren und/oder Kopien der Software zu verkaufen, und Personen,
+denen die Software zur Verfügung gestellt wird, dies unter den folgenden
+Bedingungen zu gestatten:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Der obige Urheberrechtshinweis und dieser Genehmigungshinweis müssen in allen
+Kopien oder wesentlichen Teilen der Software enthalten sein. Bei jeglicher
+Weiterverarbeitung, Veröffentlichung oder Verbreitung der Software müssen der
+Name „Patrick Asmus" und die E-Mail-Adresse „support@techniverse.net" des
+Urhebers genannt werden.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+DIE SOFTWARE WIRD „WIE BESEHEN" OHNE JEGLICHE AUSDRÜCKLICHE ODER
+STILLSCHWEIGENDE GEWÄHRLEISTUNG ZUR VERFÜGUNG GESTELLT, EINSCHLIESSLICH,
+ABER NICHT BESCHRÄNKT AUF DIE GEWÄHRLEISTUNG DER MARKTGÄNGIGKEIT, DER
+EIGNUNG FÜR EINEN BESTIMMTEN ZWECK UND DER NICHTVERLETZUNG VON RECHTEN
+DRITTER. IN KEINEM FALL HAFTEN DIE AUTOREN ODER URHEBERRECHTSINHABER FÜR
+JEGLICHE ANSPRÜCHE, SCHÄDEN ODER SONSTIGE HAFTUNG, OB AUS VERTRAG,
+UNERLAUBTER HANDLUNG ODER ANDERWEITIG, DIE SICH AUS ODER IN VERBINDUNG MIT
+DER SOFTWARE ODER DER NUTZUNG ODER ANDEREN GESCHÄFTEN MIT DER SOFTWARE
+ERGEBEN.
+
+===============================================================================
+Hinweise zu enthaltenen Drittanbieter-Tools
+===============================================================================
+
+Die oben genannte MIT-Lizenz gilt ausschließlich für den Code, die
+Konfiguration und die Container-Arbeit dieses Repositories (tmserver-docker)
+von Patrick Asmus. Die folgenden Drittanbieter-Tools werden in diesem Projekt
+eingebunden und unterliegen jeweils ihren eigenen Lizenzbedingungen. Alle
+Rechte an diesen Tools verbleiben bei den jeweiligen Entwicklern bzw.
+Rechteinhabern.
+
+-------------------------------------------------------------------------------
+1. AdminServ
+-------------------------------------------------------------------------------
+Beschreibung:  Web-Interface zur Verwaltung von TrackMania Forever und
+               ManiaPlanet Dedicated Servern.
+Ursprünglicher Entwickler: Kev717
+Weiterentwicklung:         Chris92de
+Repository:    https://github.com/Chris92de/AdminServ
+Lizenz:        Keine Lizenzdatei im Repository vorhanden.
+               Alle Rechte verbleiben bei den jeweiligen Entwicklern
+               (Kev717, Chris92de und weitere Mitwirkende).
+
+-------------------------------------------------------------------------------
+2. remoteCP
+-------------------------------------------------------------------------------
+Beschreibung:  Remote-Control-Panel für TrackMania Server.
+Entwickler:    hal.sascha
+Lizenz:        GNU Lesser General Public License (LGPL)
+               https://www.gnu.org/licenses/lgpl-3.0.html
+Hinweis:       Alle Rechte verbleiben beim Entwickler hal.sascha.
+
+-------------------------------------------------------------------------------
+3. XASECO
+-------------------------------------------------------------------------------
+Beschreibung:  Server-Controller für TrackMania (Nations/Forever).
+               Basiert auf ASECO von Florian Schnell und RASP von
+               Eyez (Iain Surgey) & Assembler Maniac (Brad Mettee).
+Entwickler:    Xymph (Frans P. de Vries)
+Copyright:     © 2007-2026 Frans P. de Vries
+Website:       https://www.xaseco.org
+Kontakt:       tm@gamers.org
+Lizenz:        Keine explizite Open-Source-Lizenz im Projekt angegeben.
+               Alle Rechte verbleiben bei Frans P. de Vries (Xymph)
+               und den ursprünglichen Autoren von ASECO und RASP.
+
+===============================================================================

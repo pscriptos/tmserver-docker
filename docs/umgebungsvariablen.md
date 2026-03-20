@@ -16,6 +16,8 @@ cp .env.example .env
 nano .env
 ```
 
+> **⚠ Sicherheitshinweis:** Die `.env.example` enthält **vorgenerierte Beispiel-Passwörter**. Diese dienen nur als Platzhalter und sind öffentlich einsehbar! **Ändere unbedingt alle Passwörter**, bevor du den Server produktiv einsetzt. Betroffen sind: `SERVER_SA_PASSWORD`, `SERVER_ADM_PASSWORD`, `SERVER_USER_PASSWORD`, `MARIADB_ROOT_PASSWORD`, `REMOTECP_DB_PASSWORD` und `XASECO_DB_PASSWORD`.
+
 ## Authentifizierung
 
 | Variable | Beschreibung | Standard |
@@ -87,6 +89,22 @@ RemoteCP verwendet die SuperAdmin-Zugangsdaten (`SERVER_SA_PASSWORD`) des TM-Ser
 
 > **Hinweis:** Der MariaDB-Container kann mehrere Datenbanken beherbergen. Zusätzliche Datenbanken und Benutzer können über den Root-Zugang erstellt werden.
 
+## XAseco
+
+XAseco ist ein Server-Controller für Rekorde, Karma, Jukebox und mehr. Siehe [XAseco](xaseco.md) für Details.
+
+| Variable | Beschreibung | Standard |
+|----------|-------------|----------|
+| `XASECO_ENABLED` | XAseco aktivieren/deaktivieren | `true` |
+| `XASECO_MASTERADMIN_LOGIN` | Dein Spieler-Login (MasterAdmin) | *(muss gesetzt werden)* |
+| `XASECO_DB_HOST` | Hostname des Datenbankservers | `mariadb` |
+| `XASECO_DB_NAME` | Name der XAseco-Datenbank | `xaseco` |
+| `XASECO_DB_USER` | Datenbank-Benutzername | `xaseco` |
+| `XASECO_DB_PASSWORD` | Datenbank-Passwort | *(muss gesetzt werden)* |
+| `XASECO_DEDIMANIA_NATION` | Dedimania-Nation (IOC-Code) | `DEU` |
+
+> **Hinweis:** Die Server-Zugangsdaten (`SERVER_SA_PASSWORD`, `SERVER_XMLRPC_PORT`) und Dedimania-Daten (`SERVER_LOGIN`, `SERVER_LOGIN_PASSWORD`) werden automatisch aus der bestehenden Konfiguration übernommen.
+
 ## Debugging
 
 | Variable | Beschreibung | Standard |
@@ -116,7 +134,9 @@ docker run -d \
   -p 2350:2350/udp \
   -p 3450:3450/tcp \
   -p 80:80/tcp \
-  -v ./data/GameData:/opt/tmserver/GameData \
+  -v ./data/gamedata:/opt/tmserver/GameData \
+  -v ./data/controlpanel:/var/www/html \
+  -v ./data/xaseco:/opt/tmserver/xaseco \
   --name tmserver tmserver:latest
 ```
 
@@ -131,6 +151,8 @@ docker run -d \
   -p 2350:2350/udp \
   -p 3450:3450/tcp \
   -p 80:80/tcp \
-  -v ./data/GameData:/opt/tmserver/GameData \
+  -v ./data/gamedata:/opt/tmserver/GameData \
+  -v ./data/controlpanel:/var/www/html \
+  -v ./data/xaseco:/opt/tmserver/xaseco \
   --name tmserver tmserver:latest
 ```

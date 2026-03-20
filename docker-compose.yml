@@ -18,6 +18,7 @@ services:
     volumes:
       - ./data/gamedata:/opt/tmserver/GameData
       - ./data/controlpanel:/var/www/html
+      - ./data/xaseco:/opt/tmserver/xaseco
     networks:
       tmserver_net:
         ipv4_address: 172.20.60.10
@@ -35,6 +36,7 @@ services:
       MYSQL_PASSWORD: ${REMOTECP_DB_PASSWORD}
     volumes:
       - ./data/mariadb:/var/lib/mysql
+      - ./assets/db/init-xaseco-db.sh:/docker-entrypoint-initdb.d/20-init-xaseco-db.sh:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s

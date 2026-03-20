@@ -16,6 +16,8 @@ cp .env.example .env
 
 Passe die Werte in der `.env`-Datei an deine Umgebung an (Passwörter, Masterserver-Account, etc.).
 
+> **⚠ Sicherheitshinweis:** Die `.env.example` enthält **vorgenerierte Beispiel-Passwörter**. Diese dienen nur als Platzhalter und sind öffentlich einsehbar! **Ändere unbedingt alle Passwörter**, bevor du den Server produktiv einsetzt.
+
 ### 2. Server starten
 
 ```bash
@@ -36,20 +38,24 @@ docker compose up -d --build
 │   ├── bin/                         # Binaries und Startscript
 │   │   ├── AdminServ_v2.1.1.zip    # AdminServ Web-UI
 │   │   ├── remoteCP_v4.0.3.5.zip   # RemoteCP Web-UI
+│   │   ├── xaseco_v1.16.zip         # XAseco Server-Controller
 │   │   ├── RunTrackmaniaServer.sh   # Container-Startscript
 │   │   └── TrackmaniaServer_*.zip   # Trackmania Server Binary
-│   └── config/
+│   ├── config/
 │       ├── custom_game_settings.txt # MatchSettings (Spielmodus, Map-Rotation)
 │       └── dedicated_cfg.txt        # Server-Config-Template (mit Platzhaltern)
+│   └── db/
+│       └── init-xaseco-db.sh        # MariaDB Init-Script fuer XAseco-DB
 ├── docs/                            # Dokumentation
 ├── docker-compose.yml               # Docker Compose Konfiguration
 ├── Dockerfile                       # Docker Build-Definition
 ├── .env.example                     # Vorlage fuer Umgebungsvariablen
 ├── .env                             # Lokale Umgebungsvariablen (nicht im Git!)
 └── data/                            # Persistente Daten (zur Laufzeit)
-    ├── GameData/                    # TM-Server-Daten
-    ├── AdminServ/                   # AdminServ + RemoteCP
-    └── MariaDB/                     # MariaDB-Datenbankdateien
+    ├── gamedata/                    # TM-Server-Daten
+    ├── controlpanel/                # AdminServ + RemoteCP
+    ├── xaseco/                      # XAseco-Konfiguration und Logs
+    └── mariadb/                     # MariaDB-Datenbankdateien
 ```
 
 ## Dokumentation
@@ -62,6 +68,7 @@ Die vollständige Dokumentation befindet sich im Ordner [`docs/`](docs/README.md
 - [Server-Modi](docs/server-modi.md) – LAN- und Internet-Dedicated-Modus
 - [AdminServ](docs/adminserv.md) – Einrichtung der Server-Verwaltungsoberfläche
 - [RemoteCP](docs/remotecp.md) – Alternative Server-Verwaltungsoberfläche
+- [XAseco](docs/xaseco.md) – Server-Controller für Rekorde, Karma und Jukebox
 - [Ports](docs/ports.md) – Freigegebene Ports und deren Verwendung
 
 ---

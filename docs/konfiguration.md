@@ -6,7 +6,7 @@ Die Template-Konfiguration befindet sich im Repository unter `assets/config/dedi
 
 ## Persistente Speicherung
 
-Das gesamte **GameData-Verzeichnis** wird über ein Bind-Mount (`./data/GameData`) persistent auf dem Host gespeichert. Das bedeutet:
+Das gesamte **GameData-Verzeichnis** wird über ein Bind-Mount (`./data/gamedata`) persistent auf dem Host gespeichert. Das bedeutet:
 
 - Alle Daten (Konfiguration, Tracks, Skins, Scores, Cache, etc.) bleiben erhalten
 - Manuelle Änderungen gehen nicht verloren, auch wenn der Container neu erstellt wird
@@ -16,9 +16,9 @@ Das gesamte **GameData-Verzeichnis** wird über ein Bind-Mount (`./data/GameData
 
 | Host-Pfad | Container-Pfad | Beschreibung |
 |-----------|----------------|-------------|
-| `./data/GameData` | `/opt/tmserver/GameData` | Gesamtes GameData-Verzeichnis |
-| `./data/AdminServ` | `/var/www/html` | AdminServ- und RemoteCP-Daten |
-| `./data/MariaDB` | `/var/lib/mysql` | MariaDB-Datenbankdateien |
+| `./data/gamedata` | `/opt/tmserver/GameData` | Gesamtes GameData-Verzeichnis |
+| `./data/controlpanel` | `/var/www/html` | AdminServ- und RemoteCP-Daten |
+| `./data/mariadb` | `/var/lib/mysql` | MariaDB-Datenbankdateien |
 
 ### Enthaltene Unterordner
 
@@ -54,7 +54,7 @@ Nach dem ersten Start kann die Konfiguration direkt auf dem Host bearbeitet werd
 
 ```bash
 # Konfiguration direkt auf dem Host bearbeiten
-nano ./data/GameData/Config/dedicated_cfg.txt
+nano ./data/gamedata/Config/dedicated_cfg.txt
 
 # Alternativ: im Container anzeigen
 docker exec tmserver cat /opt/tmserver/GameData/Config/dedicated_cfg.txt
@@ -63,7 +63,7 @@ docker exec tmserver cat /opt/tmserver/GameData/Config/dedicated_cfg.txt
 docker restart tmserver
 ```
 
-> **Hinweis:** Da `GameData/` als Bind-Mount eingebunden ist, sind Dateien direkt unter `./data/GameData/` auf dem Host verfügbar – ohne `docker cp` oder `docker exec`.
+> **Hinweis:** Da `GameData/` als Bind-Mount eingebunden ist, sind Dateien direkt unter `./data/gamedata/` auf dem Host verfügbar – ohne `docker cp` oder `docker exec`.
 
 ## Konfiguration zurücksetzen (FORCE_CONFIG_UPDATE)
 
@@ -85,7 +85,9 @@ docker run -d \
   -p 2350:2350/udp \
   -p 3450:3450/tcp \
   -p 80:80/tcp \
-  -v ./data/GameData:/opt/tmserver/GameData \
+  -v ./data/gamedata:/opt/tmserver/GameData \
+  -v ./data/controlpanel:/var/www/html \
+  -v ./data/xaseco:/opt/tmserver/xaseco \
   --name tmserver tmserver:latest
 ```
 

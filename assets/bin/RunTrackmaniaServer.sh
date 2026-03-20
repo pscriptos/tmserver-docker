@@ -232,6 +232,127 @@ else
     echo "==> Vorhandene AdminServ-Daten gefunden. Keine Aenderungen."
 fi
 
+# ============================================================
+# XAseco: First-Run-Logik
+# ============================================================
+# Beim ersten Start (leeres Volume) werden die XAseco-Dateien
+# aus dem Default-Template ins Volume kopiert und die
+# Konfiguration aus den Umgebungsvariablen angewendet.
+# ============================================================
+
+XASECO_DIR="/opt/tmserver/xaseco"
+DEFAULT_XASECO="/opt/tmserver/default-xaseco"
+XASECO_ENABLED="${XASECO_ENABLED:-true}"
+
+if [ "$XASECO_ENABLED" = "true" ]; then
+    if [ ! -f "$XASECO_DIR/aseco.php" ]; then
+        echo "==> Erster Start erkannt: Kopiere XAseco-Dateien ins Volume..."
+        cp -r "$DEFAULT_XASECO"/* "$XASECO_DIR/"
+
+        XMLRPC_PORT="${SERVER_XMLRPC_PORT:-5000}"
+        XASECO_ADMIN="${XASECO_MASTERADMIN_LOGIN:-}"
+        SA_PW_XASECO=$(printf '%s' "${SERVER_SA_PASSWORD:-SuperAdmin}" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+
+        # --- config.xml: MasterAdmin und TMServer-Verbindung konfigurieren ---
+        if [ -n "$XASECO_ADMIN" ]; then
+            SAFE_ADMIN=$(printf '%s' "$XASECO_ADMIN" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+            # MasterAdmin in die masteradmins-Liste einfuegen (nach <masteradmins>-Tag)
+            sed -i "/<masteradmins>/a\\
+      <tmlogin>${SAFE_ADMIN}</tmlogin> <ipaddress></ipaddress>" "$XASECO_DIR/config.xml"
+            echo "    config.xml: MasterAdmin '${XASECO_ADMIN}' gesetzt."
+        else
+            echo "    HINWEIS: XASECO_MASTERADMIN_LOGIN nicht gesetzt."
+            echo "    Bitte manuell in xaseco/config.xml eintragen!"
+        fi
+
+        sed -i "s|<password>YOUR_SUPERADMIN_PASSWORD</password>|<password>${SA_PW_XASECO}</password>|" "$XASECO_DIR/config.xml"
+        sed -i "s|<port>5000</port>|<port>${XMLRPC_PORT}</port>|" "$XASECO_DIR/config.xml"
+        echo "    config.xml: TMServer-Verbindung konfiguriert (Port: ${XMLRPC_PORT})."
+
+        # --- adminops.xml: Admin-Login eintragen ---
+        if [ -n "$XASECO_ADMIN" ]; then
+            SAFE_ADMIN=$(printf '%s' "$XASECO_ADMIN" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+            sed -i "s|<!-- format:\n.*<tmlogin>YOUR_ADMIN_LOGIN</tmlogin>.*\n.*-->||" "$XASECO_DIR/adminops.xml"
+            # Admin in die admins-Liste einfuegen
+            sed -i "/<admins>/a\\
+                <tmlogin>${SAFE_ADMIN}</tmlogin> <ipaddress></ipaddress>" "$XASECO_DIR/adminops.xml"
+            echo "    adminops.xml: Admin '${XASECO_ADMIN}' eingetragen."
+        fi
+
+        # --- localdatabase.xml: MySQL-Verbindung konfigurieren ---
+        XASECO_DB_HOST="${XASECO_DB_HOST:-mariadb}"
+        XASECO_DB_NAME="${XASECO_DB_NAME:-xaseco}"
+        XASECO_DB_USER="${XASECO_DB_USER:-xaseco}"
+        XASECO_DB_PASSWORD="${XASECO_DB_PASSWORD:-}"
+
+        if [ -n "$XASECO_DB_PASSWORD" ]; then
+            SAFE_DB_HOST=$(printf '%s' "$XASECO_DB_HOST" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+            SAFE_DB_USER=$(printf '%s' "$XASECO_DB_USER" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+            SAFE_DB_PW=$(printf '%s' "$XASECO_DB_PASSWORD" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+            SAFE_DB_NAME=$(printf '%s' "$XASECO_DB_NAME" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+            sed -i "s|<mysql_server>localhost</mysql_server>|<mysql_server>${SAFE_DB_HOST}</mysql_server>|" "$XASECO_DIR/localdatabase.xml"
+            sed -i "s|<mysql_login>YOUR_MYSQL_LOGIN</mysql_login>|<mysql_login>${SAFE_DB_USER}</mysql_login>|" "$XASECO_DIR/localdatabase.xml"
+            sed -i "s|<mysql_password>YOUR_MYSQL_PASSWORD</mysql_password>|<mysql_password>${SAFE_DB_PW}</mysql_password>|" "$XASECO_DIR/localdatabase.xml"
+            sed -i "s|<mysql_database>aseco</mysql_database>|<mysql_database>${SAFE_DB_NAME}</mysql_database>|" "$XASECO_DIR/localdatabase.xml"
+            echo "    localdatabase.xml: MySQL-Verbindung konfiguriert (Host: ${XASECO_DB_HOST}, DB: ${XASECO_DB_NAME})."
+        else
+            echo "    WARNUNG: XASECO_DB_PASSWORD nicht gesetzt!"
+            echo "    XAseco-Datenbank muss manuell in xaseco/localdatabase.xml konfiguriert werden."
+        fi
+
+        # --- dedimania.xml: Server-Account konfigurieren ---
+        DEDI_LOGIN="${SERVER_LOGIN:-}"
+        DEDI_PASSWORD="${SERVER_LOGIN_PASSWORD:-}"
+        DEDI_NATION="${XASECO_DEDIMANIA_NATION:-DEU}"
+
+        if [ -n "$DEDI_LOGIN" ] && [ -n "$DEDI_PASSWORD" ]; then
+            SAFE_DEDI_LOGIN=$(printf '%s' "$DEDI_LOGIN" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+            SAFE_DEDI_PW=$(printf '%s' "$DEDI_PASSWORD" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+            SAFE_DEDI_NATION=$(printf '%s' "$DEDI_NATION" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+            sed -i "s|<login>YOUR_SERVER_LOGIN</login>|<login>${SAFE_DEDI_LOGIN}</login>|" "$XASECO_DIR/dedimania.xml"
+            sed -i "s|<password>YOUR_SERVER_PASSWORD</password>|<password>${SAFE_DEDI_PW}</password>|" "$XASECO_DIR/dedimania.xml"
+            sed -i "s|<nation>YOUR_SERVER_NATION</nation>|<nation>${SAFE_DEDI_NATION}</nation>|" "$XASECO_DIR/dedimania.xml"
+            echo "    dedimania.xml: Server-Account konfiguriert (Nation: ${DEDI_NATION})."
+        else
+            echo "    HINWEIS: SERVER_LOGIN/SERVER_LOGIN_PASSWORD nicht gesetzt."
+            echo "    Dedimania wird ohne Account konfiguriert."
+        fi
+
+        # --- XAseco-Datenbank: Schema importieren ---
+        if [ -n "$XASECO_DB_PASSWORD" ]; then
+            echo "    Warte auf MariaDB (${XASECO_DB_HOST}) fuer XAseco-DB..."
+            DB_READY=false
+            for i in $(seq 1 30); do
+                if mysql -h "$XASECO_DB_HOST" -u "$XASECO_DB_USER" -p"$XASECO_DB_PASSWORD" "$XASECO_DB_NAME" -e "SELECT 1" > /dev/null 2>&1; then
+                    echo "    MariaDB erreichbar."
+                    DB_READY=true
+                    break
+                fi
+                echo "    Versuch $i/30 - MariaDB noch nicht bereit, warte 3s..."
+                sleep 3
+            done
+
+            if [ "$DB_READY" = "true" ]; then
+                echo "    Importiere XAseco-Datenbankschema..."
+                for sqlfile in "$XASECO_DIR"/localdb/*.sql; do
+                    if [ -f "$sqlfile" ]; then
+                        echo "      -> $(basename "$sqlfile")"
+                        mysql -h "$XASECO_DB_HOST" -u "$XASECO_DB_USER" -p"$XASECO_DB_PASSWORD" "$XASECO_DB_NAME" < "$sqlfile"
+                    fi
+                done
+                echo "    XAseco-Datenbank erfolgreich initialisiert."
+            else
+                echo "    WARNUNG: MariaDB nicht erreichbar nach 90s!"
+                echo "    XAseco-Datenbankschema muss manuell importiert werden."
+            fi
+        fi
+
+        echo "    XAseco-Konfiguration abgeschlossen."
+    else
+        echo "==> Vorhandene XAseco-Daten gefunden. Keine Aenderungen."
+    fi
+fi
+
 echo "Starting apache server"
 service apache2 start
 
@@ -327,4 +448,41 @@ echo "Server config dedicated_cfg.txt is"
 cat "$CONFIG"
 
 echo "Launching Server in ${SERVER_MODE} mode"
-exec ./TrackmaniaServer /dedicated_cfg=dedicated_cfg.txt /game_settings=MatchSettings/custom_game_settings.txt /nodaemon ${LAUNCH_MODE}
+./TrackmaniaServer /dedicated_cfg=dedicated_cfg.txt /game_settings=MatchSettings/custom_game_settings.txt /nodaemon ${LAUNCH_MODE} &
+TM_PID=$!
+echo "TrackmaniaServer gestartet (PID: ${TM_PID})"
+
+# ============================================================
+# XAseco starten (nach TrackmaniaServer)
+# ============================================================
+if [ "${XASECO_ENABLED:-true}" = "true" ] && [ -f "/opt/tmserver/xaseco/aseco.php" ]; then
+    echo "==> Warte auf TrackmaniaServer XMLRPC..."
+    XMLRPC_PORT="${SERVER_XMLRPC_PORT:-5000}"
+    XMLRPC_READY=false
+    for i in $(seq 1 30); do
+        if php -r "@fsockopen('127.0.0.1', ${XMLRPC_PORT}, \$e, \$m, 2) ? exit(0) : exit(1);" 2>/dev/null; then
+            XMLRPC_READY=true
+            break
+        fi
+        sleep 2
+    done
+
+    if [ "$XMLRPC_READY" = "true" ]; then
+        echo "==> Starte XAseco..."
+        cd /opt/tmserver/xaseco
+        php aseco.php TMN </dev/null >>aseco.log 2>&1 &
+        XASECO_PID=$!
+        echo "    XAseco gestartet (PID: ${XASECO_PID})"
+        cd /opt/tmserver
+    else
+        echo "    WARNUNG: XMLRPC-Port ${XMLRPC_PORT} nicht erreichbar nach 60s!"
+        echo "    XAseco wurde NICHT gestartet. Bitte manuell starten."
+    fi
+else
+    if [ "${XASECO_ENABLED:-true}" != "true" ]; then
+        echo "==> XAseco ist deaktiviert (XASECO_ENABLED=${XASECO_ENABLED})."
+    fi
+fi
+
+# Auf TrackmaniaServer warten (Hauptprozess)
+wait $TM_PID
