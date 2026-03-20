@@ -1,77 +1,86 @@
 # tmserver-docker
 
-Trackmania Nation Forever Docker Server
+Trackmania Nations Forever Docker Server
 
-You can find it on Docker Hub [lduriez/tmserver](https://hub.docker.com/r/lduriez/tmserver)
+> **Hinweis:** Dieses Projekt ist ein Fork von [lduriez/tmserver-docker](https://github.com/lduriez/tmserver-docker?tab=readme-ov-file).
 
-Only lan dedicated is enable (internet dedicated will be added in future version)
+Der Server unterstützt sowohl den **Internet-Dedicated-Modus** (Standard) als auch den **LAN-Dedicated-Modus**.
 
-Server management webui provided base on [AdminServ](https://github.com/Chris92de/AdminServ)
+## Schnellstart
 
-## Running
-
-On a docker environment simply do the following
+### 1. Umgebungsvariablen einrichten
 
 ```bash
-docker run -d -p 2350:2350 -p 3450:3450 -p 80:80 --name tm-server lduriez/tmserver
+cp .env.example .env
 ```
 
-You can add environment variable to modify default values : [#Environment variables](#environment-variables)
+Passe die Werte in der `.env`-Datei an deine Umgebung an (Passwörter, Masterserver-Account, etc.).
 
-### Configure Server Management Webui
+> **⚠ Sicherheitshinweis:** Die `.env.example` enthält **vorgenerierte Beispiel-Passwörter**. Diese dienen nur als Platzhalter und sind öffentlich einsehbar! **Ändere unbedingt alle Passwörter**, bevor du den Server produktiv einsetzt.
 
-Visit `http:<host-server-of-the-conntainer>` and start configuration by setting the password of your choice.
-This password will be the AdminServ password for configurations (add TM server)
+### 2. Server starten
 
-Then add TM server information (you can let all by default). Be sure that `Address` is set to `localhost` in order to manage our embed server.
+```bash
+docker compose up -d --build
+```
 
-Once you saved, you can go to Servers list by pushing "Servers" button and then go to management server list with button "Back".
+### 3. Verwaltungsoberflächen öffnen
 
-You should see the server you added, in the to banner you ca go to the management environment.
-Select the server you want to manage, the admin level you want to go in, and tape the password of this admion level.
+- **AdminServ:** `http://<host-ip>/`
+- **RemoteCP:** `http://<host-ip>/remotecp/`
 
-By default `SuperAdmin` password is `SuperAdmin`, `Admin` password is `Admin`, `User` password is `User`. (You can modify the admin level in configuration settings `http:<host-server-of-the-conntainer>/config`)
+> **Hinweis:** Für den Internet-Modus müssen `SERVER_LOGIN` und `SERVER_VALIDATION_KEY` in der `.env`-Datei gesetzt sein. Einen Server-Account kannst du auf [players.trackmaniaforever.com](https://players.trackmaniaforever.com) erstellen. Für den LAN-Modus setze `SERVER_MODE=lan`.
 
-Congratulation you can now manage your TM server.
+## Projektstruktur
 
-Enjoy your game.
+```
+├── assets/
+│   ├── bin/                         # Binaries und Startscript
+│   │   ├── AdminServ_v2.1.1.zip    # AdminServ Web-UI
+│   │   ├── remoteCP_v4.0.3.5.zip   # RemoteCP Web-UI
+│   │   ├── xaseco_v1.16.zip         # XAseco Server-Controller
+│   │   ├── RunTrackmaniaServer.sh   # Container-Startscript
+│   │   └── TrackmaniaServer_*.zip   # Trackmania Server Binary
+│   ├── config/
+│       ├── custom_game_settings.txt # MatchSettings (Spielmodus, Map-Rotation)
+│       └── dedicated_cfg.txt        # Server-Config-Template (mit Platzhaltern)
+│   └── db/
+│       └── init-xaseco-db.sh        # MariaDB Init-Script fuer XAseco-DB
+├── docs/                            # Dokumentation
+├── docker-compose.yml               # Docker Compose Konfiguration
+├── Dockerfile                       # Docker Build-Definition
+├── .env.example                     # Vorlage fuer Umgebungsvariablen
+├── .env                             # Lokale Umgebungsvariablen (nicht im Git!)
+└── data/                            # Persistente Daten (zur Laufzeit)
+    ├── gamedata/                    # TM-Server-Daten
+    ├── controlpanel/                # AdminServ + RemoteCP
+    ├── xaseco/                      # XAseco-Konfiguration und Logs
+    └── mariadb/                     # MariaDB-Datenbankdateien
+```
 
-## Exposed ports
+## Dokumentation
 
-* 2350/tcp game server port
-* 2350/udp game server port
-* 3450/tcp p2p game server port
-* 80/tcp  server management webui port
+Die vollständige Dokumentation befindet sich im Ordner [`docs/`](docs/README.md):
 
-## Environment variables
+- [Schnellstart](docs/schnellstart.md) – Erste Schritte und minimale Konfiguration
+- [Konfiguration](docs/konfiguration.md) – Persistente Serverkonfiguration (dedicated_cfg.txt)
+- [Umgebungsvariablen](docs/umgebungsvariablen.md) – Alle verfügbaren Umgebungsvariablen
+- [Server-Modi](docs/server-modi.md) – LAN- und Internet-Dedicated-Modus
+- [AdminServ](docs/adminserv.md) – Einrichtung der Server-Verwaltungsoberfläche
+- [RemoteCP](docs/remotecp.md) – Alternative Server-Verwaltungsoberfläche
+- [XAseco](docs/xaseco.md) – Server-Controller für Rekorde, Karma und Jukebox
+- [Ports](docs/ports.md) – Freigegebene Ports und deren Verwendung
 
-* SERVER_NAME name of your server (default is 'Trackmania Server')
-* SERVER_DESC description of your server (default is 'This is a Trackmania Server')
-* SERVER_SA_PASSWORD superadmin management password  (default is 'SuperAdmin')
-* SERVER_ADM_PASSWORD admin management password (default is 'Admin')
+---
 
-## Commit convention
+📝 **Blog:** [www.cleveradmin.de](https://www.cleveradmin.de)  
+🌐 **Webseite:** [www.patrick-asmus.de](https://www.patrick-asmus.de)  
+📧 **E-Mail:** [support@techniverse.net](mailto:support@techniverse.net)  
 
-Format : `<type>(<portée>): <sujet>`
+<p align="center">
+  <img src="https://assets.techniverse.net/f1/git/graphics/gray0-catonline.svg" alt="">
+</p>
 
-### type
-
-* `build` : changements qui affectent le système de build ou des dépendances externes (npm, make…)
-* `ci` : changements concernant les fichiers et scripts d’intégration ou de configuration (Travis, Ansible, BrowserStack…)
-* `feat` : ajout d’une nouvelle fonctionnalité
-* `fix` : correction d’un bug
-* `perf` : amélioration des performances
-* `refactor` : modification qui n’apporte ni nouvelle fonctionnalité ni d’amélioration de performances
-* `style` : changement qui n’apporte aucune altération fonctionnelle ou sémantique (indentation, mise en forme, ajout d’espace, renommante d’une variable…)
-* `docs` : rédaction ou mise à jour de documentation
-* `test` : ajout ou modification de tests
-* `revert` : annuler un précédent commit, forme `revert sujet du commit annulé hash du commit annulé`
-
-### sujet
-
-* `add`
-* `change`
-* `update`
-* `remove`
-
-[source](https://buzut.net/git-bien-nommer-ses-commits/)
+<p align="center">
+<img src="https://assets.techniverse.net/f1/logos/small/license.png" alt="License" width="15" height="15"> <a href="./LICENSE">License</a> | <img src="https://assets.techniverse.net/f1/logos/small/matrix2.svg" alt="Matrix" width="15" height="15"> <a href="https://matrix.to/#/#community:techniverse.net">Matrix</a> | <img src="https://assets.techniverse.net/f1/logos/small/mastodon2.svg" alt="Mastodon" width="15" height="15"> <a href="https://social.techniverse.net/@donnerwolke">Mastodon</a>
+</p>

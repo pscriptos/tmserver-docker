@@ -1,0 +1,5 @@
+# Umgebungsvariablen (enthaelt Passwoerter!)
+.env
+
+# Persistente Server-Daten
+data/

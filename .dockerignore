@@ -1,0 +1,18 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode
+
+# Docs
+README.md
+docs
+
+# Umgebungsvariablen (Secrets!)
+.env
+.env.example
+
+# Persistente Daten
+data
