@@ -6,7 +6,7 @@
 | 2350 | UDP | Gameserver-Port |
 | 3450 | TCP | P2P-Gameserver-Port |
 | 5000 | TCP | XML-RPC-Port (interne Kommunikation) |
-| 80 | TCP | Server-Verwaltungsoberfläche (AdminServ) |
+| 80 | TCP | Server-Verwaltungsoberflächen (AdminServ + RemoteCP) |
 
 ## Minimale Port-Freigabe
 

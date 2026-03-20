@@ -17,7 +17,8 @@ Das gesamte **GameData-Verzeichnis** wird über ein Bind-Mount (`./data/GameData
 | Host-Pfad | Container-Pfad | Beschreibung |
 |-----------|----------------|-------------|
 | `./data/GameData` | `/opt/tmserver/GameData` | Gesamtes GameData-Verzeichnis |
-| `./data/AdminServ` | `/var/www/html` | AdminServ-Daten (Passwort, Server-Einträge, Logs) |
+| `./data/AdminServ` | `/var/www/html` | AdminServ- und RemoteCP-Daten |
+| `./data/MariaDB` | `/var/lib/mysql` | MariaDB-Datenbankdateien |
 
 ### Enthaltene Unterordner
 

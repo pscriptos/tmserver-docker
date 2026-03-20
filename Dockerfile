@@ -12,7 +12,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     php-zip \
     php-xml \
     php-mbstring \
+    php-mysql \
+    default-mysql-client \
     && rm -rf /var/lib/apt/lists/*
+
+# Apache mod_rewrite aktivieren und AllowOverride fuer .htaccess (RemoteCP-Sicherheit)
+RUN a2enmod rewrite \
+    && sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
 
 COPY assets/bin/TrackmaniaServer_2011-02-21.zip /opt/tmserver
 RUN unzip /opt/tmserver/TrackmaniaServer_2011-02-21.zip -d /opt/tmserver \
@@ -51,7 +57,19 @@ RUN unzip /var/www/html/AdminServ_v2.1.1.zip -d /var/www/html \
     && chmod 666 /var/www/html/config/adminserv.cfg.php \
     && chown -R www-data:www-data /var/www/html/
 
-# AdminServ-Dateien als Default-Template sichern (wird beim ersten Start ins Volume kopiert)
+# RemoteCP installieren (als Subpath /remotecp/)
+COPY assets/bin/remoteCP_v4.0.3.5.zip /var/www/html
+RUN unzip /var/www/html/remoteCP_v4.0.3.5.zip -d /var/www/html \
+    && mv /var/www/html/remoteCP_4.0.3.5-1 /var/www/html/remotecp \
+    && rm -f /var/www/html/remoteCP_v4.0.3.5.zip \
+    && mkdir -p /var/www/html/remotecp/cache \
+    && chmod -R 777 /var/www/html/remotecp/cache \
+    && chmod -R 666 /var/www/html/remotecp/xml/*.xml \
+    && chmod -R 777 /var/www/html/remotecp/xml \
+    && chmod -R 777 /var/www/html/remotecp/xml/settings \
+    && chown -R www-data:www-data /var/www/html/remotecp/
+
+# AdminServ- und RemoteCP-Dateien als Default-Template sichern (wird beim ersten Start ins Volume kopiert)
 RUN cp -r /var/www/html /opt/tmserver/default-adminserv
 
 # PHP-Debug-Konfiguration: wird zur Laufzeit vom Startup-Script gesetzt
@@ -79,6 +97,11 @@ ENV SERVER_DOWNLOAD_RATE=8192
 # Server-Modus und Config-Steuerung
 ENV SERVER_MODE=internet
 ENV FORCE_CONFIG_UPDATE=false
+
+# RemoteCP
+ENV REMOTECP_DB_HOST=mariadb
+ENV REMOTECP_DB_NAME=remotecp
+ENV REMOTECP_DB_USER=remotecp
 
 # Debugging
 ENV PHP_DISPLAY_ERRORS=false

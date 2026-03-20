@@ -22,9 +22,10 @@ Passe die Werte in der `.env`-Datei an deine Umgebung an (Passwörter, Masterser
 docker compose up -d --build
 ```
 
-### 3. AdminServ öffnen
+### 3. Verwaltungsoberflächen öffnen
 
-Die Verwaltungsoberfläche ist unter `http://<host-ip>` erreichbar.
+- **AdminServ:** `http://<host-ip>/`
+- **RemoteCP:** `http://<host-ip>/remotecp/`
 
 > **Hinweis:** Für den Internet-Modus müssen `SERVER_LOGIN` und `SERVER_VALIDATION_KEY` in der `.env`-Datei gesetzt sein. Einen Server-Account kannst du auf [players.trackmaniaforever.com](https://players.trackmaniaforever.com) erstellen. Für den LAN-Modus setze `SERVER_MODE=lan`.
 
@@ -34,6 +35,7 @@ Die Verwaltungsoberfläche ist unter `http://<host-ip>` erreichbar.
 ├── assets/
 │   ├── bin/                         # Binaries und Startscript
 │   │   ├── AdminServ_v2.1.1.zip    # AdminServ Web-UI
+│   │   ├── remoteCP_v4.0.3.5.zip   # RemoteCP Web-UI
 │   │   ├── RunTrackmaniaServer.sh   # Container-Startscript
 │   │   └── TrackmaniaServer_*.zip   # Trackmania Server Binary
 │   └── config/
@@ -44,7 +46,10 @@ Die Verwaltungsoberfläche ist unter `http://<host-ip>` erreichbar.
 ├── Dockerfile                       # Docker Build-Definition
 ├── .env.example                     # Vorlage fuer Umgebungsvariablen
 ├── .env                             # Lokale Umgebungsvariablen (nicht im Git!)
-└── data/GameData/                   # Persistente Serverdaten (zur Laufzeit)
+└── data/                            # Persistente Daten (zur Laufzeit)
+    ├── GameData/                    # TM-Server-Daten
+    ├── AdminServ/                   # AdminServ + RemoteCP
+    └── MariaDB/                     # MariaDB-Datenbankdateien
 ```
 
 ## Dokumentation
@@ -56,6 +61,7 @@ Die vollständige Dokumentation befindet sich im Ordner [`docs/`](docs/README.md
 - [Umgebungsvariablen](docs/umgebungsvariablen.md) – Alle verfügbaren Umgebungsvariablen
 - [Server-Modi](docs/server-modi.md) – LAN- und Internet-Dedicated-Modus
 - [AdminServ](docs/adminserv.md) – Einrichtung der Server-Verwaltungsoberfläche
+- [RemoteCP](docs/remotecp.md) – Alternative Server-Verwaltungsoberfläche
 - [Ports](docs/ports.md) – Freigegebene Ports und deren Verwendung
 
 ---

@@ -64,6 +64,29 @@ nano .env
 | `SERVER_MODE` | Server-Modus (`internet` oder `lan`) | `internet` |
 | `FORCE_CONFIG_UPDATE` | Erzwingt erneutes Anwenden aller Umgebungsvariablen auf die Config | `false` |
 
+## RemoteCP
+
+RemoteCP verwendet die SuperAdmin-Zugangsdaten (`SERVER_SA_PASSWORD`) des TM-Servers für den Web-Login. Es werden keine separaten Login-Variablen benötigt.
+
+| Variable | Beschreibung | Standard |
+|----------|-------------|----------|
+| `REMOTECP_DB_HOST` | Hostname des Datenbankservers | `mariadb` |
+| `REMOTECP_DB_NAME` | Name der RemoteCP-Datenbank | `remotecp` |
+| `REMOTECP_DB_USER` | Datenbank-Benutzername | `remotecp` |
+| `REMOTECP_DB_PASSWORD` | Datenbank-Passwort | *(muss gesetzt werden)* |
+
+> **Hinweis:** Diese Werte werden nur beim ersten Start (leeres Volume) angewendet. Weitere Details unter [RemoteCP](remotecp.md).
+
+## MariaDB
+
+| Variable | Beschreibung | Standard |
+|----------|-------------|----------|
+| `MARIADB_ROOT_PASSWORD` | Root-Passwort für den MariaDB-Server | *(muss gesetzt werden)* |
+
+> **Wichtig:** `MARIADB_ROOT_PASSWORD` muss gesetzt sein, damit der MariaDB-Container startet. Die Datenbank und der Benutzer für RemoteCP werden automatisch aus `REMOTECP_DB_NAME`, `REMOTECP_DB_USER` und `REMOTECP_DB_PASSWORD` erstellt.
+
+> **Hinweis:** Der MariaDB-Container kann mehrere Datenbanken beherbergen. Zusätzliche Datenbanken und Benutzer können über den Root-Zugang erstellt werden.
+
 ## Debugging
 
 | Variable | Beschreibung | Standard |

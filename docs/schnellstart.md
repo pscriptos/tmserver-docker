@@ -65,9 +65,14 @@ docker run -d \
   --name tmserver tmserver:latest
 ```
 
-## 4. AdminServ öffnen
+## 4. Verwaltungsoberflächen öffnen
 
-Die Verwaltungsoberfläche ist unter `http://<host-ip>` erreichbar. Weitere Details unter [AdminServ](adminserv.md).
+| Tool | URL | Beschreibung |
+|------|-----|-------------|
+| AdminServ | `http://<host-ip>/` | Server-Verwaltungsoberfläche |
+| RemoteCP | `http://<host-ip>/remotecp/` | Alternative Verwaltungsoberfläche |
+
+Weitere Details unter [AdminServ](adminserv.md) und [RemoteCP](remotecp.md).
 
 ## Persistente Konfiguration
 
@@ -76,7 +81,8 @@ Alle Server- und AdminServ-Daten werden über Bind-Mounts persistent auf dem Hos
 | Host-Pfad | Container-Pfad | Beschreibung |
 |-----------|----------------|-------------|
 | `./data/GameData` | `/opt/tmserver/GameData` | TM-Server-Daten (Config, Tracks, Skins, etc.) |
-| `./data/AdminServ` | `/var/www/html` | AdminServ-Daten (Passwort, Server-Einträge, Logs) |
+| `./data/AdminServ` | `/var/www/html` | AdminServ- und RemoteCP-Daten |
+| `./data/MariaDB` | `/var/lib/mysql` | MariaDB-Datenbankdateien |
 
 Beim ersten Start werden die Verzeichnisse automatisch aus dem Image erzeugt und die Umgebungsvariablen aus der `.env`-Datei angewendet. Bei weiteren Starts bleibt alles erhalten.
 

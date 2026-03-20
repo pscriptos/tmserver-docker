@@ -4,6 +4,9 @@ services:
       context: .
     container_name: tmserver
     restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
     ports:
       - "${SERVER_PORT:-2350}:${SERVER_PORT:-2350}/tcp"
       - "${SERVER_PORT:-2350}:${SERVER_PORT:-2350}/udp"
@@ -18,6 +21,29 @@ services:
     networks:
       tmserver_net:
         ipv4_address: 172.20.60.10
+
+  mariadb:
+    image: mariadb:10.11
+    container_name: tmserver-mariadb
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${REMOTECP_DB_NAME:-remotecp}
+      MYSQL_USER: ${REMOTECP_DB_USER:-remotecp}
+      MYSQL_PASSWORD: ${REMOTECP_DB_PASSWORD}
+    volumes:
+      - ./data/MariaDB:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      tmserver_net:
+        ipv4_address: 172.20.60.11
 
 networks:
   tmserver_net:

@@ -10,7 +10,7 @@ if [ "$PHP_DISPLAY_ERRORS" = "true" ]; then
     echo "==> PHP-Debug-Modus AKTIVIERT (PHP_DISPLAY_ERRORS=true)"
     cat > "$PHP_INI_DIR/99-adminserv-debug.ini" <<EOF
 display_errors = On
-error_reporting = E_ALL
+error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT
 log_errors = On
 error_log = /var/log/php_errors.log
 EOF
@@ -72,6 +72,162 @@ EOPHP
     echo "    AdminServ-Server-Eintrag automatisch konfiguriert (Port: ${XMLRPC_PORT})."
 
     echo "    AdminServ-Dateien erfolgreich kopiert."
+
+    # ============================================================
+    # RemoteCP: Automatische Konfiguration
+    # ============================================================
+    REMOTECP_DIR="$ADMINSERV_DIR/remotecp"
+    if [ -d "$REMOTECP_DIR" ]; then
+        echo "==> Konfiguriere RemoteCP..."
+
+        # DB-Konfiguration aus Umgebungsvariablen
+        REMOTECP_DB_HOST="${REMOTECP_DB_HOST:-}"
+        REMOTECP_DB_NAME="${REMOTECP_DB_NAME:-remotecp}"
+        REMOTECP_DB_USER="${REMOTECP_DB_USER:-remotecp}"
+        REMOTECP_DB_PASSWORD="${REMOTECP_DB_PASSWORD:-}"
+
+        if [ -n "$REMOTECP_DB_HOST" ] && [ -n "$REMOTECP_DB_PASSWORD" ]; then
+            DB_ENABLED="true"
+            DB_DSN="mysql:dbname=${REMOTECP_DB_NAME};host=${REMOTECP_DB_HOST}"
+        else
+            DB_ENABLED="false"
+            DB_DSN="mysql:dbname=remotecp;host=localhost"
+            echo "    HINWEIS: Keine DB-Zugangsdaten gesetzt (REMOTECP_DB_HOST/REMOTECP_DB_PASSWORD)."
+            echo "    RemoteCP wird ohne Datenbank konfiguriert. Manuelle Einrichtung moeglich."
+        fi
+
+        # servers.xml: Serververbindung und Datenbank automatisch konfigurieren
+        SA_PW=$(printf '%s' "${SERVER_SA_PASSWORD:-SuperAdmin}" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+        SAFE_RCP_NAME=$(printf '%s' "${SERVER_NAME:-Trackmania Server}" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+        SAFE_DB_DSN=$(printf '%s' "$DB_DSN" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+        SAFE_DB_USER=$(printf '%s' "$REMOTECP_DB_USER" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+        SAFE_DB_PW=$(printf '%s' "$REMOTECP_DB_PASSWORD" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+        cat > "$REMOTECP_DIR/xml/servers.xml" <<EORCPSERV
+<?xml version="1.0" encoding="utf-8"?>
+<servers>
+	<server>
+		<id>1</id>
+		<login></login>
+		<name>${SAFE_RCP_NAME}</name>
+		<settingset></settingset>
+		<filepath></filepath>
+		<connection>
+			<host>127.0.0.1</host>
+			<port>${XMLRPC_PORT}</port>
+			<password>${SA_PW}</password>
+			<communitycode>000000</communitycode>
+		</connection>
+		<ftp enabled='false'>
+			<host>localhost</host>
+			<port></port>
+			<username>username</username>
+			<password>password</password>
+			<path>/GameData/Tracks/</path>
+		</ftp>
+		<sql enabled='${DB_ENABLED}'>
+			<dsn>${SAFE_DB_DSN}</dsn>
+			<username>${SAFE_DB_USER}</username>
+			<password>${SAFE_DB_PW}</password>
+		</sql>
+		<lists>
+			<guestlist>guestlist.txt</guestlist>
+			<blacklist>blacklist.txt</blacklist>
+		</lists>
+	</server>
+</servers>
+EORCPSERV
+
+        # admins.xml: Admin-Zugang aus SuperAdmin-Passwort konfigurieren
+        RCP_PW="${SERVER_SA_PASSWORD:-SuperAdmin}"
+        RCP_PW_MD5=$(printf '%s' "$RCP_PW" | md5sum | cut -d' ' -f1)
+        cat > "$REMOTECP_DIR/xml/admins.xml" <<EORCPADM
+<?xml version="1.0"?>
+<admins>
+	<admin>
+		<id>L1</id>
+		<active>true</active>
+		<servers>
+			<server id='1' group='1' />
+		</servers>
+		<username>rcplive</username>
+		<password>5b8e508f6f4a95bc581a37243d88f07e</password>
+		<nocode>false</nocode>
+		<tmaccount>false</tmaccount>
+		<language>en</language>
+		<style>default</style>
+	</admin>
+	<admin>
+		<id>G1</id>
+		<active>true</active>
+		<servers>
+			<server id='1' group='G1' />
+		</servers>
+		<username>Guest</username>
+		<password>adb831a7fdd83dd1e2a309ce7591dff8</password>
+		<nocode>false</nocode>
+		<tmaccount>false</tmaccount>
+		<language>en</language>
+		<style>default</style>
+	</admin>
+	<admin>
+		<id>1</id>
+		<active>true</active>
+		<servers>
+			<server id='1' group='1' />
+		</servers>
+		<username>SuperAdmin</username>
+		<password>${RCP_PW_MD5}</password>
+		<nocode>false</nocode>
+		<tmaccount>false</tmaccount>
+		<language>de</language>
+		<style>default</style>
+	</admin>
+</admins>
+EORCPADM
+
+        # ============================================================
+        # RemoteCP: Datenbank-Initialisierung
+        # ============================================================
+        if [ "$DB_ENABLED" = "true" ]; then
+            echo "    Warte auf MariaDB (${REMOTECP_DB_HOST})..."
+            DB_READY=false
+            for i in $(seq 1 30); do
+                if mysql -h "$REMOTECP_DB_HOST" -u "$REMOTECP_DB_USER" -p"$REMOTECP_DB_PASSWORD" "$REMOTECP_DB_NAME" -e "SELECT 1" > /dev/null 2>&1; then
+                    echo "    MariaDB erreichbar."
+                    DB_READY=true
+                    break
+                fi
+                echo "    Versuch $i/30 - MariaDB noch nicht bereit, warte 3s..."
+                sleep 3
+            done
+
+            if [ "$DB_READY" = "true" ]; then
+                echo "    Importiere RemoteCP-Datenbankschema..."
+                for sqlfile in "$REMOTECP_DIR"/plugins/*/mysql_*.sql "$REMOTECP_DIR"/live/*/mysql_*.sql; do
+                    if [ -f "$sqlfile" ]; then
+                        echo "      -> $(basename "$sqlfile")"
+                        mysql -h "$REMOTECP_DB_HOST" -u "$REMOTECP_DB_USER" -p"$REMOTECP_DB_PASSWORD" "$REMOTECP_DB_NAME" < "$sqlfile"
+                    fi
+                done
+
+                # Installer-Markierung setzen (ueberspringt den Web-Installer)
+                echo "installed" > "$REMOTECP_DIR/cache/installed"
+                chown www-data:www-data "$REMOTECP_DIR/cache/installed"
+                echo "    RemoteCP-Datenbank erfolgreich initialisiert."
+            else
+                echo "    WARNUNG: MariaDB nicht erreichbar nach 90s!"
+                echo "    RemoteCP-Datenbank muss manuell eingerichtet werden."
+                echo "    Installer: http://<host-ip>/remotecp/index.php?page=install"
+            fi
+        fi
+
+        # Berechtigungen fuer RemoteCP setzen
+        chmod -R 777 "$REMOTECP_DIR/cache"
+        chmod -R 777 "$REMOTECP_DIR/xml"
+        chown -R www-data:www-data "$REMOTECP_DIR/"
+
+        echo "    RemoteCP-Konfiguration abgeschlossen (Port: ${XMLRPC_PORT}, User: SuperAdmin)."
+    fi
 else
     echo "==> Vorhandene AdminServ-Daten gefunden. Keine Aenderungen."
 fi

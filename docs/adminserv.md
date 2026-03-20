@@ -34,7 +34,9 @@ Alle AdminServ-Daten (Passwort, Server-Einträge, Konfiguration, Logs) werden ü
 
 | Host-Pfad | Container-Pfad | Beschreibung |
 |-----------|----------------|-------------|
-| `./data/AdminServ` | `/var/www/html` | Gesamte AdminServ-Installation |
+| `./data/AdminServ` | `/var/www/html` | AdminServ- und RemoteCP-Installation |
+
+> **Hinweis:** Im selben Volume befindet sich auch [RemoteCP](remotecp.md) unter `./data/AdminServ/remotecp/`.
 
 ## Fehlerbehebung
 
