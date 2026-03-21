@@ -420,6 +420,7 @@ if [ "$APPLY_ENV" = "true" ]; then
     sed -i "s|%%SERVER_MAX_SPECTATORS%%|${SERVER_MAX_SPECTATORS}|g" "$CONFIG"
     sed -i "s|%%SERVER_SPEC_PASSWORD%%|${SERVER_SPEC_PASSWORD}|g" "$CONFIG"
     sed -i "s|%%SERVER_LADDER_MODE%%|${SERVER_LADDER_MODE}|g" "$CONFIG"
+    sed -i "s|%%SERVER_LADDER_LIMIT_MAX%%|${SERVER_LADDER_LIMIT_MAX:-60000}|g" "$CONFIG"
 
     # Netzwerk
     sed -i "s|%%SERVER_PORT%%|${SERVER_PORT}|g" "$CONFIG"

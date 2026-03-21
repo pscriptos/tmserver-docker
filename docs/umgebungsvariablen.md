@@ -48,6 +48,7 @@ nano .env
 | `SERVER_MAX_SPECTATORS` | Maximale Zuschaueranzahl | `32` |
 | `SERVER_SPEC_PASSWORD` | Zuschauer-Passwort (leer = offen) | *(leer)* |
 | `SERVER_LADDER_MODE` | Ladder-Modus (`inactive` oder `forced`) | `forced` |
+| `SERVER_LADDER_LIMIT_MAX` | Oberes Ladder-Serverlimit (Punktegrenze) | `60000` |
 
 ## Netzwerk
 
