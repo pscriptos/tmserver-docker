@@ -41,7 +41,7 @@ RUN mkdir -p /opt/tmserver/GameData/Config/AdminServ/ServerOptions \
     && chown -R www-data:www-data /opt/tmserver/GameData/Config/AdminServ
 
 # Gesamtes GameData als Default-Template sichern (wird beim ersten Start ins Volume kopiert)
-RUN cp -r /opt/tmserver/GameData /opt/tmserver/default-gamedata
+RUN cp -a /opt/tmserver/GameData /opt/tmserver/default-gamedata
 
 COPY assets/bin/RunTrackmaniaServer.sh /opt/tmserver/
 RUN sed -i 's/\r$//' /opt/tmserver/RunTrackmaniaServer.sh \
@@ -71,7 +71,7 @@ RUN unzip /var/www/html/remoteCP_v4.0.3.5.zip -d /var/www/html \
     && chown -R www-data:www-data /var/www/html/remotecp/
 
 # AdminServ- und RemoteCP-Dateien als Default-Template sichern (wird beim ersten Start ins Volume kopiert)
-RUN cp -r /var/www/html /opt/tmserver/default-controlpanel
+RUN cp -a /var/www/html /opt/tmserver/default-controlpanel
 
 # XAseco installieren
 COPY assets/bin/xaseco_v1.16.zip /opt/tmserver/
@@ -108,7 +108,7 @@ RUN sed -i '/<plugin>plugin\.freezone\.php<\/plugin>/d' /opt/tmserver/xaseco/plu
     && sed -i 's/<plugin>plugin\.teamspeak3\.php<\/plugin>/<!-- <plugin>plugin.teamspeak3.php<\/plugin> -->/' /opt/tmserver/xaseco/plugins.xml
 
 # XAseco als Default-Template sichern (wird beim ersten Start ins Volume kopiert)
-RUN cp -r /opt/tmserver/xaseco /opt/tmserver/default-xaseco
+RUN cp -a /opt/tmserver/xaseco /opt/tmserver/default-xaseco
 
 # PHP-Debug-Konfiguration: wird zur Laufzeit vom Startup-Script gesetzt
 # (kein Rebuild noetig – nur Container neustarten)

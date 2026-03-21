@@ -38,7 +38,7 @@ DEFAULT_CONTROLPANEL="/opt/tmserver/default-controlpanel"
 
 if [ ! -f "$ADMINSERV_DIR/index.php" ]; then
     echo "==> Erster Start erkannt: Kopiere AdminServ-Dateien ins Volume..."
-    cp -r "$DEFAULT_CONTROLPANEL"/* "$ADMINSERV_DIR/"
+    cp -a "$DEFAULT_CONTROLPANEL"/* "$ADMINSERV_DIR/"
     chmod -R 777 "$ADMINSERV_DIR/logs/"
     chmod 666 "$ADMINSERV_DIR/config/adminlevel.cfg.php"
     chmod 666 "$ADMINSERV_DIR/config/servers.cfg.php"
@@ -247,7 +247,7 @@ XASECO_ENABLED="${XASECO_ENABLED:-true}"
 if [ "$XASECO_ENABLED" = "true" ]; then
     if [ ! -f "$XASECO_DIR/aseco.php" ]; then
         echo "==> Erster Start erkannt: Kopiere XAseco-Dateien ins Volume..."
-        cp -r "$DEFAULT_XASECO"/* "$XASECO_DIR/"
+        cp -a "$DEFAULT_XASECO"/* "$XASECO_DIR/"
 
         XMLRPC_PORT="${SERVER_XMLRPC_PORT:-5000}"
         XASECO_ADMIN="${XASECO_MASTERADMIN_LOGIN:-}"
@@ -375,10 +375,13 @@ FORCE_CONFIG_UPDATE="${FORCE_CONFIG_UPDATE:-false}"
 
 if [ ! -f "$CONFIG" ]; then
     echo "==> Erster Start erkannt: Kopiere Default-GameData ins Volume..."
-    cp -r "$DEFAULT_GAMEDATA"/* "$GAMEDATA_DIR/"
+    cp -a "$DEFAULT_GAMEDATA"/* "$GAMEDATA_DIR/"
     chmod -R 777 "$GAMEDATA_DIR/Config/"
     mkdir -p "$GAMEDATA_DIR/Config/AdminServ/ServerOptions"
     chown -R www-data:www-data "$GAMEDATA_DIR/Config/AdminServ"
+    # Tracks-Verzeichnis fuer AdminServ beschreibbar machen (Maps-Upload/Download)
+    chown -R www-data:www-data "$GAMEDATA_DIR/Tracks/"
+    chmod -R 755 "$GAMEDATA_DIR/Tracks/"
     APPLY_ENV=true
 elif [ "$FORCE_CONFIG_UPDATE" = "true" ]; then
     echo "==> FORCE_CONFIG_UPDATE ist aktiv: Umgebungsvariablen werden erneut angewendet..."
