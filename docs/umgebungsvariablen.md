@@ -67,6 +67,12 @@ nano .env
 | `SERVER_MODE` | Server-Modus (`internet` oder `lan`) | `internet` |
 | `FORCE_CONFIG_UPDATE` | Erzwingt erneutes Anwenden aller Umgebungsvariablen auf die Config | `false` |
 
+## Spieleinstellungen (MatchSettings)
+
+| Variable | Beschreibung | Standard |
+|----------|-------------|----------|
+| `ALLWARMUPDURATION` | Warmup-Dauer für alle Runden (`0` = deaktiviert, `1` = eine Runde Warmup) | `0` |
+
 ## RemoteCP
 
 RemoteCP verwendet die SuperAdmin-Zugangsdaten (`SERVER_SA_PASSWORD`) des TM-Servers für den Web-Login. Es werden keine separaten Login-Variablen benötigt.

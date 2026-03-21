@@ -357,6 +357,7 @@ echo "Starting apache server"
 service apache2 start
 
 CONFIG="/opt/tmserver/GameData/Config/dedicated_cfg.txt"
+GAME_SETTINGS="/opt/tmserver/GameData/Tracks/MatchSettings/custom_game_settings.txt"
 GAMEDATA_DIR="/opt/tmserver/GameData"
 DEFAULT_GAMEDATA="/opt/tmserver/default-gamedata"
 
@@ -388,6 +389,7 @@ elif [ "$FORCE_CONFIG_UPDATE" = "true" ]; then
     echo "    ACHTUNG: Manuelle Aenderungen an den betroffenen Feldern werden ueberschrieben!"
     # Template neu kopieren, damit alle Platzhalter vorhanden sind
     cp "$DEFAULT_GAMEDATA/Config/dedicated_cfg.txt" "$CONFIG"
+    cp "$DEFAULT_GAMEDATA/Tracks/MatchSettings/custom_game_settings.txt" "$GAME_SETTINGS"
     APPLY_ENV=true
 else
     echo "==> Vorhandene Konfiguration gefunden. Umgebungsvariablen werden NICHT angewendet."
@@ -428,6 +430,9 @@ if [ "$APPLY_ENV" = "true" ]; then
     sed -i "s|%%SERVER_XMLRPC_PORT%%|${SERVER_XMLRPC_PORT}|g" "$CONFIG"
     sed -i "s|%%SERVER_UPLOAD_RATE%%|${SERVER_UPLOAD_RATE}|g" "$CONFIG"
     sed -i "s|%%SERVER_DOWNLOAD_RATE%%|${SERVER_DOWNLOAD_RATE}|g" "$CONFIG"
+
+    # Spieleinstellungen (MatchSettings)
+    sed -i "s|<allwarmupduration>[^<]*</allwarmupduration>|<allwarmupduration>${ALLWARMUPDURATION:-0}</allwarmupduration>|" "$GAME_SETTINGS"
 
     echo "Platzhalter erfolgreich ersetzt."
 fi
