@@ -71,6 +71,10 @@ Die vollständige Dokumentation befindet sich im Ordner [`docs/`](docs/README.md
 - [XAseco](docs/xaseco.md) – Server-Controller für Rekorde, Karma und Jukebox
 - [Ports](docs/ports.md) – Freigegebene Ports und deren Verwendung
 
+## Danksagung
+
+Danke an **Thomas** ([retronerd.at](https://retronerd.at)), dass er mir sein Wissen zur Verfügung gestellt hat und dass er hier im Projekt mitgewirkt hat.
+
 ---
 
 📝 **Blog:** [www.cleveradmin.de](https://www.cleveradmin.de)  
