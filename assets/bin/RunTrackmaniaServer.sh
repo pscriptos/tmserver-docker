@@ -453,6 +453,129 @@ if [ "$APPLY_ENV" = "true" ]; then
     echo "Platzhalter erfolgreich ersetzt."
 fi
 
+# ============================================================
+# AdminServ ServerOptions: Exportierte Einstellungen anwenden
+# ============================================================
+# Falls ein AdminServ-Export in GameData/Config/AdminServ/ServerOptions/
+# vorhanden ist, werden die darin enthaltenen Werte (z.B. Servername,
+# Beschreibung, Spielerzahl) in die dedicated_cfg.txt uebernommen.
+# So bleiben Aenderungen, die ueber AdminServ vorgenommen und exportiert
+# wurden, auch nach einem Container-Neustart erhalten.
+# ============================================================
+ADMINSERV_OPTIONS_DIR="$GAMEDATA_DIR/Config/AdminServ/ServerOptions"
+if [ -d "$ADMINSERV_OPTIONS_DIR" ]; then
+    LATEST_EXPORT=$(ls -t "$ADMINSERV_OPTIONS_DIR"/*.txt "$ADMINSERV_OPTIONS_DIR"/*.xml 2>/dev/null | head -1)
+    if [ -n "$LATEST_EXPORT" ] && [ -f "$LATEST_EXPORT" ]; then
+        echo "==> AdminServ ServerOptions-Export gefunden: $(basename "$LATEST_EXPORT")"
+        echo "    Uebernehme exportierte Einstellungen in dedicated_cfg.txt..."
+        php -r '
+            $xmlFile = $argv[1];
+            $cfgFile = $argv[2];
+
+            // AdminServ-Export parsen
+            $dom = new DOMDocument();
+            if (!@$dom->load($xmlFile)) {
+                echo "    WARNUNG: AdminServ-Export konnte nicht gelesen werden.\n";
+                exit(0);
+            }
+            $root = $dom->documentElement;
+            $exportValues = [];
+            foreach ($root->childNodes as $node) {
+                if ($node->nodeType === XML_ELEMENT_NODE) {
+                    $exportValues[$node->nodeName] = $node->nodeValue;
+                }
+            }
+
+            // Mapping: AdminServ-XML-Feld => dedicated_cfg.txt-Feld
+            $mapping = [
+                "Name"                   => "name",
+                "Comment"                => "comment",
+                "HideServer"             => "hide_server",
+                "NextMaxPlayers"         => "max_players",
+                "Password"               => "password",
+                "PasswordForSpectator"   => "password_spectator",
+                "NextMaxSpectators"      => "max_spectators",
+                "NextLadderMode"         => "ladder_mode",
+                "NextCallVoteTimeOut"    => "callvote_timeout",
+                "CallVoteRatio"          => "callvote_ratio",
+                "AllowChallengeDownload" => "allow_challenge_download",
+                "AutoSaveReplays"        => "autosave_replays",
+                "IsP2PUpload"            => "enable_p2p_upload",
+                "IsP2PDownload"          => "enable_p2p_download",
+            ];
+
+            // Bool-Felder: 1/0 => True/False (dedicated_cfg.txt-Format)
+            $boolFields = [
+                "allow_challenge_download", "autosave_replays",
+                "enable_p2p_upload", "enable_p2p_download",
+            ];
+
+            // Ladder-Modus: 0 => inactive, 1 => forced
+            $ladderMap = ["0" => "inactive", "1" => "forced"];
+
+            // Zu ersetzende Werte aufbauen
+            $replacements = [];
+            foreach ($mapping as $xmlField => $cfgField) {
+                if (isset($exportValues[$xmlField])) {
+                    $value = $exportValues[$xmlField];
+                    if (in_array($cfgField, $boolFields)) {
+                        $value = ($value == "1" || strtolower($value) === "true") ? "True" : "False";
+                    }
+                    if ($cfgField === "ladder_mode" && isset($ladderMap[$value])) {
+                        $value = $ladderMap[$value];
+                    }
+                    $replacements[$cfgField] = $value;
+                }
+            }
+
+            if (empty($replacements)) {
+                echo "    Keine anwendbaren Einstellungen im Export gefunden.\n";
+                exit(0);
+            }
+
+            // dedicated_cfg.txt zeilenweise verarbeiten
+            // Nur Tags innerhalb von <server_options> werden ersetzt,
+            // damit <name> und <password> in <authorization_levels> unangetastet bleiben.
+            $lines = file($cfgFile);
+            $inServerOptions = false;
+            $updated = 0;
+
+            foreach ($lines as $i => $line) {
+                if (strpos($line, "<server_options>") !== false) {
+                    $inServerOptions = true;
+                }
+                if (strpos($line, "</server_options>") !== false) {
+                    $inServerOptions = false;
+                }
+                if ($inServerOptions) {
+                    foreach ($replacements as $field => $value) {
+                        $pattern = "/(<" . preg_quote($field, "/") . ">)[^<]*(<\/" . preg_quote($field, "/") . ">)/";
+                        if (preg_match($pattern, $line)) {
+                            $safeValue = htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, "UTF-8");
+                            // $ und \ im Replacement escapen, damit preg_replace
+                            // sie nicht als Backreferences interpretiert (wichtig
+                            // fuer TM-Farbcodes wie $03F, $z, $s etc.)
+                            $escapedValue = str_replace(["\\", "$"], ["\\\\", "\\$"], $safeValue);
+                            $lines[$i] = preg_replace($pattern, "\${1}" . $escapedValue . "\${2}", $line, 1);
+                            echo "    " . $field . " => " . $value . "\n";
+                            $updated++;
+                            unset($replacements[$field]);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if ($updated > 0) {
+                file_put_contents($cfgFile, implode("", $lines));
+                echo "    " . $updated . " Einstellung(en) aus AdminServ-Export uebernommen.\n";
+            }
+        ' "$LATEST_EXPORT" "$CONFIG"
+    fi
+else
+    echo "==> Kein AdminServ ServerOptions-Verzeichnis gefunden. Ueberspringe Import."
+fi
+
 # Bestimme Server-Modus (Standard: internet)
 SERVER_MODE="${SERVER_MODE:-internet}"
 

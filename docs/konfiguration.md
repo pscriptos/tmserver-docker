@@ -103,6 +103,39 @@ Der Ordner `GameData/Config/` enthält:
 | `blacklist.txt` | Liste gesperrter Spieler |
 | `guestlist.txt` | Liste erlaubter Spieler |
 | `Default.SystemConfig.Gbx` | System-Konfiguration |
+| `AdminServ/ServerOptions/` | Von AdminServ exportierte Server-Einstellungen |
+
+## AdminServ ServerOptions-Import
+
+Wenn über AdminServ Änderungen an den Server-Optionen vorgenommen und als Export gespeichert werden (z.B. Servername, Beschreibung, Spielerzahl), werden diese beim nächsten Container-Start **automatisch** in die `dedicated_cfg.txt` übernommen.
+
+**Ablauf:**
+
+1. In AdminServ unter „Server Options" die gewünschten Einstellungen ändern und „Export" klicken
+2. Die exportierte Datei wird in `GameData/Config/AdminServ/ServerOptions/` gespeichert
+3. Beim nächsten Start des Containers wird die **neueste** Export-Datei erkannt
+4. Die darin enthaltenen Werte werden in die `dedicated_cfg.txt` geschrieben
+
+**Unterstützte Felder:**
+
+| AdminServ-Feld | dedicated_cfg.txt-Feld |
+|----------------|----------------------|
+| `Name` | `<name>` |
+| `Comment` | `<comment>` |
+| `HideServer` | `<hide_server>` |
+| `NextMaxPlayers` | `<max_players>` |
+| `Password` | `<password>` |
+| `PasswordForSpectator` | `<password_spectator>` |
+| `NextMaxSpectators` | `<max_spectators>` |
+| `NextLadderMode` | `<ladder_mode>` |
+| `NextCallVoteTimeOut` | `<callvote_timeout>` |
+| `CallVoteRatio` | `<callvote_ratio>` |
+| `AllowChallengeDownload` | `<allow_challenge_download>` |
+| `AutoSaveReplays` | `<autosave_replays>` |
+| `IsP2PUpload` | `<enable_p2p_upload>` |
+| `IsP2PDownload` | `<enable_p2p_download>` |
+
+> **Hinweis:** Die AdminServ-Exports haben **Vorrang** vor den Werten aus den Umgebungsvariablen. Beim ersten Start werden zunächst die Umgebungsvariablen angewendet, danach die AdminServ-Exports (falls vorhanden). Bei weiteren Starts werden nur die AdminServ-Exports angewendet.
 
 ## Wichtige Parameter in der dedicated_cfg.txt
 
