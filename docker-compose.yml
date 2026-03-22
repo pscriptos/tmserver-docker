@@ -1,6 +1,6 @@
 services:
   tmserver:
-    image: git.techniverse.net/scriptos/trackmania-server:1.1.0
+    image: git.techniverse.net/scriptos/trackmania-server:1.1.1
     build:
       context: .
     container_name: tmserver
