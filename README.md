@@ -2,6 +2,15 @@
 
 Trackmania Nations Forever Docker Server
 
+Ein vollständiges Docker-Setup für einen **TrackMania Nations Forever**-Server – inklusive Web-Verwaltung und Server-Controller:
+
+- **TrackMania Dedicated Server** – der eigentliche Spielserver für Internet- oder LAN-Betrieb
+- **[XAseco](docs/xaseco.md)** – Server-Controller, der lokale Rekorde, Dedimania-Weltrekorde, Karma/Votes und eine Track-Jukebox direkt im Spielchat verwaltet
+- **[AdminServ](docs/adminserv.md)** – Web-Oberfläche zur komfortablen Verwaltung und Konfiguration des Servers
+- **[RemoteCP](docs/remotecp.md)** – alternative Web-Verwaltungsoberfläche mit eigenem Login- und Benutzersystem
+
+Alle Komponenten laufen in einem einzigen Container und werden über Umgebungsvariablen konfiguriert.
+
 > **Hinweis:** Dieses Projekt ist ein Fork von [lduriez/tmserver-docker](https://github.com/lduriez/tmserver-docker?tab=readme-ov-file).
 
 Der Server unterstützt sowohl den **Internet-Dedicated-Modus** (Standard) als auch den **LAN-Dedicated-Modus**.
