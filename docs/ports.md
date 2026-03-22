@@ -5,7 +5,7 @@
 | 2350 | TCP | Gameserver-Port |
 | 2350 | UDP | Gameserver-Port |
 | 3450 | TCP | P2P-Gameserver-Port |
-| 5000 | TCP | XML-RPC-Port (interne Kommunikation) |
+| 5000 | TCP | XML-RPC-Port (nur containerintern, nicht nach außen freigegeben) |
 | 80 | TCP | Server-Verwaltungsoberflächen (AdminServ + RemoteCP) |
 
 ## Minimale Port-Freigabe
@@ -23,4 +23,16 @@ docker run -d \
   --name tmserver git.techniverse.net/scriptos/trackmania-server:latest
 ```
 
-> **Hinweis:** Port 5000 (XML-RPC) wird intern von AdminServ verwendet und muss in der Regel nicht nach außen freigegeben werden.
+> **Hinweis:** Port 5000 (XML-RPC) wird containerintern von AdminServ, RemoteCP und XAseco verwendet und ist standardmäßig **nicht** nach außen freigegeben.
+>
+> Falls du den XML-RPC-Port extern benötigst (z. B. für ein externes Tool außerhalb des Containers), kannst du ihn nachträglich in der `docker-compose.yml` unter `ports:` ergänzen:
+>
+> ```yaml
+> - "${SERVER_XMLRPC_PORT:-5000}:${SERVER_XMLRPC_PORT:-5000}/tcp"
+> ```
+>
+> Bzw. bei `docker run`:
+>
+> ```bash
+> -p 5000:5000/tcp
+> ```
