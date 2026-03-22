@@ -18,7 +18,7 @@ else
     echo "==> PHP-Debug-Modus deaktiviert"
     cat > "$PHP_INI_DIR/99-adminserv-debug.ini" <<EOF
 display_errors = Off
-error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT
+error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT & ~E_WARNING & ~E_NOTICE
 log_errors = On
 error_log = /var/log/php_errors.log
 EOF
@@ -351,6 +351,22 @@ if [ "$XASECO_ENABLED" = "true" ]; then
     else
         echo "==> Vorhandene XAseco-Daten gefunden. Keine Aenderungen."
     fi
+fi
+
+# ============================================================
+# RemoteCP: PHP-Warnungen in Plugins fixen (fuer bestehende Volumes)
+# ============================================================
+# RemoteCP nutzt bare constants (pt_custom, pt_points, ...), die in
+# PHP 7.2+ Warnungen ausloesen. Die gepatchte Datei aus dem Image
+# wird in das Volume kopiert, falls die alte Version noch vorhanden ist.
+# ============================================================
+CUSTOMPOINTS_FILE="/var/www/html/remotecp/plugins/CustomPoints/index.php"
+CUSTOMPOINTS_DEFAULT="/opt/tmserver/default-controlpanel/remotecp/plugins/CustomPoints/index.php"
+if [ -f "$CUSTOMPOINTS_FILE" ] && ! grep -q 'defined.*pt_custom' "$CUSTOMPOINTS_FILE"; then
+    echo "==> Patche CustomPoints-Plugin (PHP-Warnungen beheben)..."
+    cp "$CUSTOMPOINTS_DEFAULT" "$CUSTOMPOINTS_FILE"
+    chown www-data:www-data "$CUSTOMPOINTS_FILE"
+    echo "    CustomPoints-Plugin erfolgreich gepatcht."
 fi
 
 echo "Starting apache server"

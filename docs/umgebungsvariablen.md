@@ -116,9 +116,11 @@ XAseco ist ein Server-Controller für Rekorde, Karma, Jukebox und mehr. Siehe [X
 
 | Variable | Beschreibung | Standard |
 |----------|-------------|----------|
-| `PHP_DISPLAY_ERRORS` | Zeigt PHP-Fehlermeldungen im Browser an (nur zur Fehlersuche!) | `false` |
+| `PHP_DISPLAY_ERRORS` | Aktiviert den PHP-Debug-Modus: Fehlermeldungen im Browser + vollständige Warnungen im Log (nur zur Fehlersuche!) | `false` |
 
 > **Hinweis:** Der Debug-Modus erfordert **keinen** Rebuild des Images. Es genügt, die Variable in der `.env`-Datei zu ändern und den Container neu zu starten (`docker compose restart`). Im Produktivbetrieb sollte `PHP_DISPLAY_ERRORS` immer auf `false` stehen.
+>
+> Bei `false` werden nur schwerwiegende Fehler geloggt (keine Warnungen/Notices). Bei `true` werden zusätzlich alle Warnungen und Hinweise angezeigt und geloggt – nützlich zur Fehlersuche bei Problemen mit RemoteCP oder AdminServ.
 
 > **Hinweis:** Bei `FORCE_CONFIG_UPDATE=true` wird die `dedicated_cfg.txt` aus dem Template neu erzeugt und alle Platzhalter mit den aktuellen Umgebungsvariablen ersetzt. Manuelle Änderungen gehen dabei verloren! Nach dem Update sollte `FORCE_CONFIG_UPDATE` wieder auf `false` gesetzt werden.
 

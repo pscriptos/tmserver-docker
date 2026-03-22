@@ -70,6 +70,12 @@ RUN unzip /var/www/html/remoteCP_v4.0.3.5.zip -d /var/www/html \
     && chmod -R 777 /var/www/html/remotecp/xml/settings \
     && chown -R www-data:www-data /var/www/html/remotecp/
 
+# Fix PHP-Warnungen in RemoteCP CustomPoints-Plugin (undefined constants)
+# RemoteCP nutzt bare constants (pt_custom, pt_points, ...), die in PHP 7.2+
+# Warnungen ausloesen. Das gepatchte Plugin nutzt stattdessen defined()-Pruefungen.
+COPY assets/config/remotecp/plugins/CustomPoints/index.php /var/www/html/remotecp/plugins/CustomPoints/index.php
+RUN chown www-data:www-data /var/www/html/remotecp/plugins/CustomPoints/index.php
+
 # AdminServ- und RemoteCP-Dateien als Default-Template sichern (wird beim ersten Start ins Volume kopiert)
 RUN cp -a /var/www/html /opt/tmserver/default-controlpanel
 
