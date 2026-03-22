@@ -20,7 +20,7 @@ docker run -d \
   -p 3450:3450/tcp \
   -v ./data/gamedata:/opt/tmserver/GameData \
   -v ./data/xaseco:/opt/tmserver/xaseco \
-  --name tmserver tmserver:latest
+  --name tmserver git.techniverse.net/scriptos/trackmania-server:latest
 ```
 
 > **Hinweis:** Port 5000 (XML-RPC) wird intern von AdminServ verwendet und muss in der Regel nicht nach außen freigegeben werden.

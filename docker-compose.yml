@@ -1,6 +1,6 @@
 services:
   tmserver:
-    image: git.techniverse.net/scriptos/trackmania-server:1.0.0
+    image: git.techniverse.net/scriptos/trackmania-server:1.1.0
     build:
       context: .
     container_name: tmserver
@@ -32,9 +32,14 @@ services:
       - .env
     environment:
       MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      # RemoteCP-Datenbank (via MariaDB-Init)
       MYSQL_DATABASE: ${REMOTECP_DB_NAME:-remotecp}
       MYSQL_USER: ${REMOTECP_DB_USER:-remotecp}
       MYSQL_PASSWORD: ${REMOTECP_DB_PASSWORD}
+      # XAseco-Datenbank (via Init-Script init-xaseco-db.sh)
+      XASECO_DB_NAME: ${XASECO_DB_NAME:-xaseco}
+      XASECO_DB_USER: ${XASECO_DB_USER:-xaseco}
+      XASECO_DB_PASSWORD: ${XASECO_DB_PASSWORD}
     volumes:
       - ./data/mariadb:/var/lib/mysql
       - ./assets/db/init-xaseco-db.sh:/docker-entrypoint-initdb.d/20-init-xaseco-db.sh:ro

@@ -18,7 +18,7 @@ else
     echo "==> PHP-Debug-Modus deaktiviert"
     cat > "$PHP_INI_DIR/99-adminserv-debug.ini" <<EOF
 display_errors = Off
-error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT
+error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT & ~E_WARNING & ~E_NOTICE
 log_errors = On
 error_log = /var/log/php_errors.log
 EOF
@@ -38,7 +38,7 @@ DEFAULT_CONTROLPANEL="/opt/tmserver/default-controlpanel"
 
 if [ ! -f "$ADMINSERV_DIR/index.php" ]; then
     echo "==> Erster Start erkannt: Kopiere AdminServ-Dateien ins Volume..."
-    cp -r "$DEFAULT_CONTROLPANEL"/* "$ADMINSERV_DIR/"
+    cp -a "$DEFAULT_CONTROLPANEL"/* "$ADMINSERV_DIR/"
     chmod -R 777 "$ADMINSERV_DIR/logs/"
     chmod 666 "$ADMINSERV_DIR/config/adminlevel.cfg.php"
     chmod 666 "$ADMINSERV_DIR/config/servers.cfg.php"
@@ -185,6 +185,16 @@ EORCPSERV
 </admins>
 EORCPADM
 
+        # settings.xml: Registrierung deaktivieren (SuperAdmin wird automatisch angelegt)
+        mkdir -p "$REMOTECP_DIR/xml/settings"
+        cat > "$REMOTECP_DIR/xml/settings/settings.xml" <<EORCPSET
+<?xml version="1.0" encoding="utf-8"?>
+<settings>
+	<register>false</register>
+</settings>
+EORCPSET
+        echo "    settings.xml: Registrierung deaktiviert."
+
         # ============================================================
         # RemoteCP: Datenbank-Initialisierung
         # ============================================================
@@ -247,7 +257,7 @@ XASECO_ENABLED="${XASECO_ENABLED:-true}"
 if [ "$XASECO_ENABLED" = "true" ]; then
     if [ ! -f "$XASECO_DIR/aseco.php" ]; then
         echo "==> Erster Start erkannt: Kopiere XAseco-Dateien ins Volume..."
-        cp -r "$DEFAULT_XASECO"/* "$XASECO_DIR/"
+        cp -a "$DEFAULT_XASECO"/* "$XASECO_DIR/"
 
         XMLRPC_PORT="${SERVER_XMLRPC_PORT:-5000}"
         XASECO_ADMIN="${XASECO_MASTERADMIN_LOGIN:-}"
@@ -353,10 +363,27 @@ if [ "$XASECO_ENABLED" = "true" ]; then
     fi
 fi
 
+# ============================================================
+# RemoteCP: PHP-Warnungen in Plugins fixen (fuer bestehende Volumes)
+# ============================================================
+# RemoteCP nutzt bare constants (pt_custom, pt_points, ...), die in
+# PHP 7.2+ Warnungen ausloesen. Die gepatchte Datei aus dem Image
+# wird in das Volume kopiert, falls die alte Version noch vorhanden ist.
+# ============================================================
+CUSTOMPOINTS_FILE="/var/www/html/remotecp/plugins/CustomPoints/index.php"
+CUSTOMPOINTS_DEFAULT="/opt/tmserver/default-controlpanel/remotecp/plugins/CustomPoints/index.php"
+if [ -f "$CUSTOMPOINTS_FILE" ] && ! grep -q 'defined.*pt_custom' "$CUSTOMPOINTS_FILE"; then
+    echo "==> Patche CustomPoints-Plugin (PHP-Warnungen beheben)..."
+    cp "$CUSTOMPOINTS_DEFAULT" "$CUSTOMPOINTS_FILE"
+    chown www-data:www-data "$CUSTOMPOINTS_FILE"
+    echo "    CustomPoints-Plugin erfolgreich gepatcht."
+fi
+
 echo "Starting apache server"
 service apache2 start
 
 CONFIG="/opt/tmserver/GameData/Config/dedicated_cfg.txt"
+GAME_SETTINGS="/opt/tmserver/GameData/Tracks/MatchSettings/custom_game_settings.txt"
 GAMEDATA_DIR="/opt/tmserver/GameData"
 DEFAULT_GAMEDATA="/opt/tmserver/default-gamedata"
 
@@ -375,16 +402,20 @@ FORCE_CONFIG_UPDATE="${FORCE_CONFIG_UPDATE:-false}"
 
 if [ ! -f "$CONFIG" ]; then
     echo "==> Erster Start erkannt: Kopiere Default-GameData ins Volume..."
-    cp -r "$DEFAULT_GAMEDATA"/* "$GAMEDATA_DIR/"
+    cp -a "$DEFAULT_GAMEDATA"/* "$GAMEDATA_DIR/"
     chmod -R 777 "$GAMEDATA_DIR/Config/"
     mkdir -p "$GAMEDATA_DIR/Config/AdminServ/ServerOptions"
     chown -R www-data:www-data "$GAMEDATA_DIR/Config/AdminServ"
+    # Tracks-Verzeichnis fuer AdminServ beschreibbar machen (Maps-Upload/Download)
+    chown -R www-data:www-data "$GAMEDATA_DIR/Tracks/"
+    chmod -R 755 "$GAMEDATA_DIR/Tracks/"
     APPLY_ENV=true
 elif [ "$FORCE_CONFIG_UPDATE" = "true" ]; then
     echo "==> FORCE_CONFIG_UPDATE ist aktiv: Umgebungsvariablen werden erneut angewendet..."
     echo "    ACHTUNG: Manuelle Aenderungen an den betroffenen Feldern werden ueberschrieben!"
     # Template neu kopieren, damit alle Platzhalter vorhanden sind
     cp "$DEFAULT_GAMEDATA/Config/dedicated_cfg.txt" "$CONFIG"
+    cp "$DEFAULT_GAMEDATA/Tracks/MatchSettings/custom_game_settings.txt" "$GAME_SETTINGS"
     APPLY_ENV=true
 else
     echo "==> Vorhandene Konfiguration gefunden. Umgebungsvariablen werden NICHT angewendet."
@@ -417,6 +448,7 @@ if [ "$APPLY_ENV" = "true" ]; then
     sed -i "s|%%SERVER_MAX_SPECTATORS%%|${SERVER_MAX_SPECTATORS}|g" "$CONFIG"
     sed -i "s|%%SERVER_SPEC_PASSWORD%%|${SERVER_SPEC_PASSWORD}|g" "$CONFIG"
     sed -i "s|%%SERVER_LADDER_MODE%%|${SERVER_LADDER_MODE}|g" "$CONFIG"
+    sed -i "s|%%SERVER_LADDER_LIMIT_MAX%%|${SERVER_LADDER_LIMIT_MAX:-60000}|g" "$CONFIG"
 
     # Netzwerk
     sed -i "s|%%SERVER_PORT%%|${SERVER_PORT}|g" "$CONFIG"
@@ -424,6 +456,9 @@ if [ "$APPLY_ENV" = "true" ]; then
     sed -i "s|%%SERVER_XMLRPC_PORT%%|${SERVER_XMLRPC_PORT}|g" "$CONFIG"
     sed -i "s|%%SERVER_UPLOAD_RATE%%|${SERVER_UPLOAD_RATE}|g" "$CONFIG"
     sed -i "s|%%SERVER_DOWNLOAD_RATE%%|${SERVER_DOWNLOAD_RATE}|g" "$CONFIG"
+
+    # Spieleinstellungen (MatchSettings)
+    sed -i "s|<allwarmupduration>[^<]*</allwarmupduration>|<allwarmupduration>${ALLWARMUPDURATION:-0}</allwarmupduration>|" "$GAME_SETTINGS"
 
     echo "Platzhalter erfolgreich ersetzt."
 fi

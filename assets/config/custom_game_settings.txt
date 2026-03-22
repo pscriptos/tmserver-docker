@@ -4,7 +4,7 @@
 		<game_mode>1</game_mode>
 		<chat_time>10000</chat_time>
 		<finishtimeout>1</finishtimeout>
-		<allwarmupduration>1</allwarmupduration>
+		<allwarmupduration>0</allwarmupduration>
 		<disablerespawn>0</disablerespawn>
 		<forceshowallopponents>0</forceshowallopponents>
 		<rounds_pointslimit>30</rounds_pointslimit>

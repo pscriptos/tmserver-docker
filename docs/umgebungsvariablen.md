@@ -48,6 +48,7 @@ nano .env
 | `SERVER_MAX_SPECTATORS` | Maximale Zuschaueranzahl | `32` |
 | `SERVER_SPEC_PASSWORD` | Zuschauer-Passwort (leer = offen) | *(leer)* |
 | `SERVER_LADDER_MODE` | Ladder-Modus (`inactive` oder `forced`) | `forced` |
+| `SERVER_LADDER_LIMIT_MAX` | Oberes Ladder-Serverlimit (Punktegrenze) | `60000` |
 
 ## Netzwerk
 
@@ -65,6 +66,12 @@ nano .env
 |----------|-------------|----------|
 | `SERVER_MODE` | Server-Modus (`internet` oder `lan`) | `internet` |
 | `FORCE_CONFIG_UPDATE` | Erzwingt erneutes Anwenden aller Umgebungsvariablen auf die Config | `false` |
+
+## Spieleinstellungen (MatchSettings)
+
+| Variable | Beschreibung | Standard |
+|----------|-------------|----------|
+| `ALLWARMUPDURATION` | Warmup-Dauer für alle Runden (`0` = deaktiviert, `1` = eine Runde Warmup) | `0` |
 
 ## RemoteCP
 
@@ -109,9 +116,11 @@ XAseco ist ein Server-Controller für Rekorde, Karma, Jukebox und mehr. Siehe [X
 
 | Variable | Beschreibung | Standard |
 |----------|-------------|----------|
-| `PHP_DISPLAY_ERRORS` | Zeigt PHP-Fehlermeldungen im Browser an (nur zur Fehlersuche!) | `false` |
+| `PHP_DISPLAY_ERRORS` | Aktiviert den PHP-Debug-Modus: Fehlermeldungen im Browser + vollständige Warnungen im Log (nur zur Fehlersuche!) | `false` |
 
 > **Hinweis:** Der Debug-Modus erfordert **keinen** Rebuild des Images. Es genügt, die Variable in der `.env`-Datei zu ändern und den Container neu zu starten (`docker compose restart`). Im Produktivbetrieb sollte `PHP_DISPLAY_ERRORS` immer auf `false` stehen.
+>
+> Bei `false` werden nur schwerwiegende Fehler geloggt (keine Warnungen/Notices). Bei `true` werden zusätzlich alle Warnungen und Hinweise angezeigt und geloggt – nützlich zur Fehlersuche bei Problemen mit RemoteCP oder AdminServ.
 
 > **Hinweis:** Bei `FORCE_CONFIG_UPDATE=true` wird die `dedicated_cfg.txt` aus dem Template neu erzeugt und alle Platzhalter mit den aktuellen Umgebungsvariablen ersetzt. Manuelle Änderungen gehen dabei verloren! Nach dem Update sollte `FORCE_CONFIG_UPDATE` wieder auf `false` gesetzt werden.
 
@@ -122,8 +131,10 @@ XAseco ist ein Server-Controller für Rekorde, Karma, Jukebox und mehr. Siehe [X
 Passe die Werte in der `.env`-Datei an und starte mit:
 
 ```bash
-docker compose up -d --build
+docker compose up -d
 ```
+
+> **Tipp:** Das fertige Docker Image wird automatisch aus der [Container-Registry](https://git.techniverse.net/scriptos/-/packages/container/trackmania-server/) geladen. Wenn du das Image selbst bauen möchtest, verwende stattdessen `docker compose up -d --build`.
 
 ### docker run
 
@@ -137,7 +148,7 @@ docker run -d \
   -v ./data/gamedata:/opt/tmserver/GameData \
   -v ./data/controlpanel:/var/www/html \
   -v ./data/xaseco:/opt/tmserver/xaseco \
-  --name tmserver tmserver:latest
+  --name tmserver git.techniverse.net/scriptos/trackmania-server:latest
 ```
 
 Einzelne Werte können zusätzlich überschrieben werden:
@@ -154,5 +165,5 @@ docker run -d \
   -v ./data/gamedata:/opt/tmserver/GameData \
   -v ./data/controlpanel:/var/www/html \
   -v ./data/xaseco:/opt/tmserver/xaseco \
-  --name tmserver tmserver:latest
+  --name tmserver git.techniverse.net/scriptos/trackmania-server:latest
 ```

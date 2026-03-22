@@ -88,7 +88,7 @@ docker run -d \
   -v ./data/gamedata:/opt/tmserver/GameData \
   -v ./data/controlpanel:/var/www/html \
   -v ./data/xaseco:/opt/tmserver/xaseco \
-  --name tmserver tmserver:latest
+  --name tmserver git.techniverse.net/scriptos/trackmania-server:latest
 ```
 
 > **Achtung:** Bei `FORCE_CONFIG_UPDATE=true` wird die `dedicated_cfg.txt` komplett aus dem Template neu erzeugt und alle Platzhalter mit den aktuellen Umgebungsvariablen ersetzt. **Manuelle Änderungen an der Config gehen dabei verloren!** Andere Dateien im GameData-Volume (Tracks, Skins, Scores, etc.) bleiben erhalten. Nach dem Update sollte `FORCE_CONFIG_UPDATE` wieder auf `false` gesetzt werden.
