@@ -1,7 +1,5 @@
 # tmserver-docker
 
-Trackmania Nations Forever Docker Server
-
 Ein vollständiges Docker-Setup für einen **TrackMania Nations Forever**-Server – inklusive Web-Verwaltung und Server-Controller:
 
 - **TrackMania Dedicated Server** – der eigentliche Spielserver für Internet- oder LAN-Betrieb
@@ -83,6 +81,13 @@ Die vollständige Dokumentation befindet sich im Ordner [`docs/`](docs/README.md
 ## Danksagung
 
 Danke an **Thomas** ([retronerd.at](https://retronerd.at)), dass er mir sein Wissen zur Verfügung gestellt hat und dass er hier im Projekt mitgewirkt hat.
+
+## Spiegelung
+
+Dieses Repository wird von **Gitea** auf **GitHub** gespiegelt. Das Master-Repository befindet sich auf Gitea:
+
+- **Gitea (Master):** [git.techniverse.net/scriptos/tmserver-docker](https://git.techniverse.net/scriptos/tmserver-docker.git)
+- **GitHub (Spiegel):** [github.com/pscriptos/tmserver-docker](https://github.com/pscriptos/tmserver-docker.git)
 
 ---
 
