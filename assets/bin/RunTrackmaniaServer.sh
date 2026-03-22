@@ -369,6 +369,34 @@ if [ -f "$CUSTOMPOINTS_FILE" ] && ! grep -q 'defined.*pt_custom' "$CUSTOMPOINTS_
     echo "    CustomPoints-Plugin erfolgreich gepatcht."
 fi
 
+# ============================================================
+# AdminServ: MatchSettings-Bugfixes fuer bestehende Volumes
+# ============================================================
+# 1) get_matchset_mapimport.php: Berechnet den relativen Pfad aus dem
+#    absoluten Dropdown-Pfad statt den URL-Parameter 'd' zu verwenden.
+#    Ohne Fix wird z.B. "MatchSettings/" statt "Challenges/Downloaded/"
+#    als Praefix in die MatchSettings-Datei geschrieben.
+# 2) maps-creatematchset.php: Ueberspringt GetModeScriptInfo fuer
+#    TmForever (Methode existiert nur in ManiaPlanet/TM2, Fehler -506).
+# ============================================================
+ADMINSERV_MAPIMPORT="/var/www/html/resources/ajax/get_matchset_mapimport.php"
+ADMINSERV_MAPIMPORT_DEFAULT="/opt/tmserver/default-controlpanel/resources/ajax/get_matchset_mapimport.php"
+if [ -f "$ADMINSERV_MAPIMPORT" ] && ! grep -q 'relativePath' "$ADMINSERV_MAPIMPORT"; then
+    echo "==> Patche AdminServ: MatchSettings Map-Import (Pfad-Fix)..."
+    cp "$ADMINSERV_MAPIMPORT_DEFAULT" "$ADMINSERV_MAPIMPORT"
+    chown www-data:www-data "$ADMINSERV_MAPIMPORT"
+    echo "    get_matchset_mapimport.php erfolgreich gepatcht."
+fi
+
+ADMINSERV_CREATEMATCHSET="/var/www/html/resources/process/maps-creatematchset.php"
+ADMINSERV_CREATEMATCHSET_DEFAULT="/opt/tmserver/default-controlpanel/resources/process/maps-creatematchset.php"
+if [ -f "$ADMINSERV_CREATEMATCHSET" ] && grep -q "query('GetModeScriptInfo')" "$ADMINSERV_CREATEMATCHSET" && ! grep -q "SERVER_VERSION_NAME != 'TmForever'" "$ADMINSERV_CREATEMATCHSET"; then
+    echo "==> Patche AdminServ: GetModeScriptInfo-Fix fuer TmForever..."
+    cp "$ADMINSERV_CREATEMATCHSET_DEFAULT" "$ADMINSERV_CREATEMATCHSET"
+    chown www-data:www-data "$ADMINSERV_CREATEMATCHSET"
+    echo "    maps-creatematchset.php erfolgreich gepatcht."
+fi
+
 echo "Starting apache server"
 service apache2 start
 
@@ -576,6 +604,50 @@ else
     echo "==> Kein AdminServ ServerOptions-Verzeichnis gefunden. Ueberspringe Import."
 fi
 
+# ============================================================
+# MatchSettings: Neueste Datei automatisch ermitteln
+# ============================================================
+# Ueber die Umgebungsvariable MATCHSETTINGS_FILE kann gesteuert werden,
+# welche MatchSettings-Datei beim Serverstart geladen wird:
+#   - "auto"  (Standard): Die neueste .txt-Datei im MatchSettings-Ordner
+#     wird automatisch anhand des Aenderungsdatums ermittelt.
+#   - "<dateiname.txt>": Eine bestimmte Datei wird direkt verwendet.
+# Fallback: custom_game_settings.txt (Standard-MatchSettings aus dem Image).
+# ============================================================
+
+MATCHSETTINGS_DIR="$GAMEDATA_DIR/Tracks/MatchSettings"
+MATCHSETTINGS_FILE_ENV="${MATCHSETTINGS_FILE:-auto}"
+
+if [ "$MATCHSETTINGS_FILE_ENV" = "auto" ]; then
+    echo "==> MatchSettings: Automatische Erkennung (MATCHSETTINGS_FILE=auto)..."
+    # Neueste .txt-Datei im MatchSettings-Ordner anhand des Aenderungsdatums ermitteln
+    NEWEST_MS=$(ls -t "$MATCHSETTINGS_DIR"/*.txt 2>/dev/null | head -1)
+    if [ -n "$NEWEST_MS" ] && [ -f "$NEWEST_MS" ]; then
+        MS_FILENAME=$(basename "$NEWEST_MS")
+        GAME_SETTINGS_PATH="MatchSettings/${MS_FILENAME}"
+        echo "    Neueste MatchSettings gefunden: ${MS_FILENAME}"
+        echo "    Aenderungsdatum: $(stat -c '%y' "$NEWEST_MS" 2>/dev/null || ls -la "$NEWEST_MS" | awk '{print $6, $7, $8}')"
+    else
+        GAME_SETTINGS_PATH="MatchSettings/custom_game_settings.txt"
+        echo "    Keine .txt-Dateien in ${MATCHSETTINGS_DIR} gefunden."
+        echo "    Fallback: ${GAME_SETTINGS_PATH}"
+    fi
+else
+    # Explizit angegebene Datei verwenden
+    if [ -f "$MATCHSETTINGS_DIR/$MATCHSETTINGS_FILE_ENV" ]; then
+        GAME_SETTINGS_PATH="MatchSettings/${MATCHSETTINGS_FILE_ENV}"
+        echo "==> MatchSettings: Verwende explizit gesetzte Datei: ${MATCHSETTINGS_FILE_ENV}"
+    else
+        echo "==> WARNUNG: Angegebene MatchSettings-Datei nicht gefunden: ${MATCHSETTINGS_FILE_ENV}"
+        echo "    Vorhandene Dateien in ${MATCHSETTINGS_DIR}:"
+        ls -la "$MATCHSETTINGS_DIR"/*.txt 2>/dev/null || echo "    (keine .txt-Dateien vorhanden)"
+        GAME_SETTINGS_PATH="MatchSettings/custom_game_settings.txt"
+        echo "    Fallback: ${GAME_SETTINGS_PATH}"
+    fi
+fi
+
+echo "    Aktive MatchSettings: ${GAME_SETTINGS_PATH}"
+
 # Bestimme Server-Modus (Standard: internet)
 SERVER_MODE="${SERVER_MODE:-internet}"
 
@@ -595,8 +667,8 @@ fi
 echo "Server config dedicated_cfg.txt is"
 cat "$CONFIG"
 
-echo "Launching Server in ${SERVER_MODE} mode"
-./TrackmaniaServer /dedicated_cfg=dedicated_cfg.txt /game_settings=MatchSettings/custom_game_settings.txt /nodaemon ${LAUNCH_MODE} &
+echo "Launching Server in ${SERVER_MODE} mode (MatchSettings: ${GAME_SETTINGS_PATH})"
+./TrackmaniaServer /dedicated_cfg=dedicated_cfg.txt /game_settings=${GAME_SETTINGS_PATH} /nodaemon ${LAUNCH_MODE} &
 TM_PID=$!
 echo "TrackmaniaServer gestartet (PID: ${TM_PID})"
 

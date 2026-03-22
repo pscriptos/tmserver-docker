@@ -66,3 +66,35 @@ rm -rf ./data/controlpanel/*
 # Container neu starten – AdminServ wird frisch initialisiert
 docker compose up -d
 ```
+
+## Gepatchte AdminServ-Bugs (TmForever)
+
+AdminServ (v2.1.1) enthält zwei Bugs, die speziell im Zusammenspiel mit TmForever auftreten. Diese werden beim Container-Start automatisch gepatcht – auch bei bestehenden Volumes.
+
+### Falscher Pfad in MatchSettings-Dateien
+
+Beim Erstellen einer neuen MatchSettings-Datei über AdminServ wurden die Track-Pfade falsch geschrieben. Statt des tatsächlichen Ordners (z.B. `Challenges/Downloaded/`) wurde immer der Speicherort der MatchSettings (`MatchSettings/`) als Pfad-Präfix verwendet:
+
+```xml
+<!-- Fehlerhaft (Original) -->
+<file>MatchSettings/speed vs. fullspeed.Challenge.Gbx</file>
+
+<!-- Korrekt (nach Patch) -->
+<file>Challenges/Downloaded/speed vs. fullspeed.Challenge.Gbx</file>
+```
+
+**Ursache:** Die AJAX-Funktion `get_matchset_mapimport.php` hat den URL-Parameter `d` (= MatchSettings-Speicherordner) als relativen Pfad für die Map-Dateinamen verwendet, anstatt den tatsächlichen Ordner aus der Dropdown-Auswahl zu berechnen.
+
+**Betroffene Datei:** `resources/ajax/get_matchset_mapimport.php`
+
+### GetModeScriptInfo-Fehler (-506)
+
+Beim Speichern einer MatchSettings-Datei erschien die Fehlermeldung:
+
+```
+[-506] Method 'GetModeScriptInfo' not defined
+```
+
+**Ursache:** `GetModeScriptInfo` ist eine XML-RPC-Methode, die nur in ManiaPlanet/TM2 existiert. AdminServ hat sie ohne Versionsprüfung aufgerufen. An anderen Stellen im Code wurde korrekt mit `SERVER_VERSION_NAME != 'TmForever'` unterschieden – nur hier fehlte die Prüfung.
+
+**Betroffene Datei:** `resources/process/maps-creatematchset.php`

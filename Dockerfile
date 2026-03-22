@@ -76,6 +76,16 @@ RUN unzip /var/www/html/remoteCP_v4.0.3.5.zip -d /var/www/html \
 COPY assets/config/remotecp/plugins/CustomPoints/index.php /var/www/html/remotecp/plugins/CustomPoints/index.php
 RUN chown www-data:www-data /var/www/html/remotecp/plugins/CustomPoints/index.php
 
+# Fix AdminServ MatchSettings-Bugs fuer TmForever:
+# 1) get_matchset_mapimport.php: Falscher Pfad-Praefix (MatchSettings/ statt
+#    des tatsaechlichen Map-Ordners) beim Erstellen von MatchSettings.
+# 2) maps-creatematchset.php: GetModeScriptInfo-Aufruf (existiert nur in
+#    ManiaPlanet/TM2) wird fuer TmForever uebersprungen.
+COPY assets/config/adminserv/get_matchset_mapimport.php /var/www/html/resources/ajax/get_matchset_mapimport.php
+COPY assets/config/adminserv/maps-creatematchset.php /var/www/html/resources/process/maps-creatematchset.php
+RUN chown www-data:www-data /var/www/html/resources/ajax/get_matchset_mapimport.php \
+    && chown www-data:www-data /var/www/html/resources/process/maps-creatematchset.php
+
 # AdminServ- und RemoteCP-Dateien als Default-Template sichern (wird beim ersten Start ins Volume kopiert)
 RUN cp -a /var/www/html /opt/tmserver/default-controlpanel
 

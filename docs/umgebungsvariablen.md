@@ -71,7 +71,24 @@ nano .env
 
 | Variable | Beschreibung | Standard |
 |----------|-------------|----------|
+| `MATCHSETTINGS_FILE` | MatchSettings-Datei beim Serverstart: `auto` = neueste `.txt`-Datei im Ordner wird automatisch geladen, oder ein expliziter Dateiname (z.B. `meine_settings.txt`) | `auto` |
 | `ALLWARMUPDURATION` | Warmup-Dauer für alle Runden (`0` = deaktiviert, `1` = eine Runde Warmup) | `0` |
+
+### Automatische MatchSettings-Erkennung
+
+Standardmäßig (`MATCHSETTINGS_FILE=auto`) wird beim Serverstart automatisch die **neueste** `.txt`-Datei im Verzeichnis `data/gamedata/Tracks/MatchSettings/` anhand des Änderungsdatums ermittelt und geladen. So werden z.B. über AdminServ exportierte MatchSettings beim nächsten Neustart automatisch aktiv.
+
+**Beispiele:**
+
+```bash
+# Automatisch die neueste Datei laden (Standard)
+MATCHSETTINGS_FILE=auto
+
+# Eine bestimmte Datei verwenden
+MATCHSETTINGS_FILE=turnier_settings.txt
+```
+
+> **Hinweis:** Falls die angegebene oder automatisch ermittelte Datei nicht existiert, wird auf `custom_game_settings.txt` zurückgefallen. Die aktiv geladene Datei wird beim Serverstart in der Konsole ausgegeben.
 
 ## RemoteCP
 
