@@ -76,6 +76,10 @@ RUN unzip /var/www/html/remoteCP_v4.0.3.5.zip -d /var/www/html \
 COPY assets/config/remotecp/plugins/CustomPoints/index.php /var/www/html/remotecp/plugins/CustomPoints/index.php
 RUN chown www-data:www-data /var/www/html/remotecp/plugins/CustomPoints/index.php
 
+# RemoteCP Mods-Plugin: Vorkonfigurierte Skin-Liste (techniverse.net)
+COPY assets/config/remotecp/plugins/Mods/settings.xml /var/www/html/remotecp/plugins/Mods/settings.xml
+RUN chown www-data:www-data /var/www/html/remotecp/plugins/Mods/settings.xml
+
 # Fix AdminServ MatchSettings-Bugs fuer TmForever:
 # 1) get_matchset_mapimport.php: Falscher Pfad-Praefix (MatchSettings/ statt
 #    des tatsaechlichen Map-Ordners) beim Erstellen von MatchSettings.
@@ -154,6 +158,15 @@ ENV FORCE_CONFIG_UPDATE=false
 
 # Spieleinstellungen (MatchSettings)
 ENV ALLWARMUPDURATION=0
+
+# Forced Mods (Skins) - URL zu ZIP-Dateien, die beim Start forciert werden
+ENV FORCE_MOD_STADIUM=""
+ENV FORCE_MOD_ISLAND=""
+ENV FORCE_MOD_BAY=""
+ENV FORCE_MOD_COAST=""
+ENV FORCE_MOD_SPEED=""
+ENV FORCE_MOD_ALPINE=""
+ENV FORCE_MOD_RALLY=""
 
 # RemoteCP
 ENV REMOTECP_DB_HOST=mariadb

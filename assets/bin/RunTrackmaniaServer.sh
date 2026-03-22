@@ -397,6 +397,22 @@ if [ -f "$ADMINSERV_CREATEMATCHSET" ] && grep -q "query('GetModeScriptInfo')" "$
     echo "    maps-creatematchset.php erfolgreich gepatcht."
 fi
 
+# ============================================================
+# RemoteCP: Mods-Plugin settings.xml aktualisieren (fuer bestehende Volumes)
+# ============================================================
+# Die vorkonfigurierte Skin-Liste aus dem Image wird in das Volume
+# kopiert, falls die alte Standard-settings.xml noch vorhanden ist
+# (erkennbar am Beispiel-Eintrag "blacksunonline.com").
+# ============================================================
+MODS_SETTINGS_FILE="/var/www/html/remotecp/plugins/Mods/settings.xml"
+MODS_SETTINGS_DEFAULT="/opt/tmserver/default-controlpanel/remotecp/plugins/Mods/settings.xml"
+if [ -f "$MODS_SETTINGS_FILE" ] && grep -q 'blacksunonline.com' "$MODS_SETTINGS_FILE"; then
+    echo "==> Aktualisiere RemoteCP Mods-Plugin (Skin-Liste von techniverse.net)..."
+    cp "$MODS_SETTINGS_DEFAULT" "$MODS_SETTINGS_FILE"
+    chown www-data:www-data "$MODS_SETTINGS_FILE"
+    echo "    Mods/settings.xml erfolgreich aktualisiert."
+fi
+
 echo "Starting apache server"
 service apache2 start
 
@@ -673,35 +689,248 @@ TM_PID=$!
 echo "TrackmaniaServer gestartet (PID: ${TM_PID})"
 
 # ============================================================
-# XAseco starten (nach TrackmaniaServer)
+# Warte auf XMLRPC-Verfuegbarkeit
 # ============================================================
-if [ "${XASECO_ENABLED:-true}" = "true" ] && [ -f "/opt/tmserver/xaseco/aseco.php" ]; then
-    echo "==> Warte auf TrackmaniaServer XMLRPC..."
-    XMLRPC_PORT="${SERVER_XMLRPC_PORT:-5000}"
-    XMLRPC_READY=false
-    for i in $(seq 1 30); do
-        if php -r "@fsockopen('127.0.0.1', ${XMLRPC_PORT}, \$e, \$m, 2) ? exit(0) : exit(1);" 2>/dev/null; then
-            XMLRPC_READY=true
+# Sowohl XAseco als auch Forced Mods benoetigen eine aktive
+# XMLRPC-Verbindung zum TrackmaniaServer.
+# ============================================================
+echo "==> Warte auf TrackmaniaServer XMLRPC..."
+XMLRPC_PORT="${SERVER_XMLRPC_PORT:-5000}"
+XMLRPC_READY=false
+for i in $(seq 1 30); do
+    if php -r "@fsockopen('127.0.0.1', ${XMLRPC_PORT}, \$e, \$m, 2) ? exit(0) : exit(1);" 2>/dev/null; then
+        XMLRPC_READY=true
+        break
+    fi
+    sleep 2
+done
+
+if [ "$XMLRPC_READY" = "true" ]; then
+    echo "    XMLRPC-Port ${XMLRPC_PORT} erreichbar."
+else
+    echo "    WARNUNG: XMLRPC-Port ${XMLRPC_PORT} nicht erreichbar nach 60s!"
+fi
+
+# ============================================================
+# Forced Mods (Skins) per XMLRPC setzen
+# ============================================================
+# Wenn FORCE_MOD_*-Variablen gesetzt sind, werden die
+# entsprechenden Mods per SetForcedMods-XMLRPC-Aufruf beim
+# Serverstart automatisch aktiviert. Dies funktioniert bei
+# jedem Containerstart und ist unabhaengig von FORCE_CONFIG_UPDATE.
+# ============================================================
+
+# Pruefen, ob mindestens ein Mod gesetzt ist (Variable fuer spaeter)
+HAS_MODS=false
+if [ "$XMLRPC_READY" = "true" ]; then
+    for ENV_NAME in FORCE_MOD_STADIUM FORCE_MOD_ISLAND FORCE_MOD_BAY FORCE_MOD_COAST FORCE_MOD_SPEED FORCE_MOD_ALPINE FORCE_MOD_RALLY; do
+        eval "MOD_VAL=\${$ENV_NAME:-}"
+        if [ -n "$MOD_VAL" ]; then
+            HAS_MODS=true
             break
         fi
-        sleep 2
     done
+fi
 
-    if [ "$XMLRPC_READY" = "true" ]; then
+# ============================================================
+# XAseco starten (nach TrackmaniaServer, VOR Forced Mods)
+# ============================================================
+# XAseco muss zuerst starten und sich initialisieren, damit
+# es die Forced Mods nicht ueberschreibt oder zuruecksetzt.
+# ============================================================
+if [ "$XMLRPC_READY" = "true" ]; then
+    if [ "${XASECO_ENABLED:-true}" = "true" ] && [ -f "/opt/tmserver/xaseco/aseco.php" ]; then
         echo "==> Starte XAseco..."
         cd /opt/tmserver/xaseco
         php aseco.php TMN </dev/null >>aseco.log 2>&1 &
         XASECO_PID=$!
         echo "    XAseco gestartet (PID: ${XASECO_PID})"
         cd /opt/tmserver
-    else
-        echo "    WARNUNG: XMLRPC-Port ${XMLRPC_PORT} nicht erreichbar nach 60s!"
-        echo "    XAseco wurde NICHT gestartet. Bitte manuell starten."
-    fi
-else
-    if [ "${XASECO_ENABLED:-true}" != "true" ]; then
+    elif [ "${XASECO_ENABLED:-true}" != "true" ]; then
         echo "==> XAseco ist deaktiviert (XASECO_ENABLED=${XASECO_ENABLED})."
     fi
+else
+    echo "    WARNUNG: XMLRPC nicht erreichbar - XAseco und Forced Mods wurden NICHT gestartet."
+fi
+
+# ============================================================
+# Forced Mods (Skins) per XMLRPC setzen
+# ============================================================
+# Wird NACH XAseco-Start ausgefuehrt, damit XAseco die Mods
+# nicht bei seiner Initialisierung zuruecksetzt.
+# ============================================================
+if [ "$XMLRPC_READY" = "true" ] && [ "$HAS_MODS" = "true" ]; then
+    # Warten, damit XAseco und der TM-Server sich vollstaendig initialisieren
+    echo "==> Forced Mods: Warte 10 Sekunden auf vollstaendige Server-Initialisierung..."
+    sleep 10
+
+    echo "==> Forced Mods: Setze Mods per XMLRPC..."
+
+    # JSON-Array der Mods aufbauen
+    MODS_JSON="["
+    MODS_FIRST=true
+    for PAIR in "FORCE_MOD_STADIUM:Stadium" "FORCE_MOD_ISLAND:Island" "FORCE_MOD_BAY:Bay" "FORCE_MOD_COAST:Coast" "FORCE_MOD_SPEED:Speed" "FORCE_MOD_ALPINE:Alpine" "FORCE_MOD_RALLY:Rally"; do
+        VAR_NAME="${PAIR%%:*}"
+        ENV_NAME="${PAIR##*:}"
+        eval "MOD_URL=\${$VAR_NAME:-}"
+        if [ -n "$MOD_URL" ]; then
+            if [ "$MODS_FIRST" = "true" ]; then
+                MODS_FIRST=false
+            else
+                MODS_JSON="${MODS_JSON},"
+            fi
+            # URL fuer JSON escapen (Backslash und Anfuehrungszeichen)
+            SAFE_URL=$(printf '%s' "$MOD_URL" | sed 's/\\/\\\\/g; s/"/\\"/g')
+            MODS_JSON="${MODS_JSON}{\"Env\":\"${ENV_NAME}\",\"Url\":\"${SAFE_URL}\"}"
+            echo "    ${ENV_NAME} => ${MOD_URL}"
+        fi
+    done
+    MODS_JSON="${MODS_JSON}]"
+
+    # GBXRemote2-Protokoll: Authenticate + SetForcedMods
+    SA_PW_MODS="${SERVER_SA_PASSWORD:-SuperAdmin}"
+    php -r '
+        $port = (int)$argv[1];
+        $password = $argv[2];
+        $modsJson = $argv[3];
+
+        $mods = json_decode($modsJson, true);
+        if (empty($mods)) { echo "    Keine Mods zu setzen.\n"; exit(0); }
+
+        // GBXRemote2: Verbindung herstellen
+        $fp = @fsockopen("127.0.0.1", $port, $errno, $errstr, 5);
+        if (!$fp) { echo "    FEHLER: Verbindung zu XMLRPC fehlgeschlagen ($errno: $errstr).\n"; exit(1); }
+        stream_set_timeout($fp, 10);
+
+        // Handshake lesen (4 Bytes Laenge + Protokollstring)
+        $data = fread($fp, 4);
+        if (strlen($data) < 4) { echo "    FEHLER: Handshake fehlgeschlagen.\n"; fclose($fp); exit(1); }
+        $info = unpack("Vsize", $data);
+        $handshake = fread($fp, $info["size"]);
+        if (strpos($handshake, "GBXRemote") === false) {
+            echo "    FEHLER: Kein GBXRemote-Protokoll.\n"; fclose($fp); exit(1);
+        }
+        echo "    Protokoll: $handshake\n";
+
+        $reqhandle = 0x80000001;
+
+        // XML-RPC-Wert kodieren
+        function encodeVal($v) {
+            if (is_bool($v)) return "<value><boolean>" . ($v ? "1" : "0") . "</boolean></value>";
+            if (is_int($v)) return "<value><int>" . $v . "</int></value>";
+            if (is_string($v)) return "<value><string>" . htmlspecialchars($v, ENT_XML1) . "</string></value>";
+            if (is_array($v)) {
+                if (array_keys($v) !== range(0, count($v) - 1)) {
+                    $x = "<value><struct>";
+                    foreach ($v as $k => $val) $x .= "<member><name>" . $k . "</name>" . encodeVal($val) . "</member>";
+                    return $x . "</struct></value>";
+                } else {
+                    $x = "<value><array><data>";
+                    foreach ($v as $val) $x .= encodeVal($val);
+                    return $x . "</data></array></value>";
+                }
+            }
+            return "<value><string>" . htmlspecialchars((string)$v, ENT_XML1) . "</string></value>";
+        }
+
+        // Ein einzelnes Paket vom Server lesen (Header + Body)
+        function readPacket($fp) {
+            $header = "";
+            while (strlen($header) < 8) {
+                $chunk = @fread($fp, 8 - strlen($header));
+                if ($chunk === false || strlen($chunk) === 0) return false;
+                $header .= $chunk;
+            }
+            $info = unpack("Vsize/Vhandle", $header);
+            $size = $info["size"];
+            $handle = $info["handle"];
+            if ($size > 4194304 || $size == 0) return false;
+
+            $body = "";
+            $remaining = $size;
+            while ($remaining > 0) {
+                $chunk = @fread($fp, min($remaining, 8192));
+                if ($chunk === false || strlen($chunk) === 0) break;
+                $body .= $chunk;
+                $remaining -= strlen($chunk);
+            }
+            return ["handle" => $handle, "body" => $body];
+        }
+
+        // XMLRPC-Request senden und Antwort lesen
+        // Callbacks (handle < 0x80000000) werden uebersprungen
+        function gbxQuery($fp, &$reqhandle, $method, $params) {
+            $xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+                 . "<methodCall><methodName>" . $method . "</methodName><params>";
+            foreach ($params as $p) $xml .= "<param>" . encodeVal($p) . "</param>";
+            $xml .= "</params></methodCall>";
+
+            $myHandle = $reqhandle++;
+            $packet = pack("VV", strlen($xml), $myHandle) . $xml;
+            $written = @fwrite($fp, $packet);
+            if ($written === false || $written === 0) {
+                echo "    FEHLER: Konnte Request nicht senden ($method).\n";
+                return false;
+            }
+
+            // Auf Antwort warten, Callbacks ueberspringen
+            for ($attempt = 0; $attempt < 30; $attempt++) {
+                $pkt = readPacket($fp);
+                if ($pkt === false) {
+                    echo "    FEHLER: Keine Antwort fuer $method.\n";
+                    return false;
+                }
+                // Callback? (Handle < 0x80000000) -> ueberspringen
+                if ($pkt["handle"] < 0x80000000) {
+                    continue;
+                }
+                // Response gefunden
+                return $pkt["body"];
+            }
+            echo "    FEHLER: Zu viele Callbacks, keine Antwort fuer $method.\n";
+            return false;
+        }
+
+        // 1. Authenticate
+        echo "    Authentifiziere als SuperAdmin...\n";
+        $resp = gbxQuery($fp, $reqhandle, "Authenticate", ["SuperAdmin", $password]);
+        if ($resp === false || strpos($resp, "<boolean>1</boolean>") === false) {
+            echo "    FEHLER: Authentifizierung fehlgeschlagen.\n";
+            if ($resp) echo "    Antwort: " . substr(trim($resp), 0, 500) . "\n";
+            fclose($fp); exit(1);
+        }
+        echo "    Authentifizierung erfolgreich.\n";
+
+        // 2. EnableCallbacks deaktivieren (weniger Rauschen)
+        gbxQuery($fp, $reqhandle, "EnableCallbacks", [false]);
+
+        // 3. SetForcedMods(override=true, mods=[{Env, Url}, ...])
+        // Debug: Zeige das XML das wir senden
+        $setXml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+                . "<methodCall><methodName>SetForcedMods</methodName><params>"
+                . "<param>" . encodeVal(true) . "</param>"
+                . "<param>" . encodeVal($mods) . "</param>"
+                . "</params></methodCall>";
+        echo "    Debug SetForcedMods-XML:\n    " . $setXml . "\n";
+
+        echo "    Sende SetForcedMods (" . count($mods) . " Mod(s))...\n";
+        $resp = gbxQuery($fp, $reqhandle, "SetForcedMods", [true, $mods]);
+        echo "    SetForcedMods-Antwort: " . trim($resp) . "\n";
+        if ($resp !== false && strpos($resp, "<boolean>1</boolean>") !== false) {
+            echo "    SetForcedMods: OK\n";
+        } else {
+            echo "    FEHLER: SetForcedMods fehlgeschlagen.\n";
+        }
+
+        // 4. GetForcedMods zur Verifikation (vollstaendige Antwort)
+        echo "    Verifiziere mit GetForcedMods...\n";
+        $resp = gbxQuery($fp, $reqhandle, "GetForcedMods", []);
+        echo "    GetForcedMods-Antwort:\n    " . trim($resp) . "\n";
+
+        fclose($fp);
+    ' "$XMLRPC_PORT" "$SA_PW_MODS" "$MODS_JSON"
+elif [ "$XMLRPC_READY" = "true" ]; then
+    echo "==> Forced Mods: Keine FORCE_MOD_*-Variablen gesetzt. Ueberspringe."
 fi
 
 # Auf TrackmaniaServer warten (Hauptprozess)

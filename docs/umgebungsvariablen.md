@@ -103,6 +103,41 @@ RemoteCP verwendet die SuperAdmin-Zugangsdaten (`SERVER_SA_PASSWORD`) des TM-Ser
 
 > **Hinweis:** Diese Werte werden nur beim ersten Start (leeres Volume) angewendet. Weitere Details unter [RemoteCP](remotecp.md).
 
+## Forced Mods (Skins)
+
+Mods sind Texturpakete (Skins), die das Aussehen einer Spielumgebung komplett verändern. Über `FORCE_MOD_*`-Variablen kann beim Containerstart automatisch ein Mod pro Umgebung forciert werden. Spieler laden den Mod dann automatisch beim Betreten des Servers herunter.
+
+| Variable | Beschreibung | Standard |
+|----------|-------------|----------|
+| `FORCE_MOD_STADIUM` | Mod-URL für die Stadium-Umgebung | *(leer)* |
+| `FORCE_MOD_ISLAND` | Mod-URL für die Island-Umgebung | *(leer)* |
+| `FORCE_MOD_BAY` | Mod-URL für die Bay-Umgebung | *(leer)* |
+| `FORCE_MOD_COAST` | Mod-URL für die Coast-Umgebung | *(leer)* |
+| `FORCE_MOD_SPEED` | Mod-URL für die Speed-Umgebung | *(leer)* |
+| `FORCE_MOD_ALPINE` | Mod-URL für die Alpine-Umgebung | *(leer)* |
+| `FORCE_MOD_RALLY` | Mod-URL für die Rally-Umgebung | *(leer)* |
+
+> **Hinweis:** Die Mods werden per XML-RPC (`SetForcedMods`) bei **jedem** Containerstart gesetzt – unabhängig von `FORCE_CONFIG_UPDATE`. Die URL muss auf eine gültige Mod-ZIP-Datei zeigen, die für die Spieler erreichbar ist.
+
+### Verfügbare Skins
+
+Eine Auswahl vorkonfigurierter Skins steht unter `https://assets.techniverse.net/tm/skins/` bereit und ist auch im RemoteCP-Mods-Plugin als Dropdown auswählbar.
+
+**Beispiel:**
+
+```bash
+# Portal-Mod für Stadium forcieren
+FORCE_MOD_STADIUM=https://assets.techniverse.net/tm/skins/Portal.zip
+
+# Mehrere Umgebungen gleichzeitig
+FORCE_MOD_STADIUM=https://assets.techniverse.net/tm/skins/Xmas.zip
+FORCE_MOD_ISLAND=https://example.com/mods/island_mod.zip
+```
+
+### Mods über RemoteCP verwalten
+
+Zusätzlich zur automatischen Konfiguration per Umgebungsvariable können Mods auch zur Laufzeit über das RemoteCP-Web-Interface (`http://<host-ip>/remotecp/`) im Mods-Plugin per Dropdown ausgewählt und aktiviert werden.
+
 ## MariaDB
 
 | Variable | Beschreibung | Standard |
