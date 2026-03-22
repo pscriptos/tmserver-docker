@@ -18,7 +18,29 @@ Bearbeite die `.env`-Datei und setze mindestens die gewünschten Passwörter. F�
 
 > **Wichtig:** Die `.env`-Datei enthält sensible Daten (Passwörter, Keys) und wird über die `.gitignore` vom Einchecken ausgeschlossen.
 
-## 2. Docker Image bauen
+## 2. Server starten
+
+### Fertiges Docker Image verwenden (empfohlen)
+
+Es steht ein fertiges Docker Image in der Container-Registry bereit – kein eigener Build nötig:
+
+```
+git.techniverse.net/scriptos/trackmania-server:latest
+```
+
+> **Tipp:** Alle verfügbaren Tags findest du in der [Container-Registry](https://git.techniverse.net/scriptos/-/packages/container/trackmania-server/).
+
+#### Mit Docker Compose
+
+```bash
+docker compose up -d
+```
+
+Die Konfiguration erfolgt über die `.env`-Datei, die automatisch eingelesen wird. Das Image wird automatisch aus der Registry geladen.
+
+### Docker Image selbst bauen
+
+Alternativ kannst du das Image auch selbst bauen:
 
 ```bash
 docker build -t tmserver:latest -t tmserver:1.0.0 .
@@ -26,15 +48,11 @@ docker build -t tmserver:latest -t tmserver:1.0.0 .
 
 Damit wird das Image mit zwei Tags erstellt: `tmserver:latest` und `tmserver:1.0.0`.
 
-## 3. Server starten
-
-### Mit Docker Compose (empfohlen)
+Anschließend den Server starten:
 
 ```bash
 docker compose up -d --build
 ```
-
-Die Konfiguration erfolgt über die `.env`-Datei, die automatisch eingelesen wird.
 
 ### Internet-Modus (docker run)
 
@@ -50,7 +68,7 @@ docker run -d \
   -v ./data/gamedata:/opt/tmserver/GameData \
   -v ./data/controlpanel:/var/www/html \
   -v ./data/xaseco:/opt/tmserver/xaseco \
-  --name tmserver tmserver:latest
+  --name tmserver git.techniverse.net/scriptos/trackmania-server:latest
 ```
 
 ### LAN-Modus (docker run)
@@ -68,10 +86,10 @@ docker run -d \
   -v ./data/gamedata:/opt/tmserver/GameData \
   -v ./data/controlpanel:/var/www/html \
   -v ./data/xaseco:/opt/tmserver/xaseco \
-  --name tmserver tmserver:latest
+  --name tmserver git.techniverse.net/scriptos/trackmania-server:latest
 ```
 
-## 4. Verwaltungsoberflächen öffnen
+## 3. Verwaltungsoberflächen öffnen
 
 | Tool | URL | Beschreibung |
 |------|-----|-------------|

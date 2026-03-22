@@ -27,9 +27,19 @@ Passe die Werte in der `.env`-Datei an deine Umgebung an (Passwörter, Masterser
 
 ### 2. Server starten
 
+Das fertige Docker Image kann direkt verwendet werden – kein eigener Build nötig:
+
 ```bash
-docker compose up -d --build
+docker compose up -d
 ```
+
+Das Image wird automatisch aus der Container-Registry geladen:
+
+```
+git.techniverse.net/scriptos/trackmania-server:latest
+```
+
+> **Tipp:** Alle verfügbaren Tags findest du in der [Container-Registry](https://git.techniverse.net/scriptos/-/packages/container/trackmania-server/). Wenn du das Image lieber selbst bauen möchtest, findest du die Anleitung unter [Schnellstart – Selbst bauen](docs/schnellstart.md#docker-image-selbst-bauen).
 
 ### 3. Verwaltungsoberflächen öffnen
 

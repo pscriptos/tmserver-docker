@@ -131,8 +131,10 @@ XAseco ist ein Server-Controller für Rekorde, Karma, Jukebox und mehr. Siehe [X
 Passe die Werte in der `.env`-Datei an und starte mit:
 
 ```bash
-docker compose up -d --build
+docker compose up -d
 ```
+
+> **Tipp:** Das fertige Docker Image wird automatisch aus der [Container-Registry](https://git.techniverse.net/scriptos/-/packages/container/trackmania-server/) geladen. Wenn du das Image selbst bauen möchtest, verwende stattdessen `docker compose up -d --build`.
 
 ### docker run
 
@@ -146,7 +148,7 @@ docker run -d \
   -v ./data/gamedata:/opt/tmserver/GameData \
   -v ./data/controlpanel:/var/www/html \
   -v ./data/xaseco:/opt/tmserver/xaseco \
-  --name tmserver tmserver:latest
+  --name tmserver git.techniverse.net/scriptos/trackmania-server:latest
 ```
 
 Einzelne Werte können zusätzlich überschrieben werden:
@@ -163,5 +165,5 @@ docker run -d \
   -v ./data/gamedata:/opt/tmserver/GameData \
   -v ./data/controlpanel:/var/www/html \
   -v ./data/xaseco:/opt/tmserver/xaseco \
-  --name tmserver tmserver:latest
+  --name tmserver git.techniverse.net/scriptos/trackmania-server:latest
 ```
