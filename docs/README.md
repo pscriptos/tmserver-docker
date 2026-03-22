@@ -13,7 +13,7 @@
 | [Umgebungsvariablen](umgebungsvariablen.md) | Alle verfügbaren Umgebungsvariablen |
 | [Server-Modi](server-modi.md) | LAN- und Internet-Dedicated-Modus |
 | [AdminServ](adminserv.md) | Einrichtung der Server-Verwaltungsoberfläche |
-| [RemoteCP](remotecp.md) | Alternative Server-Verwaltungsoberfläche |
+| [RemoteCP](remotecp.md) | Alternative Server-Verwaltungsoberfläche (inkl. Mods/Skins) |
 | [XAseco](xaseco.md) | Server-Controller für Rekorde, Karma und Jukebox |
 | [Ports](ports.md) | Freigegebene Ports und deren Verwendung |
 
@@ -32,8 +32,10 @@
 │   │   ├── dedicated_cfg.txt                    # Server-Config-Template (mit Platzhaltern)
 │   │   └── remotecp/
 │   │       └── plugins/
-│   │           └── CustomPoints/
-│   │               └── index.php                # CustomPoints-Plugin fuer RemoteCP
+│   │           ├── CustomPoints/
+│   │           │   └── index.php                # CustomPoints-Plugin fuer RemoteCP
+│   │           └── Mods/
+│   │               └── settings.xml             # Skin-Bibliothek (techniverse.net)
 │   └── db/
 │       └── init-xaseco-db.sh                    # MariaDB Init-Script fuer XAseco-DB
 ├── docs/                                        # Dokumentation

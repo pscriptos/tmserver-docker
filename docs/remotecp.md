@@ -93,6 +93,61 @@ Die Konfigurationsdateien befinden sich unter `./data/controlpanel/remotecp/xml/
 | `admins.xml` | Benutzer und Zugangsdaten |
 | `groups.xml` | Berechtigungsgruppen |
 
+## Mods / Skins
+
+RemoteCP enthält ein **Mods-Plugin**, mit dem Texturpakete (Skins) pro Spielumgebung auf dem Server forciert werden können. Spieler laden den jeweiligen Mod automatisch beim Betreten des Servers herunter.
+
+### Wie funktionieren Mods?
+
+In TrackMania Forever sind Mods ZIP-Archive mit alternativen Texturen für eine Spielumgebung (Stadium, Island, Bay, etc.). Der Ablauf:
+
+1. Der Mod liegt als `.zip`-Datei auf einem **Webserver**, der für die Spieler erreichbar ist
+2. Der Serveradmin forciert den Mod über den XML-RPC-Befehl `SetForcedMods` (pro Umgebung eine URL)
+3. Wenn ein Spieler dem Server beitritt, lädt sein Client den Mod automatisch von der angegebenen URL herunter
+4. Mods sind **flüchtig** – nach einem Serverneustart müssen sie erneut gesetzt werden (das Startup-Script übernimmt das automatisch, siehe unten)
+
+### Vorkonfigurierte Skin-Bibliothek
+
+Das Image wird mit einer vorkonfigurierten Skin-Bibliothek ausgeliefert, die über **50 Skins** für die Stadium-Umgebung enthält. Alle Skins werden von [assets.techniverse.net](https://assets.techniverse.net/tm/skins/) bereitgestellt und sind im RemoteCP-Mods-Plugin als Dropdown-Auswahl verfügbar.
+
+Die Konfiguration befindet sich unter:
+
+| Host-Pfad | Container-Pfad | Beschreibung |
+|-----------|----------------|-------------|
+| `./data/controlpanel/remotecp/plugins/Mods/settings.xml` | `/var/www/html/remotecp/plugins/Mods/settings.xml` | Mod-Katalog (URLs pro Umgebung) |
+
+> **Hinweis:** Bei bestehenden Installationen (Volumes) wird die alte Standard-`settings.xml` (mit den Original-Beispiel-URLs von blacksunonline.com) beim nächsten Containerstart automatisch durch die neue Version mit den techniverse.net-Skins ersetzt.
+
+### Mods über RemoteCP verwalten
+
+1. RemoteCP öffnen: `http://<host-ip>/remotecp/`
+2. Mit SuperAdmin-Zugangsdaten einloggen
+3. Im Seitenmenü das **Mods**-Plugin aufrufen
+4. Pro Umgebung (Stadium, Island, etc.) einen Skin aus dem Dropdown auswählen
+5. "Submit" klicken – der Mod wird sofort auf dem Server aktiviert
+
+### Mods automatisch beim Start forcieren
+
+Über die Umgebungsvariablen `FORCE_MOD_*` kann ein Mod pro Umgebung automatisch bei **jedem** Containerstart gesetzt werden – unabhängig von `FORCE_CONFIG_UPDATE`. Siehe [Umgebungsvariablen – Forced Mods](umgebungsvariablen.md#forced-mods-skins) für Details.
+
+**Beispiel** (in der `.env`-Datei):
+
+```bash
+FORCE_MOD_STADIUM=https://assets.techniverse.net/tm/skins/Portal.zip
+```
+
+### Eigene Skins hinzufügen
+
+Um eigene Skins in das RemoteCP-Dropdown aufzunehmen, bearbeite die Datei `data/controlpanel/remotecp/plugins/Mods/settings.xml` und füge innerhalb der gewünschten Umgebung einen neuen Eintrag hinzu:
+
+```xml
+<Stadium>
+    <item name='Mein Skin'>https://example.com/mods/mein_skin.zip</item>
+</Stadium>
+```
+
+> **Wichtig:** Die ZIP-Datei muss von den Spielern über HTTP/HTTPS erreichbar sein.
+
 ## Sicherheit
 
 RemoteCP liefert eine `.htaccess`-Datei mit, die den direkten Zugriff auf XML-Konfigurationsdateien über den Browser verhindert. Apache `mod_rewrite` und `AllowOverride` sind im Image aktiviert, damit dieser Schutz funktioniert.

@@ -103,6 +103,39 @@ Der Ordner `GameData/Config/` enthält:
 | `blacklist.txt` | Liste gesperrter Spieler |
 | `guestlist.txt` | Liste erlaubter Spieler |
 | `Default.SystemConfig.Gbx` | System-Konfiguration |
+| `AdminServ/ServerOptions/` | Von AdminServ exportierte Server-Einstellungen |
+
+## AdminServ ServerOptions-Import
+
+Wenn über AdminServ Änderungen an den Server-Optionen vorgenommen und als Export gespeichert werden (z.B. Servername, Beschreibung, Spielerzahl), werden diese beim nächsten Container-Start **automatisch** in die `dedicated_cfg.txt` übernommen.
+
+**Ablauf:**
+
+1. In AdminServ unter „Server Options" die gewünschten Einstellungen ändern und „Export" klicken
+2. Die exportierte Datei wird in `GameData/Config/AdminServ/ServerOptions/` gespeichert
+3. Beim nächsten Start des Containers wird die **neueste** Export-Datei erkannt
+4. Die darin enthaltenen Werte werden in die `dedicated_cfg.txt` geschrieben
+
+**Unterstützte Felder:**
+
+| AdminServ-Feld | dedicated_cfg.txt-Feld |
+|----------------|----------------------|
+| `Name` | `<name>` |
+| `Comment` | `<comment>` |
+| `HideServer` | `<hide_server>` |
+| `NextMaxPlayers` | `<max_players>` |
+| `Password` | `<password>` |
+| `PasswordForSpectator` | `<password_spectator>` |
+| `NextMaxSpectators` | `<max_spectators>` |
+| `NextLadderMode` | `<ladder_mode>` |
+| `NextCallVoteTimeOut` | `<callvote_timeout>` |
+| `CallVoteRatio` | `<callvote_ratio>` |
+| `AllowChallengeDownload` | `<allow_challenge_download>` |
+| `AutoSaveReplays` | `<autosave_replays>` |
+| `IsP2PUpload` | `<enable_p2p_upload>` |
+| `IsP2PDownload` | `<enable_p2p_download>` |
+
+> **Hinweis:** Die AdminServ-Exports haben **Vorrang** vor den Werten aus den Umgebungsvariablen. Beim ersten Start werden zunächst die Umgebungsvariablen angewendet, danach die AdminServ-Exports (falls vorhanden). Bei weiteren Starts werden nur die AdminServ-Exports angewendet.
 
 ## Wichtige Parameter in der dedicated_cfg.txt
 
@@ -127,3 +160,49 @@ Alle diese Parameter können über [Umgebungsvariablen](umgebungsvariablen.md) g
 | `<xmlrpc_port>` | `SERVER_XMLRPC_PORT` | `5000` |
 | `<connection_uploadrate>` | `SERVER_UPLOAD_RATE` | `512` |
 | `<connection_downloadrate>` | `SERVER_DOWNLOAD_RATE` | `8192` |
+
+## MatchSettings (Spieleinstellungen)
+
+Die MatchSettings-Dateien liegen im Verzeichnis `data/gamedata/Tracks/MatchSettings/` und definieren Spielmodus, Regeln und die aktive Track-Liste des Servers. Sie werden als `.txt`-Dateien im XML-Format gespeichert.
+
+### Automatische Erkennung (Standard)
+
+Standardmäßig wird beim Serverstart automatisch die **neueste** `.txt`-Datei im MatchSettings-Ordner anhand des Änderungsdatums geladen. So werden z.B. über AdminServ erstellte oder bearbeitete MatchSettings beim nächsten Neustart automatisch aktiv.
+
+```bash
+# In der .env-Datei (Standardwert):
+MATCHSETTINGS_FILE=auto
+```
+
+**Ablauf bei jedem Containerstart:**
+
+1. Der Ordner `data/gamedata/Tracks/MatchSettings/` wird nach `.txt`-Dateien durchsucht
+2. Die Datei mit dem neuesten Änderungsdatum wird ermittelt
+3. Diese Datei wird als `/game_settings`-Parameter an den TM-Server übergeben
+4. Dateiname und Änderungsdatum werden in der Konsole ausgegeben
+
+### Bestimmte Datei verwenden
+
+Alternativ kann eine bestimmte MatchSettings-Datei direkt angegeben werden:
+
+```bash
+# In der .env-Datei:
+MATCHSETTINGS_FILE=turnier_settings.txt
+```
+
+Der Dateiname bezieht sich immer auf den Ordner `data/gamedata/Tracks/MatchSettings/`.
+
+### Fallback
+
+Falls die angegebene oder automatisch ermittelte Datei nicht existiert, wird auf die mitgelieferte Standard-Datei `custom_game_settings.txt` zurückgefallen.
+
+### Neue MatchSettings über AdminServ erstellen
+
+1. In AdminServ mit SuperAdmin einloggen
+2. Unter „Maps" → „MatchSettings" → „Create" eine neue Datei anlegen
+3. Tracks aus den gewünschten Ordnern importieren (z.B. `Challenges/Downloaded/`)
+4. Spielmodus und Regeln konfigurieren
+5. Speichern – die Datei wird in `MatchSettings/` abgelegt
+6. Container neustarten (`docker compose restart`) – die neue Datei wird automatisch als neueste erkannt und geladen
+
+> **Hinweis:** Die aktive MatchSettings-Datei wird beim Serverstart in der Konsole ausgegeben. Mit `docker logs tmserver` kann überprüft werden, welche Datei geladen wurde.

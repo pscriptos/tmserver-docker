@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<settings>
+	<mods>
+		<!-- Mods fuer die Stadium-Umgebung -->
+		<!-- Alle Mods werden von https://assets.techniverse.net/tm/skins/ bereitgestellt -->
+		<Stadium>
+			<item name='A Romanorum Superbia'>https://assets.techniverse.net/tm/skins/ARomanorumSuperbia.zip</item>
+			<item name='Bluemod'>https://assets.techniverse.net/tm/skins/Bluemod.zip</item>
+			<item name='Candy Box II'>https://assets.techniverse.net/tm/skins/CANDY_BOX_II.zip</item>
+			<item name='Egyptian Stadium'>https://assets.techniverse.net/tm/skins/Egyptian_Stadium.zip</item>
+			<item name='FC Mod'>https://assets.techniverse.net/tm/skins/FC-mod.zip</item>
+			<item name='Forest Mod'>https://assets.techniverse.net/tm/skins/FoResT_MoD.zip</item>
+			<item name='Imperial Palace'>https://assets.techniverse.net/tm/skins/ImperialPalace.zip</item>
+			<item name='Inca 3'>https://assets.techniverse.net/tm/skins/Inca3.zip</item>
+			<item name='Jurassic Park'>https://assets.techniverse.net/tm/skins/JurassicPark.zip</item>
+			<item name='LMDS Matrix'>https://assets.techniverse.net/tm/skins/LMDSMatrix.zip</item>
+			<item name='Lego Mod'>https://assets.techniverse.net/tm/skins/LegoMod.zip</item>
+			<item name='Lego Mod v2'>https://assets.techniverse.net/tm/skins/LegoModv2.zip</item>
+			<item name='Lego City'>https://assets.techniverse.net/tm/skins/Lego_City.zip</item>
+			<item name='Mario Mod'>https://assets.techniverse.net/tm/skins/MarioMod.zip</item>
+			<item name='Moon Base'>https://assets.techniverse.net/tm/skins/MoonBase.zip</item>
+			<item name='Portal'>https://assets.techniverse.net/tm/skins/Portal.zip</item>
+			<item name='Quantum Leap'>https://assets.techniverse.net/tm/skins/QuantumLeap.zip</item>
+			<item name='RDV Urban 01'>https://assets.techniverse.net/tm/skins/RDV-Urban01.zip</item>
+			<item name='Rainbow Road'>https://assets.techniverse.net/tm/skins/Rainbow%20Road.zip</item>
+			<item name='Star Wars Mod'>https://assets.techniverse.net/tm/skins/StarWarsMod.zip</item>
+			<item name='The Pirate Bay'>https://assets.techniverse.net/tm/skins/ThePirateBay.zip</item>
+			<item name='Toxic'>https://assets.techniverse.net/tm/skins/Toxic.zip</item>
+			<item name='Transparence V1'>https://assets.techniverse.net/tm/skins/TransparenceV1.zip</item>
+			<item name='Western Fortress'>https://assets.techniverse.net/tm/skins/WesternFortress.zip</item>
+			<item name='Wood Mod'>https://assets.techniverse.net/tm/skins/Wood%20Mod.zip</item>
+			<item name='Wooden Domnann'>https://assets.techniverse.net/tm/skins/Wooden%20Domnann.zip</item>
+			<item name='Xmas'>https://assets.techniverse.net/tm/skins/Xmas.zip</item>
+			<item name='N64 Rainbow Road'>https://assets.techniverse.net/tm/skins/_N64_%20Rainbow%20Road.zip</item>
+			<item name='Blue Light'>https://assets.techniverse.net/tm/skins/bluelight.zip</item>
+			<item name='Blue Water'>https://assets.techniverse.net/tm/skins/bluewater.zip</item>
+			<item name='Construct'>https://assets.techniverse.net/tm/skins/construct.zip</item>
+			<item name='Dark Mirror'>https://assets.techniverse.net/tm/skins/darkmirror.zip</item>
+			<item name='Formel 1'>https://assets.techniverse.net/tm/skins/formel1.zip</item>
+			<item name='Future'>https://assets.techniverse.net/tm/skins/future.zip</item>
+			<item name='Hypercube'>https://assets.techniverse.net/tm/skins/hypercube.zip</item>
+			<item name='Icebreaker'>https://assets.techniverse.net/tm/skins/icebraker.zip</item>
+			<item name='Just Black'>https://assets.techniverse.net/tm/skins/justblack.zip</item>
+			<item name='Lego II'>https://assets.techniverse.net/tm/skins/lego_II.zip</item>
+			<item name='Mars'>https://assets.techniverse.net/tm/skins/mars.zip</item>
+			<item name='Modernizer'>https://assets.techniverse.net/tm/skins/modernizer.zip</item>
+			<item name='Neon Glow'>https://assets.techniverse.net/tm/skins/neonglow.zip</item>
+			<item name='Pioneer'>https://assets.techniverse.net/tm/skins/pioneer.zip</item>
+			<item name='Push'>https://assets.techniverse.net/tm/skins/push.zip</item>
+			<item name='Puzzle'>https://assets.techniverse.net/tm/skins/puzzle.zip</item>
+			<item name='Robot Mod 2'>https://assets.techniverse.net/tm/skins/robotmod2.zip</item>
+			<item name='Rubik'>https://assets.techniverse.net/tm/skins/rubik.zip</item>
+			<item name='Smarties'>https://assets.techniverse.net/tm/skins/smarties.zip</item>
+			<item name='Sonic'>https://assets.techniverse.net/tm/skins/sonic.zip</item>
+			<item name='Stadium 2010'>https://assets.techniverse.net/tm/skins/stadium2010.zip</item>
+			<item name='Stadium Storm'>https://assets.techniverse.net/tm/skins/stadium_storm_mod.zip</item>
+			<item name='Tomb'>https://assets.techniverse.net/tm/skins/tomb.zip</item>
+			<item name='Tron Blue'>https://assets.techniverse.net/tm/skins/tronblue.zip</item>
+			<item name='Tron Green'>https://assets.techniverse.net/tm/skins/trongreen.zip</item>
+			<item name='Tron Red'>https://assets.techniverse.net/tm/skins/tronred.zip</item>
+			<item name='Tron Yellow'>https://assets.techniverse.net/tm/skins/tronyellow.zip</item>
+			<item name='Wipeout'>https://assets.techniverse.net/tm/skins/wipeout.zip</item>
+		</Stadium>
+
+		<!-- Mods fuer die Island-Umgebung -->
+		<Island>
+		</Island>
+
+		<!-- Mods fuer die Bay-Umgebung -->
+		<Bay>
+		</Bay>
+
+		<!-- Mods fuer die Coast-Umgebung -->
+		<Coast>
+		</Coast>
+
+		<!-- Mods fuer die Speed-Umgebung -->
+		<Speed>
+		</Speed>
+
+		<!-- Mods fuer die Alpine-Umgebung -->
+		<Alpine>
+		</Alpine>
+
+		<!-- Mods fuer die Rally-Umgebung -->
+		<Rally>
+		</Rally>
+	</mods>
+	<music>
+		<!-- Musik-URLs hier eintragen -->
+		<!-- <item name='Songname'>https://example.com/song.ogg</item> -->
+	</music>
+</settings>

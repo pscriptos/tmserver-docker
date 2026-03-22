@@ -6,6 +6,7 @@ Ein vollständiges Docker-Setup für einen **TrackMania Nations Forever**-Server
 - **[XAseco](docs/xaseco.md)** – Server-Controller, der lokale Rekorde, Dedimania-Weltrekorde, Karma/Votes und eine Track-Jukebox direkt im Spielchat verwaltet
 - **[AdminServ](docs/adminserv.md)** – Web-Oberfläche zur komfortablen Verwaltung und Konfiguration des Servers
 - **[RemoteCP](docs/remotecp.md)** – alternative Web-Verwaltungsoberfläche mit eigenem Login- und Benutzersystem
+- **[Mods / Skins](docs/remotecp.md#mods--skins)** – über 50 vorkonfigurierte Stadium-Skins (gehostet auf [assets.techniverse.net](https://assets.techniverse.net/tm/skins/)), automatisch beim Start forcierbar
 
 Alle Komponenten laufen in einem einzigen Container und werden über Umgebungsvariablen konfiguriert.
 

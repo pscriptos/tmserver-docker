@@ -76,6 +76,27 @@ RUN unzip /var/www/html/remoteCP_v4.0.3.5.zip -d /var/www/html \
 COPY assets/config/remotecp/plugins/CustomPoints/index.php /var/www/html/remotecp/plugins/CustomPoints/index.php
 RUN chown www-data:www-data /var/www/html/remotecp/plugins/CustomPoints/index.php
 
+# Fix PHP-Warnungen in RemoteCP Mods-Plugin (foreach auf leere Umgebungen)
+# Leere Umgebungen (Island, Bay, …) fuehrten zu "Invalid argument supplied
+# for foreach()", weil $this->mods['Env'] nicht initialisiert war.
+# Zusaetzlich bare-constant-Warnungen (pt_*) mit defined()-Pruefungen entschaerft.
+COPY assets/config/remotecp/plugins/Mods/index.php /var/www/html/remotecp/plugins/Mods/index.php
+RUN chown www-data:www-data /var/www/html/remotecp/plugins/Mods/index.php
+
+# RemoteCP Mods-Plugin: Vorkonfigurierte Skin-Liste (techniverse.net)
+COPY assets/config/remotecp/plugins/Mods/settings.xml /var/www/html/remotecp/plugins/Mods/settings.xml
+RUN chown www-data:www-data /var/www/html/remotecp/plugins/Mods/settings.xml
+
+# Fix AdminServ MatchSettings-Bugs fuer TmForever:
+# 1) get_matchset_mapimport.php: Falscher Pfad-Praefix (MatchSettings/ statt
+#    des tatsaechlichen Map-Ordners) beim Erstellen von MatchSettings.
+# 2) maps-creatematchset.php: GetModeScriptInfo-Aufruf (existiert nur in
+#    ManiaPlanet/TM2) wird fuer TmForever uebersprungen.
+COPY assets/config/adminserv/get_matchset_mapimport.php /var/www/html/resources/ajax/get_matchset_mapimport.php
+COPY assets/config/adminserv/maps-creatematchset.php /var/www/html/resources/process/maps-creatematchset.php
+RUN chown www-data:www-data /var/www/html/resources/ajax/get_matchset_mapimport.php \
+    && chown www-data:www-data /var/www/html/resources/process/maps-creatematchset.php
+
 # AdminServ- und RemoteCP-Dateien als Default-Template sichern (wird beim ersten Start ins Volume kopiert)
 RUN cp -a /var/www/html /opt/tmserver/default-controlpanel
 
@@ -144,6 +165,15 @@ ENV FORCE_CONFIG_UPDATE=false
 
 # Spieleinstellungen (MatchSettings)
 ENV ALLWARMUPDURATION=0
+
+# Forced Mods (Skins) - URL zu ZIP-Dateien, die beim Start forciert werden
+ENV FORCE_MOD_STADIUM=""
+ENV FORCE_MOD_ISLAND=""
+ENV FORCE_MOD_BAY=""
+ENV FORCE_MOD_COAST=""
+ENV FORCE_MOD_SPEED=""
+ENV FORCE_MOD_ALPINE=""
+ENV FORCE_MOD_RALLY=""
 
 # RemoteCP
 ENV REMOTECP_DB_HOST=mariadb

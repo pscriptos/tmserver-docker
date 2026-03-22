@@ -369,6 +369,50 @@ if [ -f "$CUSTOMPOINTS_FILE" ] && ! grep -q 'defined.*pt_custom' "$CUSTOMPOINTS_
     echo "    CustomPoints-Plugin erfolgreich gepatcht."
 fi
 
+# ============================================================
+# AdminServ: MatchSettings-Bugfixes fuer bestehende Volumes
+# ============================================================
+# 1) get_matchset_mapimport.php: Berechnet den relativen Pfad aus dem
+#    absoluten Dropdown-Pfad statt den URL-Parameter 'd' zu verwenden.
+#    Ohne Fix wird z.B. "MatchSettings/" statt "Challenges/Downloaded/"
+#    als Praefix in die MatchSettings-Datei geschrieben.
+# 2) maps-creatematchset.php: Ueberspringt GetModeScriptInfo fuer
+#    TmForever (Methode existiert nur in ManiaPlanet/TM2, Fehler -506).
+# ============================================================
+ADMINSERV_MAPIMPORT="/var/www/html/resources/ajax/get_matchset_mapimport.php"
+ADMINSERV_MAPIMPORT_DEFAULT="/opt/tmserver/default-controlpanel/resources/ajax/get_matchset_mapimport.php"
+if [ -f "$ADMINSERV_MAPIMPORT" ] && ! grep -q 'relativePath' "$ADMINSERV_MAPIMPORT"; then
+    echo "==> Patche AdminServ: MatchSettings Map-Import (Pfad-Fix)..."
+    cp "$ADMINSERV_MAPIMPORT_DEFAULT" "$ADMINSERV_MAPIMPORT"
+    chown www-data:www-data "$ADMINSERV_MAPIMPORT"
+    echo "    get_matchset_mapimport.php erfolgreich gepatcht."
+fi
+
+ADMINSERV_CREATEMATCHSET="/var/www/html/resources/process/maps-creatematchset.php"
+ADMINSERV_CREATEMATCHSET_DEFAULT="/opt/tmserver/default-controlpanel/resources/process/maps-creatematchset.php"
+if [ -f "$ADMINSERV_CREATEMATCHSET" ] && grep -q "query('GetModeScriptInfo')" "$ADMINSERV_CREATEMATCHSET" && ! grep -q "SERVER_VERSION_NAME != 'TmForever'" "$ADMINSERV_CREATEMATCHSET"; then
+    echo "==> Patche AdminServ: GetModeScriptInfo-Fix fuer TmForever..."
+    cp "$ADMINSERV_CREATEMATCHSET_DEFAULT" "$ADMINSERV_CREATEMATCHSET"
+    chown www-data:www-data "$ADMINSERV_CREATEMATCHSET"
+    echo "    maps-creatematchset.php erfolgreich gepatcht."
+fi
+
+# ============================================================
+# RemoteCP: Mods-Plugin settings.xml aktualisieren (fuer bestehende Volumes)
+# ============================================================
+# Die vorkonfigurierte Skin-Liste aus dem Image wird in das Volume
+# kopiert, falls die alte Standard-settings.xml noch vorhanden ist
+# (erkennbar am Beispiel-Eintrag "blacksunonline.com").
+# ============================================================
+MODS_SETTINGS_FILE="/var/www/html/remotecp/plugins/Mods/settings.xml"
+MODS_SETTINGS_DEFAULT="/opt/tmserver/default-controlpanel/remotecp/plugins/Mods/settings.xml"
+if [ -f "$MODS_SETTINGS_FILE" ] && grep -q 'blacksunonline.com' "$MODS_SETTINGS_FILE"; then
+    echo "==> Aktualisiere RemoteCP Mods-Plugin (Skin-Liste von techniverse.net)..."
+    cp "$MODS_SETTINGS_DEFAULT" "$MODS_SETTINGS_FILE"
+    chown www-data:www-data "$MODS_SETTINGS_FILE"
+    echo "    Mods/settings.xml erfolgreich aktualisiert."
+fi
+
 echo "Starting apache server"
 service apache2 start
 
@@ -453,6 +497,173 @@ if [ "$APPLY_ENV" = "true" ]; then
     echo "Platzhalter erfolgreich ersetzt."
 fi
 
+# ============================================================
+# AdminServ ServerOptions: Exportierte Einstellungen anwenden
+# ============================================================
+# Falls ein AdminServ-Export in GameData/Config/AdminServ/ServerOptions/
+# vorhanden ist, werden die darin enthaltenen Werte (z.B. Servername,
+# Beschreibung, Spielerzahl) in die dedicated_cfg.txt uebernommen.
+# So bleiben Aenderungen, die ueber AdminServ vorgenommen und exportiert
+# wurden, auch nach einem Container-Neustart erhalten.
+# ============================================================
+ADMINSERV_OPTIONS_DIR="$GAMEDATA_DIR/Config/AdminServ/ServerOptions"
+if [ -d "$ADMINSERV_OPTIONS_DIR" ]; then
+    LATEST_EXPORT=$(ls -t "$ADMINSERV_OPTIONS_DIR"/*.txt "$ADMINSERV_OPTIONS_DIR"/*.xml 2>/dev/null | head -1)
+    if [ -n "$LATEST_EXPORT" ] && [ -f "$LATEST_EXPORT" ]; then
+        echo "==> AdminServ ServerOptions-Export gefunden: $(basename "$LATEST_EXPORT")"
+        echo "    Uebernehme exportierte Einstellungen in dedicated_cfg.txt..."
+        php -r '
+            $xmlFile = $argv[1];
+            $cfgFile = $argv[2];
+
+            // AdminServ-Export parsen
+            $dom = new DOMDocument();
+            if (!@$dom->load($xmlFile)) {
+                echo "    WARNUNG: AdminServ-Export konnte nicht gelesen werden.\n";
+                exit(0);
+            }
+            $root = $dom->documentElement;
+            $exportValues = [];
+            foreach ($root->childNodes as $node) {
+                if ($node->nodeType === XML_ELEMENT_NODE) {
+                    $exportValues[$node->nodeName] = $node->nodeValue;
+                }
+            }
+
+            // Mapping: AdminServ-XML-Feld => dedicated_cfg.txt-Feld
+            $mapping = [
+                "Name"                   => "name",
+                "Comment"                => "comment",
+                "HideServer"             => "hide_server",
+                "NextMaxPlayers"         => "max_players",
+                "Password"               => "password",
+                "PasswordForSpectator"   => "password_spectator",
+                "NextMaxSpectators"      => "max_spectators",
+                "NextLadderMode"         => "ladder_mode",
+                "NextCallVoteTimeOut"    => "callvote_timeout",
+                "CallVoteRatio"          => "callvote_ratio",
+                "AllowChallengeDownload" => "allow_challenge_download",
+                "AutoSaveReplays"        => "autosave_replays",
+                "IsP2PUpload"            => "enable_p2p_upload",
+                "IsP2PDownload"          => "enable_p2p_download",
+            ];
+
+            // Bool-Felder: 1/0 => True/False (dedicated_cfg.txt-Format)
+            $boolFields = [
+                "allow_challenge_download", "autosave_replays",
+                "enable_p2p_upload", "enable_p2p_download",
+            ];
+
+            // Ladder-Modus: 0 => inactive, 1 => forced
+            $ladderMap = ["0" => "inactive", "1" => "forced"];
+
+            // Zu ersetzende Werte aufbauen
+            $replacements = [];
+            foreach ($mapping as $xmlField => $cfgField) {
+                if (isset($exportValues[$xmlField])) {
+                    $value = $exportValues[$xmlField];
+                    if (in_array($cfgField, $boolFields)) {
+                        $value = ($value == "1" || strtolower($value) === "true") ? "True" : "False";
+                    }
+                    if ($cfgField === "ladder_mode" && isset($ladderMap[$value])) {
+                        $value = $ladderMap[$value];
+                    }
+                    $replacements[$cfgField] = $value;
+                }
+            }
+
+            if (empty($replacements)) {
+                echo "    Keine anwendbaren Einstellungen im Export gefunden.\n";
+                exit(0);
+            }
+
+            // dedicated_cfg.txt zeilenweise verarbeiten
+            // Nur Tags innerhalb von <server_options> werden ersetzt,
+            // damit <name> und <password> in <authorization_levels> unangetastet bleiben.
+            $lines = file($cfgFile);
+            $inServerOptions = false;
+            $updated = 0;
+
+            foreach ($lines as $i => $line) {
+                if (strpos($line, "<server_options>") !== false) {
+                    $inServerOptions = true;
+                }
+                if (strpos($line, "</server_options>") !== false) {
+                    $inServerOptions = false;
+                }
+                if ($inServerOptions) {
+                    foreach ($replacements as $field => $value) {
+                        $pattern = "/(<" . preg_quote($field, "/") . ">)[^<]*(<\/" . preg_quote($field, "/") . ">)/";
+                        if (preg_match($pattern, $line)) {
+                            $safeValue = htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, "UTF-8");
+                            // $ und \ im Replacement escapen, damit preg_replace
+                            // sie nicht als Backreferences interpretiert (wichtig
+                            // fuer TM-Farbcodes wie $03F, $z, $s etc.)
+                            $escapedValue = str_replace(["\\", "$"], ["\\\\", "\\$"], $safeValue);
+                            $lines[$i] = preg_replace($pattern, "\${1}" . $escapedValue . "\${2}", $line, 1);
+                            echo "    " . $field . " => " . $value . "\n";
+                            $updated++;
+                            unset($replacements[$field]);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if ($updated > 0) {
+                file_put_contents($cfgFile, implode("", $lines));
+                echo "    " . $updated . " Einstellung(en) aus AdminServ-Export uebernommen.\n";
+            }
+        ' "$LATEST_EXPORT" "$CONFIG"
+    fi
+else
+    echo "==> Kein AdminServ ServerOptions-Verzeichnis gefunden. Ueberspringe Import."
+fi
+
+# ============================================================
+# MatchSettings: Neueste Datei automatisch ermitteln
+# ============================================================
+# Ueber die Umgebungsvariable MATCHSETTINGS_FILE kann gesteuert werden,
+# welche MatchSettings-Datei beim Serverstart geladen wird:
+#   - "auto"  (Standard): Die neueste .txt-Datei im MatchSettings-Ordner
+#     wird automatisch anhand des Aenderungsdatums ermittelt.
+#   - "<dateiname.txt>": Eine bestimmte Datei wird direkt verwendet.
+# Fallback: custom_game_settings.txt (Standard-MatchSettings aus dem Image).
+# ============================================================
+
+MATCHSETTINGS_DIR="$GAMEDATA_DIR/Tracks/MatchSettings"
+MATCHSETTINGS_FILE_ENV="${MATCHSETTINGS_FILE:-auto}"
+
+if [ "$MATCHSETTINGS_FILE_ENV" = "auto" ]; then
+    echo "==> MatchSettings: Automatische Erkennung (MATCHSETTINGS_FILE=auto)..."
+    # Neueste .txt-Datei im MatchSettings-Ordner anhand des Aenderungsdatums ermitteln
+    NEWEST_MS=$(ls -t "$MATCHSETTINGS_DIR"/*.txt 2>/dev/null | head -1)
+    if [ -n "$NEWEST_MS" ] && [ -f "$NEWEST_MS" ]; then
+        MS_FILENAME=$(basename "$NEWEST_MS")
+        GAME_SETTINGS_PATH="MatchSettings/${MS_FILENAME}"
+        echo "    Neueste MatchSettings gefunden: ${MS_FILENAME}"
+        echo "    Aenderungsdatum: $(stat -c '%y' "$NEWEST_MS" 2>/dev/null || ls -la "$NEWEST_MS" | awk '{print $6, $7, $8}')"
+    else
+        GAME_SETTINGS_PATH="MatchSettings/custom_game_settings.txt"
+        echo "    Keine .txt-Dateien in ${MATCHSETTINGS_DIR} gefunden."
+        echo "    Fallback: ${GAME_SETTINGS_PATH}"
+    fi
+else
+    # Explizit angegebene Datei verwenden
+    if [ -f "$MATCHSETTINGS_DIR/$MATCHSETTINGS_FILE_ENV" ]; then
+        GAME_SETTINGS_PATH="MatchSettings/${MATCHSETTINGS_FILE_ENV}"
+        echo "==> MatchSettings: Verwende explizit gesetzte Datei: ${MATCHSETTINGS_FILE_ENV}"
+    else
+        echo "==> WARNUNG: Angegebene MatchSettings-Datei nicht gefunden: ${MATCHSETTINGS_FILE_ENV}"
+        echo "    Vorhandene Dateien in ${MATCHSETTINGS_DIR}:"
+        ls -la "$MATCHSETTINGS_DIR"/*.txt 2>/dev/null || echo "    (keine .txt-Dateien vorhanden)"
+        GAME_SETTINGS_PATH="MatchSettings/custom_game_settings.txt"
+        echo "    Fallback: ${GAME_SETTINGS_PATH}"
+    fi
+fi
+
+echo "    Aktive MatchSettings: ${GAME_SETTINGS_PATH}"
+
 # Bestimme Server-Modus (Standard: internet)
 SERVER_MODE="${SERVER_MODE:-internet}"
 
@@ -472,41 +683,254 @@ fi
 echo "Server config dedicated_cfg.txt is"
 cat "$CONFIG"
 
-echo "Launching Server in ${SERVER_MODE} mode"
-./TrackmaniaServer /dedicated_cfg=dedicated_cfg.txt /game_settings=MatchSettings/custom_game_settings.txt /nodaemon ${LAUNCH_MODE} &
+echo "Launching Server in ${SERVER_MODE} mode (MatchSettings: ${GAME_SETTINGS_PATH})"
+./TrackmaniaServer /dedicated_cfg=dedicated_cfg.txt /game_settings=${GAME_SETTINGS_PATH} /nodaemon ${LAUNCH_MODE} &
 TM_PID=$!
 echo "TrackmaniaServer gestartet (PID: ${TM_PID})"
 
 # ============================================================
-# XAseco starten (nach TrackmaniaServer)
+# Warte auf XMLRPC-Verfuegbarkeit
 # ============================================================
-if [ "${XASECO_ENABLED:-true}" = "true" ] && [ -f "/opt/tmserver/xaseco/aseco.php" ]; then
-    echo "==> Warte auf TrackmaniaServer XMLRPC..."
-    XMLRPC_PORT="${SERVER_XMLRPC_PORT:-5000}"
-    XMLRPC_READY=false
-    for i in $(seq 1 30); do
-        if php -r "@fsockopen('127.0.0.1', ${XMLRPC_PORT}, \$e, \$m, 2) ? exit(0) : exit(1);" 2>/dev/null; then
-            XMLRPC_READY=true
+# Sowohl XAseco als auch Forced Mods benoetigen eine aktive
+# XMLRPC-Verbindung zum TrackmaniaServer.
+# ============================================================
+echo "==> Warte auf TrackmaniaServer XMLRPC..."
+XMLRPC_PORT="${SERVER_XMLRPC_PORT:-5000}"
+XMLRPC_READY=false
+for i in $(seq 1 30); do
+    if php -r "@fsockopen('127.0.0.1', ${XMLRPC_PORT}, \$e, \$m, 2) ? exit(0) : exit(1);" 2>/dev/null; then
+        XMLRPC_READY=true
+        break
+    fi
+    sleep 2
+done
+
+if [ "$XMLRPC_READY" = "true" ]; then
+    echo "    XMLRPC-Port ${XMLRPC_PORT} erreichbar."
+else
+    echo "    WARNUNG: XMLRPC-Port ${XMLRPC_PORT} nicht erreichbar nach 60s!"
+fi
+
+# ============================================================
+# Forced Mods (Skins) per XMLRPC setzen
+# ============================================================
+# Wenn FORCE_MOD_*-Variablen gesetzt sind, werden die
+# entsprechenden Mods per SetForcedMods-XMLRPC-Aufruf beim
+# Serverstart automatisch aktiviert. Dies funktioniert bei
+# jedem Containerstart und ist unabhaengig von FORCE_CONFIG_UPDATE.
+# ============================================================
+
+# Pruefen, ob mindestens ein Mod gesetzt ist (Variable fuer spaeter)
+HAS_MODS=false
+if [ "$XMLRPC_READY" = "true" ]; then
+    for ENV_NAME in FORCE_MOD_STADIUM FORCE_MOD_ISLAND FORCE_MOD_BAY FORCE_MOD_COAST FORCE_MOD_SPEED FORCE_MOD_ALPINE FORCE_MOD_RALLY; do
+        eval "MOD_VAL=\${$ENV_NAME:-}"
+        if [ -n "$MOD_VAL" ]; then
+            HAS_MODS=true
             break
         fi
-        sleep 2
     done
+fi
 
-    if [ "$XMLRPC_READY" = "true" ]; then
+# ============================================================
+# XAseco starten (nach TrackmaniaServer, VOR Forced Mods)
+# ============================================================
+# XAseco muss zuerst starten und sich initialisieren, damit
+# es die Forced Mods nicht ueberschreibt oder zuruecksetzt.
+# ============================================================
+if [ "$XMLRPC_READY" = "true" ]; then
+    if [ "${XASECO_ENABLED:-true}" = "true" ] && [ -f "/opt/tmserver/xaseco/aseco.php" ]; then
         echo "==> Starte XAseco..."
         cd /opt/tmserver/xaseco
         php aseco.php TMN </dev/null >>aseco.log 2>&1 &
         XASECO_PID=$!
         echo "    XAseco gestartet (PID: ${XASECO_PID})"
         cd /opt/tmserver
-    else
-        echo "    WARNUNG: XMLRPC-Port ${XMLRPC_PORT} nicht erreichbar nach 60s!"
-        echo "    XAseco wurde NICHT gestartet. Bitte manuell starten."
-    fi
-else
-    if [ "${XASECO_ENABLED:-true}" != "true" ]; then
+    elif [ "${XASECO_ENABLED:-true}" != "true" ]; then
         echo "==> XAseco ist deaktiviert (XASECO_ENABLED=${XASECO_ENABLED})."
     fi
+else
+    echo "    WARNUNG: XMLRPC nicht erreichbar - XAseco und Forced Mods wurden NICHT gestartet."
+fi
+
+# ============================================================
+# Forced Mods (Skins) per XMLRPC setzen
+# ============================================================
+# Wird NACH XAseco-Start ausgefuehrt, damit XAseco die Mods
+# nicht bei seiner Initialisierung zuruecksetzt.
+# ============================================================
+if [ "$XMLRPC_READY" = "true" ] && [ "$HAS_MODS" = "true" ]; then
+    # Warten, damit XAseco und der TM-Server sich vollstaendig initialisieren
+    echo "==> Forced Mods: Warte 10 Sekunden auf vollstaendige Server-Initialisierung..."
+    sleep 10
+
+    echo "==> Forced Mods: Setze Mods per XMLRPC..."
+
+    # JSON-Array der Mods aufbauen
+    MODS_JSON="["
+    MODS_FIRST=true
+    for PAIR in "FORCE_MOD_STADIUM:Stadium" "FORCE_MOD_ISLAND:Island" "FORCE_MOD_BAY:Bay" "FORCE_MOD_COAST:Coast" "FORCE_MOD_SPEED:Speed" "FORCE_MOD_ALPINE:Alpine" "FORCE_MOD_RALLY:Rally"; do
+        VAR_NAME="${PAIR%%:*}"
+        ENV_NAME="${PAIR##*:}"
+        eval "MOD_URL=\${$VAR_NAME:-}"
+        if [ -n "$MOD_URL" ]; then
+            if [ "$MODS_FIRST" = "true" ]; then
+                MODS_FIRST=false
+            else
+                MODS_JSON="${MODS_JSON},"
+            fi
+            # URL fuer JSON escapen (Backslash und Anfuehrungszeichen)
+            SAFE_URL=$(printf '%s' "$MOD_URL" | sed 's/\\/\\\\/g; s/"/\\"/g')
+            MODS_JSON="${MODS_JSON}{\"Env\":\"${ENV_NAME}\",\"Url\":\"${SAFE_URL}\"}"
+            echo "    ${ENV_NAME} => ${MOD_URL}"
+        fi
+    done
+    MODS_JSON="${MODS_JSON}]"
+
+    # GBXRemote2-Protokoll: Authenticate + SetForcedMods
+    SA_PW_MODS="${SERVER_SA_PASSWORD:-SuperAdmin}"
+    php -r '
+        $port = (int)$argv[1];
+        $password = $argv[2];
+        $modsJson = $argv[3];
+
+        $mods = json_decode($modsJson, true);
+        if (empty($mods)) { echo "    Keine Mods zu setzen.\n"; exit(0); }
+
+        // GBXRemote2: Verbindung herstellen
+        $fp = @fsockopen("127.0.0.1", $port, $errno, $errstr, 5);
+        if (!$fp) { echo "    FEHLER: Verbindung zu XMLRPC fehlgeschlagen ($errno: $errstr).\n"; exit(1); }
+        stream_set_timeout($fp, 10);
+
+        // Handshake lesen (4 Bytes Laenge + Protokollstring)
+        $data = fread($fp, 4);
+        if (strlen($data) < 4) { echo "    FEHLER: Handshake fehlgeschlagen.\n"; fclose($fp); exit(1); }
+        $info = unpack("Vsize", $data);
+        $handshake = fread($fp, $info["size"]);
+        if (strpos($handshake, "GBXRemote") === false) {
+            echo "    FEHLER: Kein GBXRemote-Protokoll.\n"; fclose($fp); exit(1);
+        }
+        echo "    Protokoll: $handshake\n";
+
+        $reqhandle = 0x80000001;
+
+        // XML-RPC-Wert kodieren
+        function encodeVal($v) {
+            if (is_bool($v)) return "<value><boolean>" . ($v ? "1" : "0") . "</boolean></value>";
+            if (is_int($v)) return "<value><int>" . $v . "</int></value>";
+            if (is_string($v)) return "<value><string>" . htmlspecialchars($v, ENT_XML1) . "</string></value>";
+            if (is_array($v)) {
+                if (array_keys($v) !== range(0, count($v) - 1)) {
+                    $x = "<value><struct>";
+                    foreach ($v as $k => $val) $x .= "<member><name>" . $k . "</name>" . encodeVal($val) . "</member>";
+                    return $x . "</struct></value>";
+                } else {
+                    $x = "<value><array><data>";
+                    foreach ($v as $val) $x .= encodeVal($val);
+                    return $x . "</data></array></value>";
+                }
+            }
+            return "<value><string>" . htmlspecialchars((string)$v, ENT_XML1) . "</string></value>";
+        }
+
+        // Ein einzelnes Paket vom Server lesen (Header + Body)
+        function readPacket($fp) {
+            $header = "";
+            while (strlen($header) < 8) {
+                $chunk = @fread($fp, 8 - strlen($header));
+                if ($chunk === false || strlen($chunk) === 0) return false;
+                $header .= $chunk;
+            }
+            $info = unpack("Vsize/Vhandle", $header);
+            $size = $info["size"];
+            $handle = $info["handle"];
+            if ($size > 4194304 || $size == 0) return false;
+
+            $body = "";
+            $remaining = $size;
+            while ($remaining > 0) {
+                $chunk = @fread($fp, min($remaining, 8192));
+                if ($chunk === false || strlen($chunk) === 0) break;
+                $body .= $chunk;
+                $remaining -= strlen($chunk);
+            }
+            return ["handle" => $handle, "body" => $body];
+        }
+
+        // XMLRPC-Request senden und Antwort lesen
+        // Callbacks (handle < 0x80000000) werden uebersprungen
+        function gbxQuery($fp, &$reqhandle, $method, $params) {
+            $xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+                 . "<methodCall><methodName>" . $method . "</methodName><params>";
+            foreach ($params as $p) $xml .= "<param>" . encodeVal($p) . "</param>";
+            $xml .= "</params></methodCall>";
+
+            $myHandle = $reqhandle++;
+            $packet = pack("VV", strlen($xml), $myHandle) . $xml;
+            $written = @fwrite($fp, $packet);
+            if ($written === false || $written === 0) {
+                echo "    FEHLER: Konnte Request nicht senden ($method).\n";
+                return false;
+            }
+
+            // Auf Antwort warten, Callbacks ueberspringen
+            for ($attempt = 0; $attempt < 30; $attempt++) {
+                $pkt = readPacket($fp);
+                if ($pkt === false) {
+                    echo "    FEHLER: Keine Antwort fuer $method.\n";
+                    return false;
+                }
+                // Callback? (Handle < 0x80000000) -> ueberspringen
+                if ($pkt["handle"] < 0x80000000) {
+                    continue;
+                }
+                // Response gefunden
+                return $pkt["body"];
+            }
+            echo "    FEHLER: Zu viele Callbacks, keine Antwort fuer $method.\n";
+            return false;
+        }
+
+        // 1. Authenticate
+        echo "    Authentifiziere als SuperAdmin...\n";
+        $resp = gbxQuery($fp, $reqhandle, "Authenticate", ["SuperAdmin", $password]);
+        if ($resp === false || strpos($resp, "<boolean>1</boolean>") === false) {
+            echo "    FEHLER: Authentifizierung fehlgeschlagen.\n";
+            if ($resp) echo "    Antwort: " . substr(trim($resp), 0, 500) . "\n";
+            fclose($fp); exit(1);
+        }
+        echo "    Authentifizierung erfolgreich.\n";
+
+        // 2. EnableCallbacks deaktivieren (weniger Rauschen)
+        gbxQuery($fp, $reqhandle, "EnableCallbacks", [false]);
+
+        // 3. SetForcedMods(override=true, mods=[{Env, Url}, ...])
+        // Debug: Zeige das XML das wir senden
+        $setXml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+                . "<methodCall><methodName>SetForcedMods</methodName><params>"
+                . "<param>" . encodeVal(true) . "</param>"
+                . "<param>" . encodeVal($mods) . "</param>"
+                . "</params></methodCall>";
+        echo "    Debug SetForcedMods-XML:\n    " . $setXml . "\n";
+
+        echo "    Sende SetForcedMods (" . count($mods) . " Mod(s))...\n";
+        $resp = gbxQuery($fp, $reqhandle, "SetForcedMods", [true, $mods]);
+        echo "    SetForcedMods-Antwort: " . trim($resp) . "\n";
+        if ($resp !== false && strpos($resp, "<boolean>1</boolean>") !== false) {
+            echo "    SetForcedMods: OK\n";
+        } else {
+            echo "    FEHLER: SetForcedMods fehlgeschlagen.\n";
+        }
+
+        // 4. GetForcedMods zur Verifikation (vollstaendige Antwort)
+        echo "    Verifiziere mit GetForcedMods...\n";
+        $resp = gbxQuery($fp, $reqhandle, "GetForcedMods", []);
+        echo "    GetForcedMods-Antwort:\n    " . trim($resp) . "\n";
+
+        fclose($fp);
+    ' "$XMLRPC_PORT" "$SA_PW_MODS" "$MODS_JSON"
+elif [ "$XMLRPC_READY" = "true" ]; then
+    echo "==> Forced Mods: Keine FORCE_MOD_*-Variablen gesetzt. Ueberspringe."
 fi
 
 # Auf TrackmaniaServer warten (Hauptprozess)
