@@ -185,6 +185,16 @@ EORCPSERV
 </admins>
 EORCPADM
 
+        # settings.xml: Registrierung deaktivieren (SuperAdmin wird automatisch angelegt)
+        mkdir -p "$REMOTECP_DIR/xml/settings"
+        cat > "$REMOTECP_DIR/xml/settings/settings.xml" <<EORCPSET
+<?xml version="1.0" encoding="utf-8"?>
+<settings>
+	<register>false</register>
+</settings>
+EORCPSET
+        echo "    settings.xml: Registrierung deaktiviert."
+
         # ============================================================
         # RemoteCP: Datenbank-Initialisierung
         # ============================================================

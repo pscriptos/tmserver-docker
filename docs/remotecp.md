@@ -112,4 +112,4 @@ Falls RemoteCP nicht erreichbar ist oder Fehler anzeigt:
 
 - RemoteCP ist ein älteres Tool (Version 4.0.3.5) und wurde für PHP 5.x entwickelt, läuft aber mit PHP 7.4
 - Die Live-Funktionen (`remoteCP[Live]`) benötigen eine laufende Serververbindung
-- Die Registrierung neuer Benutzer ist standardmäßig aktiviert und kann in `xml/settings/settings.xml` über `<register>false</register>` deaktiviert werden
+- Die Registrierung neuer Benutzer wird beim ersten Start automatisch deaktiviert (`xml/settings/settings.xml` → `<register>false</register>`). Der SuperAdmin-Account wird automatisch aus `SERVER_SA_PASSWORD` angelegt
