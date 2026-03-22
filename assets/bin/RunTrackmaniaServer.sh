@@ -354,6 +354,40 @@ if [ "$XASECO_ENABLED" = "true" ]; then
 fi
 
 # ============================================================
+# XAseco: TeamSpeak3-Plugin Gateway aktualisieren (fuer bestehende Volumes)
+# ============================================================
+# Das Original-TS3-Gateway ist nicht mehr verfuegbar. Die eigene
+# teamspeak3.xml mit dem Ersatz-Gateway wird in das Volume kopiert,
+# falls sie fehlt oder noch das alte (nicht mehr erreichbare) Gateway
+# referenziert. Gleichzeitig wird das Plugin reaktiviert, falls es
+# in einer frueheren Version auskommentiert wurde.
+# ============================================================
+XASECO_DIR_TS3="/opt/tmserver/xaseco"
+TS3_XML="$XASECO_DIR_TS3/teamspeak3.xml"
+TS3_DEFAULT="/opt/tmserver/default-xaseco/teamspeak3.xml"
+TS3_PLUGINS_XML="$XASECO_DIR_TS3/plugins.xml"
+
+# teamspeak3.xml aktualisieren: Kopieren wenn fehlend oder veraltet
+if [ -f "$TS3_DEFAULT" ]; then
+    if [ ! -f "$TS3_XML" ]; then
+        echo "==> TeamSpeak3-Gateway: teamspeak3.xml fehlt, kopiere aus Template..."
+        cp "$TS3_DEFAULT" "$TS3_XML"
+        echo "    teamspeak3.xml erfolgreich kopiert."
+    elif ! diff -q "$TS3_DEFAULT" "$TS3_XML" > /dev/null 2>&1; then
+        echo "==> TeamSpeak3-Gateway: teamspeak3.xml wird aktualisiert..."
+        cp "$TS3_DEFAULT" "$TS3_XML"
+        echo "    teamspeak3.xml erfolgreich aktualisiert."
+    fi
+fi
+
+# TS3-Plugin reaktivieren, falls es auskommentiert ist
+if [ -f "$TS3_PLUGINS_XML" ] && grep -q '<!-- <plugin>plugin\.teamspeak3\.php</plugin> -->' "$TS3_PLUGINS_XML"; then
+    echo "==> TeamSpeak3-Plugin: Reaktiviere auskommentiertes Plugin..."
+    sed -i 's|<!-- <plugin>plugin\.teamspeak3\.php</plugin> -->|<plugin>plugin.teamspeak3.php</plugin>|' "$TS3_PLUGINS_XML"
+    echo "    TeamSpeak3-Plugin erfolgreich aktiviert."
+fi
+
+# ============================================================
 # RemoteCP: PHP-Warnungen in Plugins fixen (fuer bestehende Volumes)
 # ============================================================
 # RemoteCP nutzt bare constants (pt_custom, pt_points, ...), die in

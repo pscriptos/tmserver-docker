@@ -130,9 +130,13 @@ RUN unzip /opt/tmserver/xaseco_v1.16.zip -d /opt/tmserver/ \
     # newinstall-Ordner aufraeumen
     && rm -rf /opt/tmserver/xaseco/newinstall
 
-# Nicht mehr verfuegbare Plugins deaktivieren (freezone entfernen, teamspeak3 auskommentieren)
-RUN sed -i '/<plugin>plugin\.freezone\.php<\/plugin>/d' /opt/tmserver/xaseco/plugins.xml \
-    && sed -i 's/<plugin>plugin\.teamspeak3\.php<\/plugin>/<!-- <plugin>plugin.teamspeak3.php<\/plugin> -->/' /opt/tmserver/xaseco/plugins.xml
+# Nicht mehr verfuegbares freezone-Plugin entfernen
+RUN sed -i '/<plugin>plugin\.freezone\.php<\/plugin>/d' /opt/tmserver/xaseco/plugins.xml
+
+# TeamSpeak3-Plugin: Eigenes Gateway einbinden (Original-Gateway nicht mehr verfuegbar)
+# Die teamspeak3.xml wird direkt in den XAseco-Ordner kopiert, damit das Plugin
+# beim Start automatisch den konfigurierten TS3-Server anzeigt.
+COPY assets/config/xaseco/teamspeak3.xml /opt/tmserver/xaseco/teamspeak3.xml
 
 # XAseco als Default-Template sichern (wird beim ersten Start ins Volume kopiert)
 RUN cp -a /opt/tmserver/xaseco /opt/tmserver/default-xaseco
