@@ -76,6 +76,13 @@ RUN unzip /var/www/html/remoteCP_v4.0.3.5.zip -d /var/www/html \
 COPY assets/config/remotecp/plugins/CustomPoints/index.php /var/www/html/remotecp/plugins/CustomPoints/index.php
 RUN chown www-data:www-data /var/www/html/remotecp/plugins/CustomPoints/index.php
 
+# Fix PHP-Warnungen in RemoteCP Mods-Plugin (foreach auf leere Umgebungen)
+# Leere Umgebungen (Island, Bay, …) fuehrten zu "Invalid argument supplied
+# for foreach()", weil $this->mods['Env'] nicht initialisiert war.
+# Zusaetzlich bare-constant-Warnungen (pt_*) mit defined()-Pruefungen entschaerft.
+COPY assets/config/remotecp/plugins/Mods/index.php /var/www/html/remotecp/plugins/Mods/index.php
+RUN chown www-data:www-data /var/www/html/remotecp/plugins/Mods/index.php
+
 # RemoteCP Mods-Plugin: Vorkonfigurierte Skin-Liste (techniverse.net)
 COPY assets/config/remotecp/plugins/Mods/settings.xml /var/www/html/remotecp/plugins/Mods/settings.xml
 RUN chown www-data:www-data /var/www/html/remotecp/plugins/Mods/settings.xml
