@@ -48,33 +48,6 @@ git.techniverse.net/scriptos/trackmania-server:latest
 
 > **Hinweis:** Für den Internet-Modus müssen `SERVER_LOGIN` und `SERVER_VALIDATION_KEY` in der `.env`-Datei gesetzt sein. Einen Server-Account kannst du auf [players.trackmaniaforever.com](https://players.trackmaniaforever.com) erstellen. Für den LAN-Modus setze `SERVER_MODE=lan`.
 
-## Projektstruktur
-
-```
-├── assets/
-│   ├── bin/                         # Binaries und Startscript
-│   │   ├── AdminServ_v2.1.1.zip    # AdminServ Web-UI
-│   │   ├── remoteCP_v4.0.3.5.zip   # RemoteCP Web-UI
-│   │   ├── xaseco_v1.16.zip         # XAseco Server-Controller
-│   │   ├── RunTrackmaniaServer.sh   # Container-Startscript
-│   │   └── TrackmaniaServer_*.zip   # Trackmania Server Binary
-│   ├── config/
-│       ├── custom_game_settings.txt # MatchSettings (Spielmodus, Map-Rotation)
-│       └── dedicated_cfg.txt        # Server-Config-Template (mit Platzhaltern)
-│   └── db/
-│       └── init-xaseco-db.sh        # MariaDB Init-Script fuer XAseco-DB
-├── docs/                            # Dokumentation
-├── docker-compose.yml               # Docker Compose Konfiguration
-├── Dockerfile                       # Docker Build-Definition
-├── .env.example                     # Vorlage fuer Umgebungsvariablen
-├── .env                             # Lokale Umgebungsvariablen (nicht im Git!)
-└── data/                            # Persistente Daten (zur Laufzeit)
-    ├── gamedata/                    # TM-Server-Daten
-    ├── controlpanel/                # AdminServ + RemoteCP
-    ├── xaseco/                      # XAseco-Konfiguration und Logs
-    └── mariadb/                     # MariaDB-Datenbankdateien
-```
-
 ## Dokumentation
 
 Die vollständige Dokumentation befindet sich im Ordner [`docs/`](docs/README.md):
