@@ -8,6 +8,55 @@ Im Container wird die modifizierte Version **XAseco 1.16** verwendet, die für P
 
 XAseco verbindet sich über XML-RPC mit dem TrackMania-Server und reagiert auf Spielereignisse (neue Rekorde, Spieler-Connects, Chat-Befehle usw.). Die Daten werden in einer eigenen MySQL-Datenbank gespeichert.
 
+## TeamSpeak 3 Integration
+
+XAseco enthält ein Plugin (`plugin.teamspeak3.php`), das im Spiel ein Widget mit den aktuell verbundenen TeamSpeak-3-Nutzern anzeigt. Das Plugin ist **standardmäßig aktiviert** und verwendet ein eigenes Gateway, das im Container mitgeliefert wird (das Original-Gateway des Plugin-Entwicklers ist nicht mehr verfügbar).
+
+### TS3-Server konfigurieren
+
+Die Konfiguration erfolgt über die Datei `data/xaseco/teamspeak3.xml`. Dort kann der eigene TeamSpeak-3-Server eingetragen werden:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<settings>
+        <!-- Server Configuration, can be address or ip -->
+        <server>ts3.techniverse.net</server>
+        <serverid>1</serverid>
+        <serverport>9987</serverport>
+        <queryport>10011</queryport>
+
+        <!-- Channel & Update Settings -->
+        <defaultchannel></defaultchannel>
+        <subchannel></subchannel>
+        <channelpassword></channelpassword>
+        <update_interval>30</update_interval>
+
+        <!-- Helpers and images -->
+        <helperURL>http://assets.techniverse.net/tm/ts3gateway/gateway3.html</helperURL>
+        <logoURL>http://assets.techniverse.net/tm/ts3gateway/ts3logo.jpg</logoURL>
+
+        <!-- Widget position -->
+        <posx>-64</posx>
+        <posy>45</posy>
+</settings>
+```
+
+| Feld | Beschreibung |
+|------|-------------|
+| `server` | Hostname oder IP des TS3-Servers |
+| `serverid` | Virtuelle-Server-ID (meist `1`) |
+| `serverport` | Voice-Port des TS3-Servers (Standard: `9987`) |
+| `queryport` | ServerQuery-Port (Standard: `10011`) |
+| `defaultchannel` | Standard-Channel (leer = Server-Default) |
+| `subchannel` | Sub-Channel (optional) |
+| `channelpassword` | Channel-Passwort (optional) |
+| `update_interval` | Aktualisierungsintervall in Sekunden |
+| `helperURL` | URL zur Gateway-HTML-Seite (nicht ändern) |
+| `logoURL` | URL zum TS3-Logo im Widget (nicht ändern) |
+| `posx` / `posy` | Widget-Position im Spiel |
+
+> **Hinweis:** Standardmäßig ist der TS3-Server `ts3.techniverse.net` vorkonfiguriert. Zum Anpassen einfach nach dem ersten Start die Datei `data/xaseco/teamspeak3.xml` bearbeiten. Die Felder `helperURL` und `logoURL` verweisen auf das mitgelieferte Gateway und sollten nicht geändert werden.
+
 ## Konfiguration
 
 Die Konfiguration erfolgt ausschließlich über Umgebungsvariablen in der `.env`-Datei. Beim **ersten Start** (leeres XAseco-Volume) werden die Werte automatisch in die XML-Konfigurationsdateien eingetragen.

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<settings>
+        <!-- Server Configuration, can be address or ip -->
+        <server>ts3.techniverse.net</server>
+        <serverid>1</serverid>
+        <serverport>9987</serverport>
+        <queryport>10011</queryport>
+
+        <!-- Channel & Update Settings -->
+        <defaultchannel></defaultchannel>
+        <subchannel></subchannel>
+        <channelpassword></channelpassword>
+        <update_interval>30</update_interval>
+
+
+        <!-- Helpers and images -->
+        <helperURL>http://assets.techniverse.net/tm/ts3gateway/gateway3.html</helperURL>
+        <logoURL>http://assets.techniverse.net/tm/ts3gateway/ts3logo.jpg</logoURL>
+
+        <!-- Widget position -->
+        <posx>-64</posx>
+        <posy>45</posy>
+</settings>
