@@ -1101,5 +1101,23 @@ elif [ "$XMLRPC_READY" = "true" ]; then
     echo "==> Forced Mods: Keine FORCE_MOD_*-Variablen gesetzt. Ueberspringe."
 fi
 
+# ============================================================
+# Log-Rotation: Hintergrundprozess starten
+# ============================================================
+# logrotate wird stuendlich ausgefuehrt, um Apache-, PHP- und
+# XAseco-Logs groessenbasiert zu rotieren (max. 10 MB pro Datei,
+# 5 rotierte Dateien). Da im Container kein cron laeuft, wird
+# ein einfacher Background-Loop verwendet.
+# ============================================================
+echo "==> Starte Log-Rotation (stuendlich, groessenbasiert 10 MB)..."
+(
+    while true; do
+        sleep 3600
+        /usr/sbin/logrotate /etc/logrotate.d/tmserver --state /tmp/logrotate.state
+    done
+) &
+LOGROTATE_PID=$!
+echo "    Log-Rotation gestartet (PID: ${LOGROTATE_PID})"
+
 # Auf TrackmaniaServer warten (Hauptprozess)
 wait $TM_PID

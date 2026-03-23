@@ -106,6 +106,37 @@ Der Ordner `GameData/Config/` enthält:
 | `Default.SystemConfig.Gbx` | System-Konfiguration |
 | `AdminServ/ServerOptions/` | Von AdminServ exportierte Server-Einstellungen |
 
+## Log-Rotation
+
+Alle Log-Dateien im Container werden automatisch per `logrotate` rotiert, damit sie nicht unbegrenzt wachsen. Die Rotation läuft **größenbasiert** als Hintergrundprozess (stündliche Prüfung, kein Cron nötig).
+
+### Einstellungen
+
+| Parameter | Wert |
+|-----------|------|
+| Maximale Dateigröße | 10 MB |
+| Rotierte Dateien behalten | 5 |
+| Komprimierung | Ja (gzip, verzögert) |
+| Leere Logs überspringen | Ja |
+
+### Rotierte Log-Dateien
+
+| Log | Pfad im Container | Persistenz |
+|-----|--------------------|------------|
+| Apache Access | `/var/log/apache2/access.log` | Nur im Container |
+| Apache Error | `/var/log/apache2/error.log` | Nur im Container |
+| PHP Errors | `/var/log/php_errors.log` | Nur im Container |
+| XAseco | `/opt/tmserver/xaseco/aseco.log` | Volume (`./data/xaseco/`) |
+| AdminServ | `/var/www/html/logs/*.log` | Volume (`./data/controlpanel/logs/`) |
+
+Rotierte Dateien werden als `*.1` (vorherige), `*.2.gz`, `*.3.gz` usw. aufbewahrt.
+
+### Konfigurationsdatei
+
+Die logrotate-Konfiguration liegt im Image unter `/etc/logrotate.d/tmserver` (Quelle: `assets/config/logrotate.conf`). Sie wird beim Bau des Images fest eingebettet und erfordert keine manuelle Anpassung.
+
+> **Hinweis:** Die Log-Rotation ist nach einem Image-Update automatisch aktiv – auch bei bestehenden Installationen. Es sind keine manuellen Schritte nötig.
+
 ## AdminServ ServerOptions-Import
 
 Wenn über AdminServ Änderungen an den Server-Optionen vorgenommen und als Export gespeichert werden (z.B. Servername, Beschreibung, Spielerzahl), werden diese beim nächsten Container-Start **automatisch** in die `dedicated_cfg.txt` übernommen.

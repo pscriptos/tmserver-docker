@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     php-mysql \
     php-curl \
     default-mysql-client \
+    logrotate \
     && rm -rf /var/lib/apt/lists/*
 
 # Apache mod_rewrite aktivieren und AllowOverride fuer .htaccess (RemoteCP-Sicherheit)
@@ -147,6 +148,11 @@ RUN cp -a /opt/tmserver/xaseco /opt/tmserver/default-xaseco
 
 # PHP-Debug-Konfiguration: wird zur Laufzeit vom Startup-Script gesetzt
 # (kein Rebuild noetig – nur Container neustarten)
+
+# Log-Rotation: logrotate-Konfiguration ins Image kopieren
+# Wird zur Laufzeit stuendlich per Background-Loop ausgefuehrt (kein cron noetig).
+COPY assets/config/logrotate.conf /etc/logrotate.d/tmserver
+RUN chmod 644 /etc/logrotate.d/tmserver
 
 # --- Umgebungsvariablen ---
 # Sensible Werte (Passwoerter, Keys) werden NICHT im Image hinterlegt,

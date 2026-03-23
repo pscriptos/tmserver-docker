@@ -190,6 +190,8 @@ Die XAseco-Logdatei befindet sich unter:
 
 Bei Problemen ist dies die erste Anlaufstelle für die Fehlersuche.
 
+> **Hinweis:** Die XAseco-Logdatei wird automatisch per logrotate rotiert (max. 10 MB pro Datei, 5 rotierte Dateien). Alte Logs werden komprimiert als `aseco.log.1.gz`, `aseco.log.2.gz` usw. aufbewahrt. Siehe [Konfiguration – Log-Rotation](konfiguration.md#log-rotation).
+
 ## Chat-Befehle
 
 Nachfolgend eine Übersicht der wichtigsten Befehle, die im Spielchat verfügbar sind. Eine vollständige Liste aller Befehle findest du in der offiziellen Dokumentation unter: https://docs.xaseco.org/commands.php

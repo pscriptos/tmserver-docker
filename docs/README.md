@@ -33,6 +33,7 @@
 │   │   │   └── maps-creatematchset.php          # MatchSet-Erstellung Script
 │   │   ├── custom_game_settings.txt             # MatchSettings (Spielmodus, Map-Rotation)
 │   │   ├── dedicated_cfg.txt                    # Server-Config-Template (mit Platzhaltern)
+│   │   ├── logrotate.conf                       # Log-Rotation-Konfiguration (groessenbasiert)
 │   │   ├── remotecp/
 │   │   │   └── plugins/
 │   │   │       ├── CustomPoints/
