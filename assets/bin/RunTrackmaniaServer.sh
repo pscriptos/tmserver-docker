@@ -71,6 +71,18 @@ EOPHP
     chown www-data:www-data "$ADMINSERV_DIR/config/servers.cfg.php"
     echo "    AdminServ-Server-Eintrag automatisch konfiguriert (Port: ${XMLRPC_PORT})."
 
+    # AdminServ-Konfigurationspasswort automatisch sichern
+    # OnlineConfig::PASSWORD in adminserv.cfg.php schuetzt die /config-Seite
+    # (Server hinzufuegen/aendern/loeschen). Da der Server-Eintrag bereits
+    # automatisch konfiguriert wird, ist kein manueller Zugriff noetig.
+    # Der Standard-Hash aus dem ZIP wird durch einen zufaelligen ersetzt.
+    ADMINSERV_CFG="$ADMINSERV_DIR/config/adminserv.cfg.php"
+    if [ -f "$ADMINSERV_CFG" ]; then
+        RANDOM_HASH=$(head -c 32 /dev/urandom | md5sum | cut -d' ' -f1)
+        sed -i "s|const PASSWORD = '[^']*';|const PASSWORD = '${RANDOM_HASH}';|" "$ADMINSERV_CFG"
+        echo "    AdminServ-Konfigurationspasswort automatisch gesichert."
+    fi
+
     echo "    AdminServ-Dateien erfolgreich kopiert."
 
     # ============================================================

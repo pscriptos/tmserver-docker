@@ -4,17 +4,19 @@ Die Server-Verwaltungsoberfläche basiert auf [AdminServ](https://github.com/Chr
 
 ## Einrichtung
 
-1. `http://<host-server-des-containers>` im Browser aufrufen
-2. Ein Passwort festlegen – dieses wird als AdminServ-Passwort verwendet
-3. TM-Server-Informationen eintragen (Standardwerte können beibehalten werden)
-4. `Address` auf `localhost` setzen, um den eingebetteten Server zu verwalten
-5. Speichern
+AdminServ wird beim ersten Container-Start **vollständig automatisch konfiguriert**:
+
+- Serververbindung (Adresse `127.0.0.1`, XML-RPC-Port)
+- Server-Eintrag (Name, DisplayServ-Passwort)
+- Konfigurationspasswort (siehe [Konfigurationsseite (`/config`)](#konfigurationsseite-config))
+
+Es ist kein manuelles Setup nötig.
 
 ## Verbindung zum Server
 
-1. Über den Button „Servers" zur Serverliste navigieren
-2. Den gewünschten Server auswählen
-3. Admin-Stufe wählen und zugehöriges Passwort eingeben
+1. `http://<host-server-des-containers>` im Browser aufrufen
+2. Den Server aus der Liste auswählen
+3. Admin-Stufe wählen (SuperAdmin, Admin oder User) und das zugehörige Passwort eingeben
 
 ## Standard-Passwörter
 
@@ -24,9 +26,11 @@ Die Server-Verwaltungsoberfläche basiert auf [AdminServ](https://github.com/Chr
 | Admin | `Admin` |
 | User | `User` |
 
+Diese Passwörter werden über die `.env`-Datei gesetzt (`SERVER_SA_PASSWORD`, `SERVER_ADM_PASSWORD`, `SERVER_USER_PASSWORD`) und beim ersten Start in die `dedicated_cfg.txt` geschrieben. AdminServ liest die Passwörter über die XML-RPC-Verbindung direkt vom TM-Server.
+
 Die Admin-Stufen können unter `http://<host-server-des-containers>/config` geändert werden.
 
-> **Hinweis:** Es wird empfohlen, die Standard-Passwörter über die `.env`-Datei (`SERVER_SA_PASSWORD`, `SERVER_ADM_PASSWORD`) zu ändern. Siehe [Umgebungsvariablen](umgebungsvariablen.md).
+> **Hinweis:** Die Standard-Passwörter in der `.env.example` sind öffentlich einsehbar. Ändere sie unbedingt, bevor du den Server produktiv einsetzt. Siehe [Umgebungsvariablen](umgebungsvariablen.md).
 
 ## Persistente Speicherung
 
@@ -66,6 +70,16 @@ rm -rf ./data/controlpanel/*
 # Container neu starten – AdminServ wird frisch initialisiert
 docker compose up -d
 ```
+
+## Konfigurationsseite (`/config`)
+
+AdminServ bringt unter `http://<host-ip>/config` eine eigene Konfigurationsseite mit, über die Server-Einträge hinzugefügt, geändert oder gelöscht werden können. Diese Seite ist durch ein separates Passwort geschützt (`OnlineConfig::PASSWORD` in `adminserv.cfg.php`, MD5-gehasht).
+
+Da dieser Container als **Standalone-Setup** läuft und ausschließlich den einen lokalen TrackMania-Server bedient, wird die `/config`-Seite **nicht benötigt** – der Server-Eintrag wird beim ersten Start automatisch angelegt (Adresse, XML-RPC-Port, Passwörter).
+
+Zur Absicherung wird das Konfigurationspasswort beim ersten Container-Start automatisch durch einen **zufällig generierten MD5-Hash** ersetzt. Damit ist die `/config`-Seite vor unbefugtem Zugriff geschützt, ohne dass ein Benutzer ein Passwort vergeben oder sich merken muss.
+
+> **Hinweis:** Falls du dennoch Zugriff auf die `/config`-Seite benötigst (z.B. für Debugging), kannst du den MD5-Hash in `data/controlpanel/config/adminserv.cfg.php` manuell auf ein bekanntes Passwort setzen. Beispiel: `const PASSWORD = '5f4dcc3b5aa765d61d8327deb882cf99';` entspricht dem Passwort `password`.
 
 ## Gepatchte AdminServ-Bugs (TmForever)
 

@@ -22,27 +22,36 @@
 ```
 ├── assets/
 │   ├── bin/                                     # Binaries und Startscript
-│   │   ├── AdminServ_v2.1.1.zip                # AdminServ Web-UI
-│   │   ├── remoteCP_v4.0.3.5.zip               # RemoteCP Web-UI
-│   │   ├── xaseco_v1.16.zip                     # XAseco Server-Controller
+│   │   ├── AdminServ_v2.1.1.zip                 # AdminServ Web-UI
+│   │   ├── remoteCP_v4.0.3.5.zip                # RemoteCP Web-UI
 │   │   ├── RunTrackmaniaServer.sh               # Container-Startscript
-│   │   └── TrackmaniaServer_*.zip               # Trackmania Server Binary
+│   │   ├── TrackmaniaServer_2011-02-21.zip      # Trackmania Server Binary
+│   │   └── xaseco_v1.16.zip                     # XAseco Server-Controller
 │   ├── config/
+│   │   ├── adminserv/                           # AdminServ-Konfiguration
+│   │   │   ├── get_matchset_mapimport.php       # MatchSet Map-Import Script
+│   │   │   └── maps-creatematchset.php          # MatchSet-Erstellung Script
 │   │   ├── custom_game_settings.txt             # MatchSettings (Spielmodus, Map-Rotation)
 │   │   ├── dedicated_cfg.txt                    # Server-Config-Template (mit Platzhaltern)
-│   │   └── remotecp/
-│   │       └── plugins/
-│   │           ├── CustomPoints/
-│   │           │   └── index.php                # CustomPoints-Plugin fuer RemoteCP
-│   │           └── Mods/
-│   │               └── settings.xml             # Skin-Bibliothek (techniverse.net)
+│   │   ├── remotecp/
+│   │   │   └── plugins/
+│   │   │       ├── CustomPoints/
+│   │   │       │   └── index.php                # CustomPoints-Plugin fuer RemoteCP
+│   │   │       └── Mods/
+│   │   │           ├── index.php                # Mods-Plugin fuer RemoteCP
+│   │   │           └── settings.xml             # Skin-Bibliothek (techniverse.net)
+│   │   └── xaseco/
+│   │       └── teamspeak3.xml                   # TeamSpeak3-Konfiguration fuer XAseco
 │   └── db/
 │       └── init-xaseco-db.sh                    # MariaDB Init-Script fuer XAseco-DB
 ├── docs/                                        # Dokumentation
 ├── docker-compose.yml                           # Docker Compose Konfiguration
 ├── Dockerfile                                   # Docker Build-Definition
+├── .dockerignore                                # Docker-Ignore-Regeln
 ├── .env.example                                 # Vorlage fuer Umgebungsvariablen
 ├── .env                                         # Lokale Umgebungsvariablen (nicht im Git!)
+├── .gitattributes                               # Git-Attribut-Konfiguration
+├── .gitignore                                   # Git-Ignore-Regeln
 ├── LICENSE                                      # Lizenz
 ├── README.md                                    # Projektbeschreibung
 └── data/                                        # Persistente Daten (zur Laufzeit)
