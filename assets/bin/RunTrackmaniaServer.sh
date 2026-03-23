@@ -368,10 +368,12 @@ fi
 # ============================================================
 # XAseco: TeamSpeak3-Plugin Gateway aktualisieren (fuer bestehende Volumes)
 # ============================================================
-# Das Original-TS3-Gateway ist nicht mehr verfuegbar. Die eigene
-# teamspeak3.xml mit dem Ersatz-Gateway wird in das Volume kopiert,
-# falls sie fehlt oder noch das alte (nicht mehr erreichbare) Gateway
-# referenziert. Gleichzeitig wird das Plugin reaktiviert, falls es
+# Das Original-TS3-Gateway ist nicht mehr verfuegbar. Falls die
+# teamspeak3.xml fehlt, wird sie aus dem Template kopiert. Falls sie
+# bereits existiert (= Nutzer hat eigene TS3-Daten konfiguriert),
+# werden NUR die Gateway-URLs (helperURL/logoURL) gezielt aktualisiert.
+# Alle anderen Einstellungen (Server, Port, Channel etc.) bleiben
+# erhalten. Gleichzeitig wird das Plugin reaktiviert, falls es
 # in einer frueheren Version auskommentiert wurde.
 # ============================================================
 XASECO_DIR_TS3="/opt/tmserver/xaseco"
@@ -379,16 +381,30 @@ TS3_XML="$XASECO_DIR_TS3/teamspeak3.xml"
 TS3_DEFAULT="/opt/tmserver/default-xaseco/teamspeak3.xml"
 TS3_PLUGINS_XML="$XASECO_DIR_TS3/plugins.xml"
 
-# teamspeak3.xml aktualisieren: Kopieren wenn fehlend oder veraltet
+# teamspeak3.xml aktualisieren: Kopieren wenn fehlend, Gateway-URLs gezielt patchen
+# WICHTIG: Bei bestehender Datei wird NICHT die gesamte Datei ueberschrieben,
+# damit benutzerdefinierte Einstellungen (Server, Port, Channel) erhalten bleiben.
+# Nur die Gateway-URLs (helperURL/logoURL) werden aktualisiert, falls sie noch
+# auf ein altes, nicht mehr erreichbares Gateway zeigen.
 if [ -f "$TS3_DEFAULT" ]; then
     if [ ! -f "$TS3_XML" ]; then
         echo "==> TeamSpeak3-Gateway: teamspeak3.xml fehlt, kopiere aus Template..."
         cp "$TS3_DEFAULT" "$TS3_XML"
         echo "    teamspeak3.xml erfolgreich kopiert."
-    elif ! diff -q "$TS3_DEFAULT" "$TS3_XML" > /dev/null 2>&1; then
-        echo "==> TeamSpeak3-Gateway: teamspeak3.xml wird aktualisiert..."
-        cp "$TS3_DEFAULT" "$TS3_XML"
-        echo "    teamspeak3.xml erfolgreich aktualisiert."
+    else
+        # Gateway-URLs aus dem Template auslesen
+        NEW_HELPER_URL=$(grep -oP '(?<=<helperURL>).*?(?=</helperURL>)' "$TS3_DEFAULT")
+        NEW_LOGO_URL=$(grep -oP '(?<=<logoURL>).*?(?=</logoURL>)' "$TS3_DEFAULT")
+        # Aktuelle URLs aus der bestehenden Datei auslesen
+        CUR_HELPER_URL=$(grep -oP '(?<=<helperURL>).*?(?=</helperURL>)' "$TS3_XML")
+        CUR_LOGO_URL=$(grep -oP '(?<=<logoURL>).*?(?=</logoURL>)' "$TS3_XML")
+        # Nur patchen, wenn sich die Gateway-URLs unterscheiden
+        if [ "$CUR_HELPER_URL" != "$NEW_HELPER_URL" ] || [ "$CUR_LOGO_URL" != "$NEW_LOGO_URL" ]; then
+            echo "==> TeamSpeak3-Gateway: Aktualisiere Gateway-URLs (Server-Einstellungen bleiben erhalten)..."
+            [ -n "$NEW_HELPER_URL" ] && sed -i "s|<helperURL>.*</helperURL>|<helperURL>${NEW_HELPER_URL}</helperURL>|" "$TS3_XML"
+            [ -n "$NEW_LOGO_URL" ] && sed -i "s|<logoURL>.*</logoURL>|<logoURL>${NEW_LOGO_URL}</logoURL>|" "$TS3_XML"
+            echo "    Gateway-URLs erfolgreich aktualisiert."
+        fi
     fi
 fi
 
