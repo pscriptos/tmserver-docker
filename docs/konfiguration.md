@@ -172,28 +172,28 @@ Nach Abschluss des gesamten Startprozesses wird automatisch eine übersichtliche
 
 ```
 ╔════════════════════════════════════════════════════════════════╗
-║     TrackMania Nations Forever - Server gestartet             ║
+║     TrackMania Nations Forever - Server gestartet              ║
 ╠════════════════════════════════════════════════════════════════╣
-║  Servername:     Mein Trackmania Server                       ║
-║  Modus:          Internet (Ladder: forced)                    ║
-║  Spieler:        max. 32 Spieler / 32 Zuschauer              ║
-║  Server-Port:    2350 (TCP/UDP) | P2P: 3450 (TCP)            ║
-║  XMLRPC-Port:    5000                                         ║
+║  Servername:     Mein Trackmania Server                        ║
+║  Modus:          Internet (Ladder: forced)                     ║
+║  Spieler:        max. 32 Spieler / 32 Zuschauer                ║
+║  Server-Port:    2350 (TCP/UDP) | P2P: 3450 (TCP)              ║
+║  XMLRPC-Port:    5000                                          ║
 ╠════════════════════════════════════════════════════════════════╣
-║  MatchSettings:  custom_game_settings.txt                     ║
-║  Maps:           24 Maps geladen                              ║
-║  Map-Shuffle:    Deaktiviert                                  ║
+║  MatchSettings:  custom_game_settings.txt                      ║
+║  Maps:           24 Maps geladen                               ║
+║  Map-Shuffle:    Deaktiviert                                   ║
 ╠════════════════════════════════════════════════════════════════╣
-║  XAseco:         Aktiv (PID 1234)                             ║
-║  Healthcheck:    Aktiv (PID 5678)                             ║
-║  Forced Mods:    Keine                                        ║
+║  XAseco:         Aktiv (PID 1234)                              ║
+║  Healthcheck:    Aktiv (PID 5678)                              ║
+║  Forced Mods:    Keine                                         ║
 ╠════════════════════════════════════════════════════════════════╣
-║  AdminServ:      http://<host-ip>/                            ║
-║  RemoteCP:       http://<host-ip>/remotecp/                   ║
+║  AdminServ:      http://<host-ip>/                             ║
+║  RemoteCP:       http://<host-ip>/remotecp/                    ║
 ╠════════════════════════════════════════════════════════════════╣
-║  Log-Rotation:   Aktiv (stuendlich, max. 10 MB)              ║
-║  PHP-Debug:      Deaktiviert                                  ║
-║  TM-Server:      PID 42                                       ║
+║  Log-Rotation:   Aktiv (stuendlich, max. 10 MB)                ║
+║  PHP-Debug:      Deaktiviert                                   ║
+║  TM-Server:      PID 42                                        ║
 ╚════════════════════════════════════════════════════════════════╝
 ```
 
