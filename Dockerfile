@@ -47,6 +47,10 @@ COPY assets/bin/RunTrackmaniaServer.sh /opt/tmserver/
 RUN sed -i 's/\r$//' /opt/tmserver/RunTrackmaniaServer.sh \
     && chmod +x /opt/tmserver/RunTrackmaniaServer.sh
 
+COPY assets/bin/XAsecoHealthcheck.sh /opt/tmserver/
+RUN sed -i 's/\r$//' /opt/tmserver/XAsecoHealthcheck.sh \
+    && chmod +x /opt/tmserver/XAsecoHealthcheck.sh
+
 COPY assets/bin/AdminServ_v2.1.1.zip /var/www/html
 RUN unzip /var/www/html/AdminServ_v2.1.1.zip -d /var/www/html \
     && rm -f /var/www/html/AdminServ_v2.1.1.zip \
@@ -192,6 +196,8 @@ ENV XASECO_DB_HOST=mariadb
 ENV XASECO_DB_NAME=xaseco
 ENV XASECO_DB_USER=xaseco
 ENV XASECO_DEDIMANIA_NATION=DEU
+ENV XASECO_HEALTHCHECK=true
+ENV XASECO_HEALTHCHECK_INTERVAL=60
 
 # Debugging
 ENV PHP_DISPLAY_ERRORS=false

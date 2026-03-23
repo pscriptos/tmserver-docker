@@ -183,6 +183,8 @@ XAseco ist ein Server-Controller für Rekorde, Karma, Jukebox und mehr. Siehe [X
 | `XASECO_DB_USER` | Datenbank-Benutzername | `xaseco` |
 | `XASECO_DB_PASSWORD` | Datenbank-Passwort | *(muss gesetzt werden)* |
 | `XASECO_DEDIMANIA_NATION` | Dedimania-Nation (IOC-Code) | `DEU` |
+| `XASECO_HEALTHCHECK` | Automatische Überwachung und Neustart von XAseco bei Absturz/Verbindungsverlust | `true` |
+| `XASECO_HEALTHCHECK_INTERVAL` | Prüfintervall des Healthchecks in Sekunden | `60` |
 
 > **Hinweis:** Die Server-Zugangsdaten (`SERVER_SA_PASSWORD`, `SERVER_XMLRPC_PORT`) und Dedimania-Daten (`SERVER_LOGIN`, `SERVER_LOGIN_PASSWORD`) werden automatisch aus der bestehenden Konfiguration übernommen.
 

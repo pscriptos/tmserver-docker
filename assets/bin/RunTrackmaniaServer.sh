@@ -900,10 +900,22 @@ if [ "$XMLRPC_READY" = "true" ]; then
         cd /opt/tmserver/xaseco
         php aseco.php TMN </dev/null >>aseco.log 2>&1 &
         XASECO_PID=$!
+        echo "$XASECO_PID" > /tmp/xaseco.pid
         echo "    XAseco gestartet (PID: ${XASECO_PID})"
         cd /opt/tmserver
+
+        # XAseco Healthcheck / Watchdog starten
+        XASECO_HEALTHCHECK="${XASECO_HEALTHCHECK:-true}"
+        if [ "$XASECO_HEALTHCHECK" = "true" ] && [ -f "/opt/tmserver/XAsecoHealthcheck.sh" ]; then
+            echo "==> Starte XAseco-Healthcheck (Watchdog)..."
+            /opt/tmserver/XAsecoHealthcheck.sh &
+            HEALTHCHECK_PID=$!
+            echo "    XAseco-Healthcheck gestartet (PID: ${HEALTHCHECK_PID})"
+        elif [ "$XASECO_HEALTHCHECK" != "true" ]; then
+            echo "==> XAseco-Healthcheck ist deaktiviert (XASECO_HEALTHCHECK=${XASECO_HEALTHCHECK})."
+        fi
     elif [ "${XASECO_ENABLED:-true}" != "true" ]; then
-        echo "==> XAseco ist deaktiviert (XASECO_ENABLED=${XASECO_ENABLED})."
+        echo "==> XAseco ist deaktiviert (XASECO_ENABLED=${XASECO_ENABLED})." 
     fi
 else
     echo "    WARNUNG: XMLRPC nicht erreichbar - XAseco und Forced Mods wurden NICHT gestartet."
