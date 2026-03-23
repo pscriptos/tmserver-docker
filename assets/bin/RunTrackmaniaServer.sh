@@ -743,6 +743,83 @@ fi
 
 echo "    Aktive MatchSettings: ${GAME_SETTINGS_PATH}"
 
+# ============================================================
+# MatchSettings: Map-Reihenfolge zufaellig mischen
+# ============================================================
+# Ueber die Umgebungsvariable SHUFFLE_MAPLIST kann gesteuert werden,
+# ob die Reihenfolge der Maps in der aktiven MatchSettings-Datei
+# beim Containerstart zufaellig durchgemischt wird:
+#   - "false" (Standard): Reihenfolge bleibt unveraendert.
+#   - "true":  Alle <challenge>-Eintraege werden zufaellig gemischt
+#              und <startindex> wird auf 0 gesetzt.
+# Die originale Datei wird dabei ueberschrieben.
+# ============================================================
+
+SHUFFLE_MAPLIST="${SHUFFLE_MAPLIST:-false}"
+
+if [ "$SHUFFLE_MAPLIST" = "true" ]; then
+    # Vollstaendigen Pfad zur aktiven MatchSettings-Datei bestimmen
+    ACTIVE_MS_FILE="$GAMEDATA_DIR/Tracks/${GAME_SETTINGS_PATH}"
+    if [ -f "$ACTIVE_MS_FILE" ]; then
+        echo "==> Map-Shuffle: Mische Maps in ${GAME_SETTINGS_PATH}..."
+        php -r '
+            $file = $argv[1];
+            $xml = file_get_contents($file);
+            if ($xml === false) {
+                echo "    FEHLER: Konnte MatchSettings-Datei nicht lesen.\n";
+                exit(1);
+            }
+
+            // Alle <challenge>...</challenge>-Bloecke extrahieren
+            if (!preg_match_all("/<challenge>.*?<\/challenge>/s", $xml, $matches)) {
+                echo "    Keine <challenge>-Eintraege gefunden. Shuffle uebersprungen.\n";
+                exit(0);
+            }
+
+            $challenges = $matches[0];
+            $count = count($challenges);
+            echo "    $count Maps gefunden. Mische Reihenfolge...\n";
+
+            // Zufaellig mischen
+            shuffle($challenges);
+
+            // Alle bestehenden <challenge>-Bloecke aus dem XML entfernen
+            $xmlClean = preg_replace("/(\s*<challenge>.*?<\/challenge>)+/s", "", $xml, 1);
+
+            // Gemischte Challenges vor </playlist> wieder einfuegen
+            $challengeBlock = "";
+            foreach ($challenges as $ch) {
+                $challengeBlock .= "\t" . $ch . "\n";
+            }
+            $xmlNew = str_replace("</playlist>", $challengeBlock . "</playlist>", $xmlClean);
+
+            // <startindex> auf 0 setzen (damit ab der ersten gemischten Map gestartet wird)
+            $xmlNew = preg_replace("/<startindex>[^<]*<\/startindex>/", "<startindex>0</startindex>", $xmlNew);
+
+            // Datei zurueckschreiben
+            if (file_put_contents($file, $xmlNew) === false) {
+                echo "    FEHLER: Konnte MatchSettings-Datei nicht schreiben.\n";
+                exit(1);
+            }
+
+            // Erste 3 Maps anzeigen
+            echo "    Reihenfolge erfolgreich gemischt.\n";
+            echo "    Neue Startreihenfolge (erste 3 Maps):\n";
+            for ($i = 0; $i < min(3, $count); $i++) {
+                if (preg_match("/<file>(.*?)<\/file>/", $challenges[$i], $m)) {
+                    echo "      " . ($i + 1) . ". " . $m[1] . "\n";
+                }
+            }
+            if ($count > 3) echo "      ... und " . ($count - 3) . " weitere Maps\n";
+        ' "$ACTIVE_MS_FILE"
+    else
+        echo "==> Map-Shuffle: MatchSettings-Datei nicht gefunden: ${ACTIVE_MS_FILE}"
+        echo "    Shuffle uebersprungen."
+    fi
+else
+    echo "==> Map-Shuffle: Deaktiviert (SHUFFLE_MAPLIST=false)."
+fi
+
 # Bestimme Server-Modus (Standard: internet)
 SERVER_MODE="${SERVER_MODE:-internet}"
 

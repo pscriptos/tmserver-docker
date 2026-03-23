@@ -169,6 +169,7 @@ ENV FORCE_CONFIG_UPDATE=false
 
 # Spieleinstellungen (MatchSettings)
 ENV ALLWARMUPDURATION=0
+ENV SHUFFLE_MAPLIST=false
 
 # Forced Mods (Skins) - URL zu ZIP-Dateien, die beim Start forciert werden
 ENV FORCE_MOD_STADIUM=""
