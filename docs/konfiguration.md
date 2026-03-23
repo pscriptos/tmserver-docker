@@ -18,6 +18,7 @@ Das gesamte **GameData-Verzeichnis** wird über ein Bind-Mount (`./data/gamedata
 |-----------|----------------|-------------|
 | `./data/gamedata` | `/opt/tmserver/GameData` | Gesamtes GameData-Verzeichnis |
 | `./data/controlpanel` | `/var/www/html` | AdminServ- und RemoteCP-Daten |
+| `./data/xaseco` | `/opt/tmserver/xaseco` | XAseco-Konfiguration und Logs |
 | `./data/mariadb` | `/var/lib/mysql` | MariaDB-Datenbankdateien |
 
 ### Enthaltene Unterordner

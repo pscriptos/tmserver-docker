@@ -71,6 +71,18 @@ EOPHP
     chown www-data:www-data "$ADMINSERV_DIR/config/servers.cfg.php"
     echo "    AdminServ-Server-Eintrag automatisch konfiguriert (Port: ${XMLRPC_PORT})."
 
+    # AdminServ-Konfigurationspasswort automatisch sichern
+    # OnlineConfig::PASSWORD in adminserv.cfg.php schuetzt die /config-Seite
+    # (Server hinzufuegen/aendern/loeschen). Da der Server-Eintrag bereits
+    # automatisch konfiguriert wird, ist kein manueller Zugriff noetig.
+    # Der Standard-Hash aus dem ZIP wird durch einen zufaelligen ersetzt.
+    ADMINSERV_CFG="$ADMINSERV_DIR/config/adminserv.cfg.php"
+    if [ -f "$ADMINSERV_CFG" ]; then
+        RANDOM_HASH=$(head -c 32 /dev/urandom | md5sum | cut -d' ' -f1)
+        sed -i "s|const PASSWORD = '[^']*';|const PASSWORD = '${RANDOM_HASH}';|" "$ADMINSERV_CFG"
+        echo "    AdminServ-Konfigurationspasswort automatisch gesichert."
+    fi
+
     echo "    AdminServ-Dateien erfolgreich kopiert."
 
     # ============================================================
@@ -445,6 +457,23 @@ if [ -f "$MODS_SETTINGS_FILE" ] && grep -q 'blacksunonline.com' "$MODS_SETTINGS_
     cp "$MODS_SETTINGS_DEFAULT" "$MODS_SETTINGS_FILE"
     chown www-data:www-data "$MODS_SETTINGS_FILE"
     echo "    Mods/settings.xml erfolgreich aktualisiert."
+fi
+
+# ============================================================
+# AdminServ: Konfigurationspasswort absichern (fuer bestehende Volumes)
+# ============================================================
+# AdminServ wird mit einem oeffentlich bekannten Standard-Hash
+# ausgeliefert (0b28a5799a32c687dad2c5183718ceac, aus dem
+# AdminServ-GitHub-Repo). Dieser wird durch einen zufaelligen
+# MD5-Hash ersetzt, damit die /config-Seite abgesichert ist.
+# ============================================================
+ADMINSERV_CFG_VOL="/var/www/html/config/adminserv.cfg.php"
+if [ -f "$ADMINSERV_CFG_VOL" ] && grep -q "0b28a5799a32c687dad2c5183718ceac" "$ADMINSERV_CFG_VOL"; then
+    echo "==> SICHERHEIT: AdminServ-Konfigurationspasswort wird ersetzt (Standard-Hash erkannt)..."
+    RANDOM_HASH=$(head -c 32 /dev/urandom | md5sum | cut -d' ' -f1)
+    sed -i "s|const PASSWORD = '0b28a5799a32c687dad2c5183718ceac';|const PASSWORD = '${RANDOM_HASH}';|" "$ADMINSERV_CFG_VOL"
+    echo "    Standard-Hash durch zufaelligen Hash ersetzt."
+    echo "    Die /config-Seite ist jetzt abgesichert."
 fi
 
 echo "Starting apache server"

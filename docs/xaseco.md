@@ -157,13 +157,197 @@ Die XAseco-Logdatei befindet sich unter:
 
 Bei Problemen ist dies die erste Anlaufstelle für die Fehlersuche.
 
-## Wichtige Chat-Befehle
+## Chat-Befehle
+
+Nachfolgend eine Übersicht der wichtigsten Befehle, die im Spielchat verfügbar sind. Eine vollständige Liste aller Befehle findest du in der offiziellen Dokumentation unter: https://docs.xaseco.org/commands.php
+
+### Hilfe & Info
 
 | Befehl | Beschreibung |
 |--------|-------------|
-| `/helpadmin` | Admin-Befehle anzeigen |
-| `/recs` | Lokale Rekorde anzeigen |
-| `/dedirecs` | Dedimania-Rekorde anzeigen |
-| `/jukebox` | Track-Jukebox öffnen |
-| `/stats` | Spieler-Statistiken anzeigen |
-| `/admin help` | Alle Admin-Befehle |
+| `/help` | Zeigt alle verfügbaren Befehle |
+| `/helpall` | Zeigt ausführliche Hilfe zu allen Befehlen |
+| `/xaseco` | Zeigt Infos über die XAseco-Version |
+| `/server` | Zeigt Infos über den Server |
+| `/plugins` | Zeigt Liste der aktiven Plugins |
+| `/time` | Zeigt aktuelle Serverzeit und Datum |
+
+### Rekorde & Statistiken
+
+| Befehl | Beschreibung |
+|--------|-------------|
+| `/recs` | Zeigt alle lokalen Rekorde auf der aktuellen Strecke |
+| `/recs pb` | Zeigt deine persönliche Bestzeit |
+| `/recs new` | Zeigt neu gefahrene Rekorde |
+| `/recs live` | Zeigt Rekorde der Online-Spieler |
+| `/pb` | Zeigt deine persönliche Bestzeit auf der aktuellen Strecke |
+| `/dedirecs` | Zeigt Dedimania-Rekorde auf der aktuellen Strecke |
+| `/dedipb` | Zeigt deine persönliche Dedimania-Bestzeit |
+| `/dedistats` | Zeigt Dedimania-Streckenstatistiken |
+| `/best` | Zeigt deine besten Rekorde |
+| `/worst` | Zeigt deine schlechtesten Rekorde |
+| `/summary` | Zeigt eine Zusammenfassung aller deiner Rekorde |
+| `/stats` | Zeigt Statistiken des aktuellen Spielers |
+| `/wins` | Zeigt Siege des aktuellen Spielers |
+
+### Rankings & Toplisten
+
+| Befehl | Beschreibung |
+|--------|-------------|
+| `/rank` | Zeigt deinen aktuellen Serverrang |
+| `/nextrank` | Zeigt den nächst besser platzierten Spieler |
+| `/top10` | Zeigt die 10 bestplatzierten Spieler |
+| `/top100` | Zeigt die 100 bestplatzierten Spieler |
+| `/topwins` | Zeigt die 100 siegreichsten Spieler |
+| `/toprecs` | Zeigt Top 100 der Rekord-Halter |
+| `/topsums` | Zeigt Top 100 der Top-3-Rekord-Halter |
+| `/active` | Zeigt die 100 aktivsten Spieler |
+| `/topclans` | Zeigt die 10 bestplatzierten Clans |
+
+### Strecken & Jukebox
+
+| Befehl | Beschreibung |
+|--------|-------------|
+| `/track` | Zeigt Infos über die aktuelle Strecke |
+| `/nextmap` | Zeigt den Namen der nächsten Strecke |
+| `/playtime` | Zeigt, wie lange die aktuelle Strecke läuft |
+| `/list` | Listet Strecken auf dem Server (siehe `/list help`) |
+| `/list nofinish` | Strecken, auf denen du keinen Rang hast |
+| `/list newest` | Die neuesten Strecken |
+| `/list <name>` | Suche nach Strecken- oder Autorennamen |
+| `/jukebox` | Track-Jukebox (siehe `/jukebox help`) |
+| `/jukebox list` | Zeigt kommende Strecken |
+| `/jukebox <#>` | Fügt Strecke Nr. `<#>` aus `/list` hinzu |
+| `/jukebox drop` | Entfernt deine hinzugefügte Strecke |
+| `/add <ID>` | Fügt eine Strecke direkt von TMX hinzu |
+| `/history` | Zeigt die 10 zuletzt gespielten Strecken |
+
+### Karma & Voting
+
+| Befehl | Beschreibung |
+|--------|-------------|
+| `/karma` | Zeigt Karma der aktuellen Strecke |
+| `/++` | Positive Bewertung für die aktuelle Strecke |
+| `/--` | Negative Bewertung für die aktuelle Strecke |
+| `/helpvote` | Zeigt Infos zum Chat-Voting-System |
+| `/endround` | Startet Vote zum Beenden der aktuellen Runde |
+| `/replay` | Startet Vote zum Wiederholen der Strecke |
+| `/skip` | Startet Vote zum Überspringen der Strecke |
+| `/kick` | Startet Vote zum Kicken eines Spielers |
+| `/y` | Stimmt mit Ja bei einem laufenden Vote |
+| `/cancel` | Bricht deinen aktuellen Vote ab |
+
+### Kommunikation
+
+| Befehl | Beschreibung |
+|--------|-------------|
+| `/pm <login> <msg>` | Sendet eine private Nachricht |
+| `/pmlog` | Zeigt Verlauf deiner privaten Nachrichten |
+| `/chatlog` | Zeigt Verlauf der letzten Chat-Nachrichten |
+| `/me` | Drückt eine Aktion/Emotion aus |
+| `/hi` | Sendet eine Hallo-Nachricht an alle |
+| `/bye` | Sendet eine Tschüss-Nachricht an alle |
+| `/gg` | Sendet "Good Game" an alle |
+| `/n1` | Sendet "Nice One" an alle |
+| `/brb` | Sendet "Be Right Back" an alle |
+| `/afk` | Sendet "Away From Keyboard" an alle |
+
+### Spieleroptionen
+
+| Befehl | Beschreibung |
+|--------|-------------|
+| `/settings` | Zeigt deine persönlichen Einstellungen |
+| `/cps` | Setzt Checkpoint-Tracking für lokale Rekorde |
+| `/dedicps` | Setzt Checkpoint-Tracking für Dedimania-Rekorde |
+| `/mute <login>` | Chat eines Spielers stummschalten |
+| `/unmute <login>` | Stummschaltung aufheben |
+| `/mutelist` | Zeigt Liste der stummgeschalteten Spieler |
+| `/players` | Zeigt aktuelle Spieler-Liste (Nicks/Logins) |
+| `/ranks` | Zeigt Liste der Online-Ränge |
+| `/bootme` | Kickt dich selbst vom Server |
+
+### Admin-Befehle (`/admin`)
+
+Diese Befehle sind nur für Admins und MasterAdmins verfügbar.
+
+| Befehl | Beschreibung |
+|--------|-------------|
+| `/admin help` | Zeigt alle Admin-Befehle |
+| `/admin helpall` | Zeigt ausführliche Hilfe zu allen Admin-Befehlen |
+
+**Server-Einstellungen:**
+
+| Befehl | Beschreibung |
+|--------|-------------|
+| `/admin setservername <name>` | Ändert den Servernamen |
+| `/admin setpwd <pwd>` | Ändert das Spieler-Passwort |
+| `/admin setspecpwd <pwd>` | Ändert das Zuschauer-Passwort |
+| `/admin setmaxplayers <#>` | Setzt maximale Spieleranzahl |
+| `/admin setmaxspecs <#>` | Setzt maximale Zuschauerzahl |
+| `/admin setgamemode <mode>` | Setzt Spielmodus (ta/rounds/team/laps/stunts/cup) |
+
+**Strecken-Verwaltung:**
+
+| Befehl | Beschreibung |
+|--------|-------------|
+| `/admin nextmap` | Erzwingt nächste Strecke |
+| `/admin restartmap` | Startet aktuelle Strecke neu |
+| `/admin replaymap` | Wiederholt aktuelle Strecke (via Jukebox) |
+| `/admin endround` | Erzwingt Ende der aktuellen Runde |
+| `/admin add <ID>` | Fügt Strecke von TMX hinzu |
+| `/admin addlocal <datei>` | Fügt lokale Strecke hinzu |
+| `/admin remove <#>` | Entfernt Strecke aus der Rotation |
+| `/admin erasethis` | Entfernt aktuelle Strecke und löscht Datei |
+| `/admin shuffle` | Mischt die Streckenliste zufällig |
+| `/admin writetracklist` | Speichert aktuelle Streckenliste |
+| `/admin readtracklist` | Lädt Streckenliste aus Datei |
+
+**Jukebox:**
+
+| Befehl | Beschreibung |
+|--------|-------------|
+| `/admin dropjukebox <#>` | Entfernt eine Strecke aus der Jukebox |
+| `/admin clearjukebox` | Leert die gesamte Jukebox |
+| `/admin pass` | Genehmigt einen laufenden Vote |
+| `/admin cancel` | Bricht einen laufenden Vote ab |
+
+**Spieler-Moderation:**
+
+| Befehl | Beschreibung |
+|--------|-------------|
+| `/admin warn <login>` | Sendet eine Warnung an einen Spieler |
+| `/admin kick <login>` | Kickt einen Spieler vom Server |
+| `/admin kickghost <login>` | Kickt einen Ghost-Spieler |
+| `/admin ban <login>` | Bannt einen Spieler |
+| `/admin unban <login>` | Entbannt einen Spieler |
+| `/admin black <login>` | Setzt einen Spieler auf die Blacklist |
+| `/admin unblack <login>` | Entfernt einen Spieler von der Blacklist |
+| `/admin mute <login>` | Schaltet einen Spieler global stumm |
+| `/admin unmute <login>` | Hebt globale Stummschaltung auf |
+| `/admin forcespec <login>` | Erzwingt Zuschauer-Modus |
+| `/admin forceteam <login>` | Erzwingt Team-Zuordnung (Blue/Red) |
+
+**Admin-Verwaltung:**
+
+| Befehl | Beschreibung |
+|--------|-------------|
+| `/admin addadmin <login>` | Fügt einen neuen Admin hinzu |
+| `/admin removeadmin <login>` | Entfernt einen Admin |
+| `/admin addop <login>` | Fügt einen neuen Operator hinzu |
+| `/admin removeop <login>` | Entfernt einen Operator |
+| `/admin listmasters` | Zeigt MasterAdmin-Liste |
+| `/admin listadmins` | Zeigt Admin-Liste |
+| `/admin listops` | Zeigt Operator-Liste |
+
+**Rekorde & System:**
+
+| Befehl | Beschreibung |
+|--------|-------------|
+| `/admin delrec <#>` | Löscht einen bestimmten Rekord auf der aktuellen Strecke |
+| `/admin wall <msg>` | Zeigt Popup-Nachricht für alle Spieler |
+| `/admin pm <msg>` | Sendet private Nachricht an alle Admins |
+| `/admin server` | Zeigt detaillierte Server-Einstellungen |
+| `/admin shutdown` | Fährt XAseco herunter |
+| `/admin shutdownall` | Fährt Server und XAseco herunter |
+
+> **Tipp:** Eine vollständige Referenz aller Befehle (inkl. `/jfreu`-Befehle für erweiterte Moderation) findest du unter: https://docs.xaseco.org/commands.php
