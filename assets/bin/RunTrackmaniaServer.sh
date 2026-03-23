@@ -1122,7 +1122,7 @@ echo "    Log-Rotation gestartet (PID: ${LOGROTATE_PID})"
 # ============================================================
 # Graceful Shutdown: Signal-Handler
 # ============================================================
-# Faengt SIGTERM/SIGINT ab und beendet alle Dienste sauber in
+# Faengt TERM/INT ab und beendet alle Dienste sauber in
 # der richtigen Reihenfolge:
 #   1. XAseco-Healthcheck (verhindert Neustart waehrend Shutdown)
 #   2. XAseco (schliesst DB-Connections ordentlich)
@@ -1203,8 +1203,8 @@ graceful_shutdown() {
     exit 0
 }
 
-trap graceful_shutdown SIGTERM SIGINT
-echo "==> Signal-Handler registriert (SIGTERM/SIGINT -> Graceful Shutdown)"
+trap graceful_shutdown TERM INT
+echo "==> Signal-Handler registriert (TERM/INT -> Graceful Shutdown)"
 
 # ============================================================
 # Startup-Zusammenfassung
