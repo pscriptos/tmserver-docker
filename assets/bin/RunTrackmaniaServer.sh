@@ -1119,5 +1119,92 @@ echo "==> Starte Log-Rotation (stuendlich, groessenbasiert 10 MB)..."
 LOGROTATE_PID=$!
 echo "    Log-Rotation gestartet (PID: ${LOGROTATE_PID})"
 
+# ============================================================
+# Graceful Shutdown: Signal-Handler
+# ============================================================
+# Faengt SIGTERM/SIGINT ab und beendet alle Dienste sauber in
+# der richtigen Reihenfolge:
+#   1. XAseco-Healthcheck (verhindert Neustart waehrend Shutdown)
+#   2. XAseco (schliesst DB-Connections ordentlich)
+#   3. TrackmaniaServer
+#   4. Apache (AdminServ/RemoteCP)
+#   5. Log-Rotation
+# Verhindert Datenbank-Korruption beim Container-Stop.
+# ============================================================
+graceful_shutdown() {
+    echo ""
+    echo "============================================================"
+    echo "==> Graceful Shutdown eingeleitet (Signal empfangen)..."
+    echo "============================================================"
+
+    # 1. XAseco-Healthcheck beenden (verhindert Neustart waehrend Shutdown)
+    if [ -n "${HEALTHCHECK_PID:-}" ] && kill -0 "$HEALTHCHECK_PID" 2>/dev/null; then
+        echo "    Beende XAseco-Healthcheck (PID: ${HEALTHCHECK_PID})..."
+        kill "$HEALTHCHECK_PID" 2>/dev/null
+        wait "$HEALTHCHECK_PID" 2>/dev/null
+        echo "    XAseco-Healthcheck beendet."
+    fi
+
+    # 2. XAseco beenden (schliesst DB-Connections ordentlich)
+    XASECO_PID_CURRENT=""
+    if [ -f "/tmp/xaseco.pid" ]; then
+        XASECO_PID_CURRENT=$(cat /tmp/xaseco.pid 2>/dev/null)
+    fi
+    if [ -n "$XASECO_PID_CURRENT" ] && kill -0 "$XASECO_PID_CURRENT" 2>/dev/null; then
+        echo "    Beende XAseco (PID: ${XASECO_PID_CURRENT})..."
+        kill "$XASECO_PID_CURRENT" 2>/dev/null
+        # Warte max. 10 Sekunden auf sauberes Beenden
+        WAIT_COUNT=0
+        while kill -0 "$XASECO_PID_CURRENT" 2>/dev/null && [ $WAIT_COUNT -lt 10 ]; do
+            sleep 1
+            WAIT_COUNT=$((WAIT_COUNT + 1))
+        done
+        if kill -0 "$XASECO_PID_CURRENT" 2>/dev/null; then
+            echo "    XAseco reagiert nicht, sende SIGKILL..."
+            kill -9 "$XASECO_PID_CURRENT" 2>/dev/null
+        fi
+        echo "    XAseco beendet."
+        rm -f /tmp/xaseco.pid
+    fi
+
+    # 3. TrackmaniaServer beenden
+    if [ -n "${TM_PID:-}" ] && kill -0 "$TM_PID" 2>/dev/null; then
+        echo "    Beende TrackmaniaServer (PID: ${TM_PID})..."
+        kill "$TM_PID" 2>/dev/null
+        # Warte max. 10 Sekunden auf sauberes Beenden
+        WAIT_COUNT=0
+        while kill -0 "$TM_PID" 2>/dev/null && [ $WAIT_COUNT -lt 10 ]; do
+            sleep 1
+            WAIT_COUNT=$((WAIT_COUNT + 1))
+        done
+        if kill -0 "$TM_PID" 2>/dev/null; then
+            echo "    TrackmaniaServer reagiert nicht, sende SIGKILL..."
+            kill -9 "$TM_PID" 2>/dev/null
+        fi
+        echo "    TrackmaniaServer beendet."
+    fi
+
+    # 4. Apache beenden (AdminServ/RemoteCP)
+    echo "    Beende Apache..."
+    service apache2 stop 2>/dev/null
+    echo "    Apache beendet."
+
+    # 5. Log-Rotation beenden
+    if [ -n "${LOGROTATE_PID:-}" ] && kill -0 "$LOGROTATE_PID" 2>/dev/null; then
+        echo "    Beende Log-Rotation (PID: ${LOGROTATE_PID})..."
+        kill "$LOGROTATE_PID" 2>/dev/null
+        wait "$LOGROTATE_PID" 2>/dev/null
+        echo "    Log-Rotation beendet."
+    fi
+
+    echo "============================================================"
+    echo "==> Graceful Shutdown abgeschlossen."
+    echo "============================================================"
+    exit 0
+}
+
+trap graceful_shutdown SIGTERM SIGINT
+echo "==> Signal-Handler registriert (SIGTERM/SIGINT -> Graceful Shutdown)"
+
 # Auf TrackmaniaServer warten (Hauptprozess)
 wait $TM_PID

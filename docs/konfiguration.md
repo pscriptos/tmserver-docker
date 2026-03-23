@@ -106,6 +106,22 @@ Der Ordner `GameData/Config/` enthält:
 | `Default.SystemConfig.Gbx` | System-Konfiguration |
 | `AdminServ/ServerOptions/` | Von AdminServ exportierte Server-Einstellungen |
 
+## Graceful Shutdown
+
+Beim Stoppen des Containers (`docker compose stop`, `docker compose down` oder `docker stop`) werden alle Dienste **sauber und in der richtigen Reihenfolge** heruntergefahren:
+
+1. **XAseco-Healthcheck** – wird zuerst beendet, damit XAseco nicht während des Shutdowns neu gestartet wird
+2. **XAseco** – beendet sich ordentlich und schließt alle Datenbank-Connections (verhindert DB-Korruption)
+3. **TrackmaniaServer** – der Spielserver wird sauber gestoppt
+4. **Apache** – AdminServ und RemoteCP werden beendet
+5. **Log-Rotation** – Hintergrundprozess wird gestoppt
+
+Jeder Dienst hat maximal 10 Sekunden Zeit, sich sauber zu beenden. Falls ein Prozess nicht reagiert, wird er zwangsweise beendet (SIGKILL). Die `stop_grace_period` in der `docker-compose.yml` ist auf 30 Sekunden gesetzt, um genügend Zeit für den gesamten Shutdown-Prozess zu geben.
+
+Der Shutdown-Fortschritt wird in der Konsole protokolliert und kann mit `docker logs tmserver` nachvollzogen werden.
+
+> **Hinweis:** Der Graceful Shutdown ist nach einem Image-Update automatisch aktiv – auch bei bestehenden Installationen. Es sind keine manuellen Schritte nötig.
+
 ## Log-Rotation
 
 Alle Log-Dateien im Container werden automatisch per `logrotate` rotiert, damit sie nicht unbegrenzt wachsen. Die Rotation läuft **größenbasiert** als Hintergrundprozess (stündliche Prüfung, kein Cron nötig).

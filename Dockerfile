@@ -219,4 +219,8 @@ EXPOSE 2350/udp
 EXPOSE 3450/tcp
 EXPOSE 80/tcp
 
+# Graceful Shutdown: SIGTERM wird vom Signal-Handler im Startscript abgefangen
+# und alle Dienste (XAseco, TM-Server, Apache) sauber heruntergefahren.
+STOPSIGNAL SIGTERM
+
 CMD ["/opt/tmserver/RunTrackmaniaServer.sh"]
