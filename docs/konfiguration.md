@@ -157,47 +157,51 @@ Die logrotate-Konfiguration liegt im Image unter `/etc/logrotate.d/tmserver` (Qu
 
 Nach Abschluss des gesamten Startprozesses wird automatisch eine übersichtliche Zusammenfassung aller wichtigen Server-Informationen als formatierte Box in der Konsole ausgegeben. Die Box-Breite passt sich dynamisch an den längsten Inhalt an.
 
+Alle angezeigten Werte (Servername, Spielerzahl, Ladder-Modus etc.) werden direkt aus der `dedicated_cfg.txt` gelesen – nicht aus den Umgebungsvariablen. So werden auch nachträgliche Änderungen (z.B. über AdminServ oder manuelles Editieren) korrekt angezeigt. Die Host-IP wird automatisch über das Default-Route-Interface des Containers ermittelt.
+
 **Angezeigte Informationen:**
 
-| Bereich | Details |
-|---------|---------|
-| **Server** | Servername, Modus (Internet/LAN), Ladder, Spieler-/Zuschauerlimit |
-| **Netzwerk** | Server-Port, P2P-Port, XMLRPC-Port |
-| **Maps** | Aktive MatchSettings-Datei, Anzahl geladener Maps, Shuffle-Status |
-| **Dienste** | XAseco-Status (mit PID), Healthcheck, Forced Mods |
-| **Web-Interfaces** | AdminServ- und RemoteCP-URLs |
-| **System** | Log-Rotation, PHP-Debug-Modus, TM-Server-PID |
+| Bereich | Details | Quelle |
+|---------|---------|--------|
+| **Server** | Servername, Modus (Internet/LAN), Ladder, Spieler-/Zuschauerlimit | `dedicated_cfg.txt` |
+| **Netzwerk** | Server-Port, P2P-Port, XMLRPC-Port | Umgebungsvariablen |
+| **Maps** | Aktive MatchSettings-Datei, Anzahl geladener Maps, Shuffle-Status | MatchSettings-XML |
+| **Dienste** | XAseco-Status (mit PID), Healthcheck, Forced Mods | Laufzeit-PIDs |
+| **Web-Interfaces** | AdminServ- und RemoteCP-URLs (mit ermittelter Host-IP) | Container-Netzwerk |
+| **System** | Log-Rotation, PHP-Debug-Modus, TM-Server-PID | Laufzeit |
 
 **Beispielausgabe:**
 
 ```
-╔════════════════════════════════════════════════════════════════╗
-║     TrackMania Nations Forever - Server gestartet              ║
-╠════════════════════════════════════════════════════════════════╣
-║  Servername:     Mein Trackmania Server                        ║
-║  Modus:          Internet (Ladder: forced)                     ║
-║  Spieler:        max. 32 Spieler / 32 Zuschauer                ║
-║  Server-Port:    2350 (TCP/UDP) | P2P: 3450 (TCP)              ║
-║  XMLRPC-Port:    5000                                          ║
-╠════════════════════════════════════════════════════════════════╣
-║  MatchSettings:  custom_game_settings.txt                      ║
-║  Maps:           24 Maps geladen                               ║
-║  Map-Shuffle:    Deaktiviert                                   ║
-╠════════════════════════════════════════════════════════════════╣
-║  XAseco:         Aktiv (PID 1234)                              ║
-║  Healthcheck:    Aktiv (PID 5678)                              ║
-║  Forced Mods:    Keine                                         ║
-╠════════════════════════════════════════════════════════════════╣
-║  AdminServ:      http://<host-ip>/                             ║
-║  RemoteCP:       http://<host-ip>/remotecp/                    ║
-╠════════════════════════════════════════════════════════════════╣
-║  Log-Rotation:   Aktiv (stuendlich, max. 10 MB)                ║
-║  PHP-Debug:      Deaktiviert                                   ║
-║  TM-Server:      PID 42                                        ║
-╚════════════════════════════════════════════════════════════════╝
+╔════════════════════════════════════════════════════════════════════╗
+║       TrackMania Nations Forever - Server gestartet               ║
+╠════════════════════════════════════════════════════════════════════╣
+║  Servername:     Mein Trackmania Server                           ║
+║  Modus:          Internet (Ladder: forced)                        ║
+║  Spieler:        max. 32 Spieler / 32 Zuschauer                   ║
+║  Server-Port:    2350 (TCP/UDP) | P2P: 3450 (TCP)                 ║
+║  XMLRPC-Port:    5000                                              ║
+╠════════════════════════════════════════════════════════════════════╣
+║  MatchSettings:  custom_game_settings.txt                          ║
+║  Maps:           24 Maps geladen                                   ║
+║  Map-Shuffle:    Deaktiviert                                       ║
+╠════════════════════════════════════════════════════════════════════╣
+║  XAseco:         Aktiv (PID 1234)                                  ║
+║  Healthcheck:    Aktiv (PID 5678)                                  ║
+║  Forced Mods:    Keine                                             ║
+╠════════════════════════════════════════════════════════════════════╣
+║  AdminServ:      http://172.20.60.10/                              ║
+║  RemoteCP:       http://172.20.60.10/remotecp/                     ║
+╠════════════════════════════════════════════════════════════════════╣
+║  Log-Rotation:   Aktiv (stuendlich, max. 10 MB)                   ║
+║  PHP-Debug:      Deaktiviert                                       ║
+║  TM-Server:      PID 42                                            ║
+╚════════════════════════════════════════════════════════════════════╝
 ```
 
 Die Zusammenfassung kann jederzeit mit `docker logs tmserver` erneut eingesehen werden.
+
+> **Hinweis:** Die angezeigte IP ist die Container-interne IP. Wenn der Server über Port-Forwarding erreichbar ist, muss die tatsächliche Host-IP oder Domain verwendet werden.
 
 > **Hinweis:** Die Startup-Zusammenfassung ist nach einem Image-Update automatisch aktiv – auch bei bestehenden Installationen. Es sind keine manuellen Schritte nötig.
 

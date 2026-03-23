@@ -1282,6 +1282,27 @@ print_startup_summary() {
         _PHP_DEBUG="Deaktiviert"
     fi
 
+    # Servername aus dedicated_cfg.txt lesen (nicht aus Env-Variable, da diese
+    # nach AdminServ-Aenderungen oder manuellen Edits veraltet sein kann)
+    _SERVER_NAME=""
+    if [ -f "$CONFIG" ]; then
+        # Nur <name> innerhalb von <server_options> lesen (nicht aus <authorization_levels>)
+        _SERVER_NAME=$(php -r '
+            $cfg = file_get_contents($argv[1]);
+            if (preg_match("/<server_options>.*?<name>([^<]*)<\/name>/s", $cfg, $m)) {
+                echo trim($m[1]);
+            }
+        ' "$CONFIG" 2>/dev/null)
+    fi
+    _SERVER_NAME=${_SERVER_NAME:-${SERVER_NAME:-Trackmania Server}}
+
+    # Ladder-Modus aus dedicated_cfg.txt lesen
+    _LADDER_MODE=""
+    if [ -f "$CONFIG" ]; then
+        _LADDER_MODE=$(grep -oP '(?<=<ladder_mode>)[^<]+' "$CONFIG" 2>/dev/null | head -1)
+    fi
+    _LADDER_MODE=${_LADDER_MODE:-${SERVER_LADDER_MODE:-forced}}
+
     # Max-Players und Max-Spectators aus Config lesen (falls verfuegbar)
     _MAX_PLAYERS=""
     _MAX_SPECS=""
@@ -1292,12 +1313,17 @@ print_startup_summary() {
     _MAX_PLAYERS=${_MAX_PLAYERS:-${SERVER_MAX_PLAYERS:-32}}
     _MAX_SPECS=${_MAX_SPECS:-${SERVER_MAX_SPECTATORS:-32}}
 
+    # Host-IP ermitteln (IP des Default-Route-Interface)
+    _HOST_IP=$(ip route get 1.1.1.1 2>/dev/null | grep -oP 'src \K[0-9.]+' | head -1)
+    _HOST_IP=${_HOST_IP:-$(hostname -i 2>/dev/null | awk '{print $1}')}
+    _HOST_IP=${_HOST_IP:-"<host-ip>"}
+
     # --- Zeilen in Temp-Datei schreiben ('---' = Trennlinie) ---
     cat > "$_SUMMARY_TMP" <<EOSUMMARY
 TrackMania Nations Forever - Server gestartet
 ---
-Servername:     ${SERVER_NAME:-Trackmania Server}
-Modus:          ${_MODE_DISPLAY} (Ladder: ${SERVER_LADDER_MODE:-forced})
+Servername:     ${_SERVER_NAME}
+Modus:          ${_MODE_DISPLAY} (Ladder: ${_LADDER_MODE})
 Spieler:        max. ${_MAX_PLAYERS} Spieler / ${_MAX_SPECS} Zuschauer
 Server-Port:    ${SERVER_PORT:-2350} (TCP/UDP) | P2P: ${SERVER_P2P_PORT:-3450} (TCP)
 XMLRPC-Port:    ${SERVER_XMLRPC_PORT:-5000}
@@ -1310,8 +1336,8 @@ XAseco:         ${_XASECO_STATUS}
 Healthcheck:    ${_HC_STATUS}
 Forced Mods:    ${_MODS_STATUS}
 ---
-AdminServ:      http://<host-ip>/
-RemoteCP:       http://<host-ip>/remotecp/
+AdminServ:      http://${_HOST_IP}/
+RemoteCP:       http://${_HOST_IP}/remotecp/
 ---
 Log-Rotation:   Aktiv (stuendlich, max. 10 MB)
 PHP-Debug:      ${_PHP_DEBUG}
