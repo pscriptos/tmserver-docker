@@ -1206,5 +1206,167 @@ graceful_shutdown() {
 trap graceful_shutdown SIGTERM SIGINT
 echo "==> Signal-Handler registriert (SIGTERM/SIGINT -> Graceful Shutdown)"
 
+# ============================================================
+# Startup-Zusammenfassung
+# ============================================================
+# Gibt am Ende des Startprozesses eine uebersichtliche Box mit
+# allen wichtigen Server-Informationen aus. Die Box-Breite passt
+# sich automatisch an den laengsten Inhalt an.
+# Bei bestehenden Installationen ist dieses Feature nach einem
+# Image-Update automatisch aktiv (keine manuellen Schritte noetig).
+# ============================================================
+print_startup_summary() {
+    _SUMMARY_TMP=$(mktemp /tmp/startup_summary.XXXXXX)
+
+    # Map-Anzahl aus aktiver MatchSettings-Datei zaehlen
+    _ACTIVE_MS_FULL="$GAMEDATA_DIR/Tracks/${GAME_SETTINGS_PATH}"
+    _MAP_COUNT="0"
+    if [ -f "$_ACTIVE_MS_FULL" ]; then
+        _MAP_COUNT=$(grep -c '<challenge>' "$_ACTIVE_MS_FULL" 2>/dev/null)
+        _MAP_COUNT=${_MAP_COUNT:-0}
+    fi
+
+    # MatchSettings-Dateiname extrahieren
+    _MS_FILENAME=$(basename "$GAME_SETTINGS_PATH")
+
+    # XAseco-Status ermitteln
+    if [ "${XASECO_ENABLED:-true}" != "true" ]; then
+        _XASECO_STATUS="Deaktiviert"
+    elif [ -n "${XASECO_PID:-}" ] && kill -0 "$XASECO_PID" 2>/dev/null; then
+        _XASECO_STATUS="Aktiv (PID ${XASECO_PID})"
+    else
+        _XASECO_STATUS="Nicht gestartet"
+    fi
+
+    # Healthcheck-Status ermitteln
+    if [ "${XASECO_ENABLED:-true}" != "true" ]; then
+        _HC_STATUS="—"
+    elif [ "${XASECO_HEALTHCHECK:-true}" = "true" ] && [ -n "${HEALTHCHECK_PID:-}" ]; then
+        _HC_STATUS="Aktiv (PID ${HEALTHCHECK_PID})"
+    elif [ "${XASECO_HEALTHCHECK:-true}" != "true" ]; then
+        _HC_STATUS="Deaktiviert"
+    else
+        _HC_STATUS="Nicht gestartet"
+    fi
+
+    # Forced Mods zaehlen
+    _MOD_COUNT=0
+    for _ENV_NAME in FORCE_MOD_STADIUM FORCE_MOD_ISLAND FORCE_MOD_BAY FORCE_MOD_COAST FORCE_MOD_SPEED FORCE_MOD_ALPINE FORCE_MOD_RALLY; do
+        eval "_MOD_VAL=\${$_ENV_NAME:-}"
+        [ -n "$_MOD_VAL" ] && _MOD_COUNT=$((_MOD_COUNT + 1))
+    done
+    if [ "$_MOD_COUNT" -gt 0 ]; then
+        _MODS_STATUS="${_MOD_COUNT} Mod(s) aktiv"
+    else
+        _MODS_STATUS="Keine"
+    fi
+
+    # Shuffle-Status
+    if [ "${SHUFFLE_MAPLIST:-false}" = "true" ]; then
+        _SHUFFLE_STATUS="Aktiviert"
+    else
+        _SHUFFLE_STATUS="Deaktiviert"
+    fi
+
+    # Server-Modus-Anzeige
+    case "${SERVER_MODE:-internet}" in
+        internet) _MODE_DISPLAY="Internet" ;;
+        lan)      _MODE_DISPLAY="LAN" ;;
+        *)        _MODE_DISPLAY="${SERVER_MODE}" ;;
+    esac
+
+    # PHP-Debug-Status
+    if [ "${PHP_DISPLAY_ERRORS:-false}" = "true" ]; then
+        _PHP_DEBUG="Aktiviert"
+    else
+        _PHP_DEBUG="Deaktiviert"
+    fi
+
+    # Max-Players und Max-Spectators aus Config lesen (falls verfuegbar)
+    _MAX_PLAYERS=""
+    _MAX_SPECS=""
+    if [ -f "$CONFIG" ]; then
+        _MAX_PLAYERS=$(grep -oP '(?<=<max_players>)[^<]+' "$CONFIG" 2>/dev/null | head -1)
+        _MAX_SPECS=$(grep -oP '(?<=<max_spectators>)[^<]+' "$CONFIG" 2>/dev/null | head -1)
+    fi
+    _MAX_PLAYERS=${_MAX_PLAYERS:-${SERVER_MAX_PLAYERS:-32}}
+    _MAX_SPECS=${_MAX_SPECS:-${SERVER_MAX_SPECTATORS:-32}}
+
+    # --- Zeilen in Temp-Datei schreiben ('---' = Trennlinie) ---
+    cat > "$_SUMMARY_TMP" <<EOSUMMARY
+TrackMania Nations Forever - Server gestartet
+---
+Servername:     ${SERVER_NAME:-Trackmania Server}
+Modus:          ${_MODE_DISPLAY} (Ladder: ${SERVER_LADDER_MODE:-forced})
+Spieler:        max. ${_MAX_PLAYERS} Spieler / ${_MAX_SPECS} Zuschauer
+Server-Port:    ${SERVER_PORT:-2350} (TCP/UDP) | P2P: ${SERVER_P2P_PORT:-3450} (TCP)
+XMLRPC-Port:    ${SERVER_XMLRPC_PORT:-5000}
+---
+MatchSettings:  ${_MS_FILENAME}
+Maps:           ${_MAP_COUNT} Maps geladen
+Map-Shuffle:    ${_SHUFFLE_STATUS}
+---
+XAseco:         ${_XASECO_STATUS}
+Healthcheck:    ${_HC_STATUS}
+Forced Mods:    ${_MODS_STATUS}
+---
+AdminServ:      http://<host-ip>/
+RemoteCP:       http://<host-ip>/remotecp/
+---
+Log-Rotation:   Aktiv (stuendlich, max. 10 MB)
+PHP-Debug:      ${_PHP_DEBUG}
+TM-Server:      PID ${TM_PID}
+EOSUMMARY
+
+    # --- Maximale Zeilenlaenge ermitteln ---
+    _MAX_LEN=0
+    while IFS= read -r _line; do
+        if [ "$_line" != "---" ]; then
+            _cur_len=${#_line}
+            [ "$_cur_len" -gt "$_MAX_LEN" ] && _MAX_LEN=$_cur_len
+        fi
+    done < "$_SUMMARY_TMP"
+
+    # Box-Breite: Inhalt + je 2 Zeichen Padding (links/rechts)
+    _BOX_INNER=$((_MAX_LEN + 4))
+
+    # --- Horizontale Linie erzeugen ---
+    _HLINE=""
+    _i=0
+    while [ "$_i" -lt "$_BOX_INNER" ]; do
+        _HLINE="${_HLINE}═"
+        _i=$((_i + 1))
+    done
+
+    # --- Box ausgeben ---
+    echo ""
+    printf '╔%s╗\n' "$_HLINE"
+
+    _is_title=true
+    while IFS= read -r _line; do
+        if [ "$_line" = "---" ]; then
+            printf '╠%s╣\n' "$_HLINE"
+        elif [ "$_is_title" = "true" ]; then
+            # Titelzeile zentriert ausgeben
+            _title_len=${#_line}
+            _pad_total=$((_MAX_LEN - _title_len))
+            _pad_left=$((_pad_total / 2))
+            _pad_right=$((_pad_total - _pad_left))
+            printf '║  %*s%s%*s  ║\n' "$_pad_left" "" "$_line" "$_pad_right" ""
+            _is_title=false
+        else
+            printf '║  %-*s  ║\n' "$_MAX_LEN" "$_line"
+        fi
+    done < "$_SUMMARY_TMP"
+
+    printf '╚%s╝\n' "$_HLINE"
+    echo ""
+
+    # Aufraeumen
+    rm -f "$_SUMMARY_TMP"
+}
+
+print_startup_summary
+
 # Auf TrackmaniaServer warten (Hauptprozess)
 wait $TM_PID

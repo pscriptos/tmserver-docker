@@ -153,6 +153,54 @@ Die logrotate-Konfiguration liegt im Image unter `/etc/logrotate.d/tmserver` (Qu
 
 > **Hinweis:** Die Log-Rotation ist nach einem Image-Update automatisch aktiv – auch bei bestehenden Installationen. Es sind keine manuellen Schritte nötig.
 
+## Startup-Zusammenfassung
+
+Nach Abschluss des gesamten Startprozesses wird automatisch eine übersichtliche Zusammenfassung aller wichtigen Server-Informationen als formatierte Box in der Konsole ausgegeben. Die Box-Breite passt sich dynamisch an den längsten Inhalt an.
+
+**Angezeigte Informationen:**
+
+| Bereich | Details |
+|---------|---------|
+| **Server** | Servername, Modus (Internet/LAN), Ladder, Spieler-/Zuschauerlimit |
+| **Netzwerk** | Server-Port, P2P-Port, XMLRPC-Port |
+| **Maps** | Aktive MatchSettings-Datei, Anzahl geladener Maps, Shuffle-Status |
+| **Dienste** | XAseco-Status (mit PID), Healthcheck, Forced Mods |
+| **Web-Interfaces** | AdminServ- und RemoteCP-URLs |
+| **System** | Log-Rotation, PHP-Debug-Modus, TM-Server-PID |
+
+**Beispielausgabe:**
+
+```
+╔════════════════════════════════════════════════════════════════╗
+║     TrackMania Nations Forever - Server gestartet             ║
+╠════════════════════════════════════════════════════════════════╣
+║  Servername:     Mein Trackmania Server                       ║
+║  Modus:          Internet (Ladder: forced)                    ║
+║  Spieler:        max. 32 Spieler / 32 Zuschauer              ║
+║  Server-Port:    2350 (TCP/UDP) | P2P: 3450 (TCP)            ║
+║  XMLRPC-Port:    5000                                         ║
+╠════════════════════════════════════════════════════════════════╣
+║  MatchSettings:  custom_game_settings.txt                     ║
+║  Maps:           24 Maps geladen                              ║
+║  Map-Shuffle:    Deaktiviert                                  ║
+╠════════════════════════════════════════════════════════════════╣
+║  XAseco:         Aktiv (PID 1234)                             ║
+║  Healthcheck:    Aktiv (PID 5678)                             ║
+║  Forced Mods:    Keine                                        ║
+╠════════════════════════════════════════════════════════════════╣
+║  AdminServ:      http://<host-ip>/                            ║
+║  RemoteCP:       http://<host-ip>/remotecp/                   ║
+╠════════════════════════════════════════════════════════════════╣
+║  Log-Rotation:   Aktiv (stuendlich, max. 10 MB)              ║
+║  PHP-Debug:      Deaktiviert                                  ║
+║  TM-Server:      PID 42                                       ║
+╚════════════════════════════════════════════════════════════════╝
+```
+
+Die Zusammenfassung kann jederzeit mit `docker logs tmserver` erneut eingesehen werden.
+
+> **Hinweis:** Die Startup-Zusammenfassung ist nach einem Image-Update automatisch aktiv – auch bei bestehenden Installationen. Es sind keine manuellen Schritte nötig.
+
 ## AdminServ ServerOptions-Import
 
 Wenn über AdminServ Änderungen an den Server-Optionen vorgenommen und als Export gespeichert werden (z.B. Servername, Beschreibung, Spielerzahl), werden diese beim nächsten Container-Start **automatisch** in die `dedicated_cfg.txt` übernommen.
