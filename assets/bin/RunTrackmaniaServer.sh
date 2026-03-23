@@ -1313,11 +1313,6 @@ print_startup_summary() {
     _MAX_PLAYERS=${_MAX_PLAYERS:-${SERVER_MAX_PLAYERS:-32}}
     _MAX_SPECS=${_MAX_SPECS:-${SERVER_MAX_SPECTATORS:-32}}
 
-    # Host-IP ermitteln (IP des Default-Route-Interface)
-    _HOST_IP=$(ip route get 1.1.1.1 2>/dev/null | grep -oP 'src \K[0-9.]+' | head -1)
-    _HOST_IP=${_HOST_IP:-$(hostname -i 2>/dev/null | awk '{print $1}')}
-    _HOST_IP=${_HOST_IP:-"<host-ip>"}
-
     # --- Zeilen in Temp-Datei schreiben ('---' = Trennlinie) ---
     cat > "$_SUMMARY_TMP" <<EOSUMMARY
 TrackMania Nations Forever - Server gestartet
@@ -1336,8 +1331,8 @@ XAseco:         ${_XASECO_STATUS}
 Healthcheck:    ${_HC_STATUS}
 Forced Mods:    ${_MODS_STATUS}
 ---
-AdminServ:      http://${_HOST_IP}/
-RemoteCP:       http://${_HOST_IP}/remotecp/
+AdminServ:      http://<host-ip>/
+RemoteCP:       http://<host-ip>/remotecp/
 ---
 Log-Rotation:   Aktiv (stuendlich, max. 10 MB)
 PHP-Debug:      ${_PHP_DEBUG}

@@ -157,7 +157,7 @@ Die logrotate-Konfiguration liegt im Image unter `/etc/logrotate.d/tmserver` (Qu
 
 Nach Abschluss des gesamten Startprozesses wird automatisch eine übersichtliche Zusammenfassung aller wichtigen Server-Informationen als formatierte Box in der Konsole ausgegeben. Die Box-Breite passt sich dynamisch an den längsten Inhalt an.
 
-Alle angezeigten Werte (Servername, Spielerzahl, Ladder-Modus etc.) werden direkt aus der `dedicated_cfg.txt` gelesen – nicht aus den Umgebungsvariablen. So werden auch nachträgliche Änderungen (z.B. über AdminServ oder manuelles Editieren) korrekt angezeigt. Die Host-IP wird automatisch über das Default-Route-Interface des Containers ermittelt.
+Alle angezeigten Werte (Servername, Spielerzahl, Ladder-Modus etc.) werden direkt aus der `dedicated_cfg.txt` gelesen – nicht aus den Umgebungsvariablen. So werden auch nachträgliche Änderungen (z.B. über AdminServ oder manuelles Editieren) korrekt angezeigt.
 
 **Angezeigte Informationen:**
 
@@ -167,7 +167,7 @@ Alle angezeigten Werte (Servername, Spielerzahl, Ladder-Modus etc.) werden direk
 | **Netzwerk** | Server-Port, P2P-Port, XMLRPC-Port | Umgebungsvariablen |
 | **Maps** | Aktive MatchSettings-Datei, Anzahl geladener Maps, Shuffle-Status | MatchSettings-XML |
 | **Dienste** | XAseco-Status (mit PID), Healthcheck, Forced Mods | Laufzeit-PIDs |
-| **Web-Interfaces** | AdminServ- und RemoteCP-URLs (mit ermittelter Host-IP) | Container-Netzwerk |
+| **Web-Interfaces** | AdminServ- und RemoteCP-URLs | Platzhalter |
 | **System** | Log-Rotation, PHP-Debug-Modus, TM-Server-PID | Laufzeit |
 
 **Beispielausgabe:**
@@ -190,8 +190,8 @@ Alle angezeigten Werte (Servername, Spielerzahl, Ladder-Modus etc.) werden direk
 ║  Healthcheck:    Aktiv (PID 5678)                                  ║
 ║  Forced Mods:    Keine                                             ║
 ╠════════════════════════════════════════════════════════════════════╣
-║  AdminServ:      http://172.20.60.10/                              ║
-║  RemoteCP:       http://172.20.60.10/remotecp/                     ║
+║  AdminServ:      http://<host-ip>/                                 ║
+║  RemoteCP:       http://<host-ip>/remotecp/                        ║
 ╠════════════════════════════════════════════════════════════════════╣
 ║  Log-Rotation:   Aktiv (stuendlich, max. 10 MB)                   ║
 ║  PHP-Debug:      Deaktiviert                                       ║
@@ -201,7 +201,7 @@ Alle angezeigten Werte (Servername, Spielerzahl, Ladder-Modus etc.) werden direk
 
 Die Zusammenfassung kann jederzeit mit `docker logs tmserver` erneut eingesehen werden.
 
-> **Hinweis:** Die angezeigte IP ist die Container-interne IP. Wenn der Server über Port-Forwarding erreichbar ist, muss die tatsächliche Host-IP oder Domain verwendet werden.
+> **Hinweis:** `<host-ip>` ist ein Platzhalter – ersetze ihn durch die tatsächliche IP oder Domain deines Hosts (z.B. `http://192.168.1.100/`).
 
 > **Hinweis:** Die Startup-Zusammenfassung ist nach einem Image-Update automatisch aktiv – auch bei bestehenden Installationen. Es sind keine manuellen Schritte nötig.
 
