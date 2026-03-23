@@ -73,6 +73,7 @@ nano .env
 |----------|-------------|----------|
 | `MATCHSETTINGS_FILE` | MatchSettings-Datei beim Serverstart: `auto` = neueste `.txt`-Datei im Ordner wird automatisch geladen, oder ein expliziter Dateiname (z.B. `meine_settings.txt`) | `auto` |
 | `ALLWARMUPDURATION` | Warmup-Dauer für alle Runden (`0` = deaktiviert, `1` = eine Runde Warmup) | `0` |
+| `SHUFFLE_MAPLIST` | Map-Reihenfolge beim Containerstart zufällig mischen (`true` = aktiviert, `false` = deaktiviert) | `false` |
 
 ### Automatische MatchSettings-Erkennung
 
@@ -89,6 +90,27 @@ MATCHSETTINGS_FILE=turnier_settings.txt
 ```
 
 > **Hinweis:** Falls die angegebene oder automatisch ermittelte Datei nicht existiert, wird auf `custom_game_settings.txt` zurückgefallen. Die aktiv geladene Datei wird beim Serverstart in der Konsole ausgegeben.
+
+### Map-Shuffle
+
+Mit `SHUFFLE_MAPLIST=true` wird die Reihenfolge aller Maps in der aktiven MatchSettings-Datei beim **jedem Containerstart** zufällig durchgemischt. So startet der Server jedes Mal mit einer anderen Map, statt immer bei Map #1 zu beginnen.
+
+- Die `<challenge>`-Einträge in der MatchSettings-XML werden zufällig neu angeordnet
+- Der `<startindex>` wird automatisch auf `0` gesetzt
+- Die aktive MatchSettings-Datei wird dabei direkt überschrieben
+- Die ersten 3 Maps der neuen Reihenfolge werden beim Start in der Konsole angezeigt
+
+**Beispiel:**
+
+```bash
+# Map-Reihenfolge bei jedem Start mischen
+SHUFFLE_MAPLIST=true
+
+# Deaktiviert (Standard) – Reihenfolge bleibt wie in der Datei
+SHUFFLE_MAPLIST=false
+```
+
+> **Hinweis:** Der Shuffle wird auf die MatchSettings-Datei angewendet, die durch `MATCHSETTINGS_FILE` bestimmt wird (entweder automatisch oder explizit). Die Änderung ist persistent – die Datei wird tatsächlich umgeschrieben. Bei jedem Neustart wird erneut gemischt.
 
 ## RemoteCP
 
@@ -161,6 +183,8 @@ XAseco ist ein Server-Controller für Rekorde, Karma, Jukebox und mehr. Siehe [X
 | `XASECO_DB_USER` | Datenbank-Benutzername | `xaseco` |
 | `XASECO_DB_PASSWORD` | Datenbank-Passwort | *(muss gesetzt werden)* |
 | `XASECO_DEDIMANIA_NATION` | Dedimania-Nation (IOC-Code) | `DEU` |
+| `XASECO_HEALTHCHECK` | Automatische Überwachung und Neustart von XAseco bei Absturz/Verbindungsverlust | `true` |
+| `XASECO_HEALTHCHECK_INTERVAL` | Prüfintervall des Healthchecks in Sekunden | `60` |
 
 > **Hinweis:** Die Server-Zugangsdaten (`SERVER_SA_PASSWORD`, `SERVER_XMLRPC_PORT`) und Dedimania-Daten (`SERVER_LOGIN`, `SERVER_LOGIN_PASSWORD`) werden automatisch aus der bestehenden Konfiguration übernommen.
 

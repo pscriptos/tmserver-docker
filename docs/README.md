@@ -9,7 +9,7 @@
 | Dokument | Beschreibung |
 |----------|-------------|
 | [Schnellstart](schnellstart.md) | Erste Schritte und minimale Konfiguration |
-| [Konfiguration](konfiguration.md) | Persistente Serverkonfiguration (dedicated_cfg.txt) |
+| [Konfiguration](konfiguration.md) | Persistente Serverkonfiguration (dedicated_cfg.txt), Graceful Shutdown |
 | [Umgebungsvariablen](umgebungsvariablen.md) | Alle verfügbaren Umgebungsvariablen |
 | [Server-Modi](server-modi.md) | LAN- und Internet-Dedicated-Modus |
 | [AdminServ](adminserv.md) | Einrichtung der Server-Verwaltungsoberfläche |
@@ -33,6 +33,7 @@
 │   │   │   └── maps-creatematchset.php          # MatchSet-Erstellung Script
 │   │   ├── custom_game_settings.txt             # MatchSettings (Spielmodus, Map-Rotation)
 │   │   ├── dedicated_cfg.txt                    # Server-Config-Template (mit Platzhaltern)
+│   │   ├── logrotate.conf                       # Log-Rotation-Konfiguration (groessenbasiert)
 │   │   ├── remotecp/
 │   │   │   └── plugins/
 │   │   │       ├── CustomPoints/

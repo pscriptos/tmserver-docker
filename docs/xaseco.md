@@ -77,6 +77,8 @@ Die Konfiguration erfolgt ausschließlich über Umgebungsvariablen in der `.env`
 | `XASECO_DB_NAME` | Name der XAseco-Datenbank | `xaseco` |
 | `XASECO_DB_USER` | Datenbank-Benutzername | `xaseco` |
 | `XASECO_DEDIMANIA_NATION` | Dedimania-Nation ([IOC-Code](https://en.wikipedia.org/wiki/List_of_IOC_country_codes), z.B. `DEU`, `AUT`, `CHE`) | `DEU` |
+| `XASECO_HEALTHCHECK` | Automatische Überwachung und Neustart bei Absturz | `true` |
+| `XASECO_HEALTHCHECK_INTERVAL` | Prüfintervall des Healthchecks in Sekunden | `60` |
 
 ### Automatisch übernommene Variablen
 
@@ -147,6 +149,37 @@ XASECO_ENABLED=false
 
 Der TrackMania-Server läuft dann ohne Server-Controller.
 
+## Healthcheck / Watchdog
+
+XAseco wird automatisch durch einen Watchdog-Prozess überwacht. Dieser erkennt Abstürze und verlorene Verbindungen (z.B. wenn das Overlay im Spiel verschwindet) und startet XAseco selbstständig neu.
+
+### Funktionsweise
+
+Der Watchdog prüft regelmäßig (Standard: alle 60 Sekunden):
+
+1. **PID-Check:** Läuft der XAseco-PHP-Prozess noch?
+2. **Log-Check:** Enthält das XAseco-Log fatale Fehler oder Verbindungsabbrüche?
+3. **XMLRPC-Check:** Ist der TM-Server noch erreichbar?
+
+Bei erkannten Problemen wird XAseco automatisch beendet und neu gestartet. Crash-Logs werden zur Fehleranalyse unter `data/xaseco/aseco_crash_<TIMESTAMP>.log` gesichert (max. 5 Dateien).
+
+### Konfiguration
+
+| Variable | Beschreibung | Standard |
+|----------|-------------|----------|
+| `XASECO_HEALTHCHECK` | Watchdog aktivieren/deaktivieren | `true` |
+| `XASECO_HEALTHCHECK_INTERVAL` | Prüfintervall in Sekunden | `60` |
+
+```env
+# Healthcheck deaktivieren
+XASECO_HEALTHCHECK=false
+
+# Prüfintervall auf 30 Sekunden verkürzen
+XASECO_HEALTHCHECK_INTERVAL=30
+```
+
+> **Hinweis:** Der Watchdog ist standardmäßig aktiviert und erfordert keine zusätzliche Konfiguration. Bei bestehenden Installationen wird er nach dem nächsten Image-Update automatisch aktiv.
+
 ## Logs
 
 Die XAseco-Logdatei befindet sich unter:
@@ -156,6 +189,8 @@ Die XAseco-Logdatei befindet sich unter:
 ```
 
 Bei Problemen ist dies die erste Anlaufstelle für die Fehlersuche.
+
+> **Hinweis:** Die XAseco-Logdatei wird automatisch per logrotate rotiert (max. 10 MB pro Datei, 5 rotierte Dateien). Alte Logs werden komprimiert als `aseco.log.1.gz`, `aseco.log.2.gz` usw. aufbewahrt. Siehe [Konfiguration – Log-Rotation](konfiguration.md#log-rotation).
 
 ## Chat-Befehle
 

@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     php-mysql \
     php-curl \
     default-mysql-client \
+    logrotate \
     && rm -rf /var/lib/apt/lists/*
 
 # Apache mod_rewrite aktivieren und AllowOverride fuer .htaccess (RemoteCP-Sicherheit)
@@ -46,6 +47,10 @@ RUN cp -a /opt/tmserver/GameData /opt/tmserver/default-gamedata
 COPY assets/bin/RunTrackmaniaServer.sh /opt/tmserver/
 RUN sed -i 's/\r$//' /opt/tmserver/RunTrackmaniaServer.sh \
     && chmod +x /opt/tmserver/RunTrackmaniaServer.sh
+
+COPY assets/bin/XAsecoHealthcheck.sh /opt/tmserver/
+RUN sed -i 's/\r$//' /opt/tmserver/XAsecoHealthcheck.sh \
+    && chmod +x /opt/tmserver/XAsecoHealthcheck.sh
 
 COPY assets/bin/AdminServ_v2.1.1.zip /var/www/html
 RUN unzip /var/www/html/AdminServ_v2.1.1.zip -d /var/www/html \
@@ -144,6 +149,11 @@ RUN cp -a /opt/tmserver/xaseco /opt/tmserver/default-xaseco
 # PHP-Debug-Konfiguration: wird zur Laufzeit vom Startup-Script gesetzt
 # (kein Rebuild noetig – nur Container neustarten)
 
+# Log-Rotation: logrotate-Konfiguration ins Image kopieren
+# Wird zur Laufzeit stuendlich per Background-Loop ausgefuehrt (kein cron noetig).
+COPY assets/config/logrotate.conf /etc/logrotate.d/tmserver
+RUN chmod 644 /etc/logrotate.d/tmserver
+
 # --- Umgebungsvariablen ---
 # Sensible Werte (Passwoerter, Keys) werden NICHT im Image hinterlegt,
 # sondern muessen zur Laufzeit uebergeben werden (z.B. via .env-Datei).
@@ -169,6 +179,7 @@ ENV FORCE_CONFIG_UPDATE=false
 
 # Spieleinstellungen (MatchSettings)
 ENV ALLWARMUPDURATION=0
+ENV SHUFFLE_MAPLIST=false
 
 # Forced Mods (Skins) - URL zu ZIP-Dateien, die beim Start forciert werden
 ENV FORCE_MOD_STADIUM=""
@@ -191,6 +202,8 @@ ENV XASECO_DB_HOST=mariadb
 ENV XASECO_DB_NAME=xaseco
 ENV XASECO_DB_USER=xaseco
 ENV XASECO_DEDIMANIA_NATION=DEU
+ENV XASECO_HEALTHCHECK=true
+ENV XASECO_HEALTHCHECK_INTERVAL=60
 
 # Debugging
 ENV PHP_DISPLAY_ERRORS=false
@@ -205,5 +218,9 @@ EXPOSE 2350/tcp
 EXPOSE 2350/udp
 EXPOSE 3450/tcp
 EXPOSE 80/tcp
+
+# Graceful Shutdown: SIGTERM wird vom Signal-Handler im Startscript abgefangen
+# und alle Dienste (XAseco, TM-Server, Apache) sauber heruntergefahren.
+STOPSIGNAL SIGTERM
 
 CMD ["/opt/tmserver/RunTrackmaniaServer.sh"]

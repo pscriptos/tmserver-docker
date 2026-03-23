@@ -43,10 +43,10 @@ Die Konfiguration erfolgt über die `.env`-Datei, die automatisch eingelesen wir
 Alternativ kannst du das Image auch selbst bauen:
 
 ```bash
-docker build -t tmserver:latest -t tmserver:1.2.1 .
+docker build -t tmserver:latest -t tmserver:1.3.0 .
 ```
 
-Damit wird das Image mit zwei Tags erstellt: `tmserver:latest` und `tmserver:1.2.1`.
+Damit wird das Image mit zwei Tags erstellt: `tmserver:latest` und `tmserver:1.3.0`.
 
 Anschließend den Server starten:
 

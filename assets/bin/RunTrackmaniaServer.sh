@@ -368,10 +368,12 @@ fi
 # ============================================================
 # XAseco: TeamSpeak3-Plugin Gateway aktualisieren (fuer bestehende Volumes)
 # ============================================================
-# Das Original-TS3-Gateway ist nicht mehr verfuegbar. Die eigene
-# teamspeak3.xml mit dem Ersatz-Gateway wird in das Volume kopiert,
-# falls sie fehlt oder noch das alte (nicht mehr erreichbare) Gateway
-# referenziert. Gleichzeitig wird das Plugin reaktiviert, falls es
+# Das Original-TS3-Gateway ist nicht mehr verfuegbar. Falls die
+# teamspeak3.xml fehlt, wird sie aus dem Template kopiert. Falls sie
+# bereits existiert (= Nutzer hat eigene TS3-Daten konfiguriert),
+# werden NUR die Gateway-URLs (helperURL/logoURL) gezielt aktualisiert.
+# Alle anderen Einstellungen (Server, Port, Channel etc.) bleiben
+# erhalten. Gleichzeitig wird das Plugin reaktiviert, falls es
 # in einer frueheren Version auskommentiert wurde.
 # ============================================================
 XASECO_DIR_TS3="/opt/tmserver/xaseco"
@@ -379,16 +381,30 @@ TS3_XML="$XASECO_DIR_TS3/teamspeak3.xml"
 TS3_DEFAULT="/opt/tmserver/default-xaseco/teamspeak3.xml"
 TS3_PLUGINS_XML="$XASECO_DIR_TS3/plugins.xml"
 
-# teamspeak3.xml aktualisieren: Kopieren wenn fehlend oder veraltet
+# teamspeak3.xml aktualisieren: Kopieren wenn fehlend, Gateway-URLs gezielt patchen
+# WICHTIG: Bei bestehender Datei wird NICHT die gesamte Datei ueberschrieben,
+# damit benutzerdefinierte Einstellungen (Server, Port, Channel) erhalten bleiben.
+# Nur die Gateway-URLs (helperURL/logoURL) werden aktualisiert, falls sie noch
+# auf ein altes, nicht mehr erreichbares Gateway zeigen.
 if [ -f "$TS3_DEFAULT" ]; then
     if [ ! -f "$TS3_XML" ]; then
         echo "==> TeamSpeak3-Gateway: teamspeak3.xml fehlt, kopiere aus Template..."
         cp "$TS3_DEFAULT" "$TS3_XML"
         echo "    teamspeak3.xml erfolgreich kopiert."
-    elif ! diff -q "$TS3_DEFAULT" "$TS3_XML" > /dev/null 2>&1; then
-        echo "==> TeamSpeak3-Gateway: teamspeak3.xml wird aktualisiert..."
-        cp "$TS3_DEFAULT" "$TS3_XML"
-        echo "    teamspeak3.xml erfolgreich aktualisiert."
+    else
+        # Gateway-URLs aus dem Template auslesen
+        NEW_HELPER_URL=$(grep -oP '(?<=<helperURL>).*?(?=</helperURL>)' "$TS3_DEFAULT")
+        NEW_LOGO_URL=$(grep -oP '(?<=<logoURL>).*?(?=</logoURL>)' "$TS3_DEFAULT")
+        # Aktuelle URLs aus der bestehenden Datei auslesen
+        CUR_HELPER_URL=$(grep -oP '(?<=<helperURL>).*?(?=</helperURL>)' "$TS3_XML")
+        CUR_LOGO_URL=$(grep -oP '(?<=<logoURL>).*?(?=</logoURL>)' "$TS3_XML")
+        # Nur patchen, wenn sich die Gateway-URLs unterscheiden
+        if [ "$CUR_HELPER_URL" != "$NEW_HELPER_URL" ] || [ "$CUR_LOGO_URL" != "$NEW_LOGO_URL" ]; then
+            echo "==> TeamSpeak3-Gateway: Aktualisiere Gateway-URLs (Server-Einstellungen bleiben erhalten)..."
+            [ -n "$NEW_HELPER_URL" ] && sed -i "s|<helperURL>.*</helperURL>|<helperURL>${NEW_HELPER_URL}</helperURL>|" "$TS3_XML"
+            [ -n "$NEW_LOGO_URL" ] && sed -i "s|<logoURL>.*</logoURL>|<logoURL>${NEW_LOGO_URL}</logoURL>|" "$TS3_XML"
+            echo "    Gateway-URLs erfolgreich aktualisiert."
+        fi
     fi
 fi
 
@@ -727,6 +743,83 @@ fi
 
 echo "    Aktive MatchSettings: ${GAME_SETTINGS_PATH}"
 
+# ============================================================
+# MatchSettings: Map-Reihenfolge zufaellig mischen
+# ============================================================
+# Ueber die Umgebungsvariable SHUFFLE_MAPLIST kann gesteuert werden,
+# ob die Reihenfolge der Maps in der aktiven MatchSettings-Datei
+# beim Containerstart zufaellig durchgemischt wird:
+#   - "false" (Standard): Reihenfolge bleibt unveraendert.
+#   - "true":  Alle <challenge>-Eintraege werden zufaellig gemischt
+#              und <startindex> wird auf 0 gesetzt.
+# Die originale Datei wird dabei ueberschrieben.
+# ============================================================
+
+SHUFFLE_MAPLIST="${SHUFFLE_MAPLIST:-false}"
+
+if [ "$SHUFFLE_MAPLIST" = "true" ]; then
+    # Vollstaendigen Pfad zur aktiven MatchSettings-Datei bestimmen
+    ACTIVE_MS_FILE="$GAMEDATA_DIR/Tracks/${GAME_SETTINGS_PATH}"
+    if [ -f "$ACTIVE_MS_FILE" ]; then
+        echo "==> Map-Shuffle: Mische Maps in ${GAME_SETTINGS_PATH}..."
+        php -r '
+            $file = $argv[1];
+            $xml = file_get_contents($file);
+            if ($xml === false) {
+                echo "    FEHLER: Konnte MatchSettings-Datei nicht lesen.\n";
+                exit(1);
+            }
+
+            // Alle <challenge>...</challenge>-Bloecke extrahieren
+            if (!preg_match_all("/<challenge>.*?<\/challenge>/s", $xml, $matches)) {
+                echo "    Keine <challenge>-Eintraege gefunden. Shuffle uebersprungen.\n";
+                exit(0);
+            }
+
+            $challenges = $matches[0];
+            $count = count($challenges);
+            echo "    $count Maps gefunden. Mische Reihenfolge...\n";
+
+            // Zufaellig mischen
+            shuffle($challenges);
+
+            // Alle bestehenden <challenge>-Bloecke aus dem XML entfernen
+            $xmlClean = preg_replace("/(\s*<challenge>.*?<\/challenge>)+/s", "", $xml, 1);
+
+            // Gemischte Challenges vor </playlist> wieder einfuegen
+            $challengeBlock = "";
+            foreach ($challenges as $ch) {
+                $challengeBlock .= "\t" . $ch . "\n";
+            }
+            $xmlNew = str_replace("</playlist>", $challengeBlock . "</playlist>", $xmlClean);
+
+            // <startindex> auf 0 setzen (damit ab der ersten gemischten Map gestartet wird)
+            $xmlNew = preg_replace("/<startindex>[^<]*<\/startindex>/", "<startindex>0</startindex>", $xmlNew);
+
+            // Datei zurueckschreiben
+            if (file_put_contents($file, $xmlNew) === false) {
+                echo "    FEHLER: Konnte MatchSettings-Datei nicht schreiben.\n";
+                exit(1);
+            }
+
+            // Erste 3 Maps anzeigen
+            echo "    Reihenfolge erfolgreich gemischt.\n";
+            echo "    Neue Startreihenfolge (erste 3 Maps):\n";
+            for ($i = 0; $i < min(3, $count); $i++) {
+                if (preg_match("/<file>(.*?)<\/file>/", $challenges[$i], $m)) {
+                    echo "      " . ($i + 1) . ". " . $m[1] . "\n";
+                }
+            }
+            if ($count > 3) echo "      ... und " . ($count - 3) . " weitere Maps\n";
+        ' "$ACTIVE_MS_FILE"
+    else
+        echo "==> Map-Shuffle: MatchSettings-Datei nicht gefunden: ${ACTIVE_MS_FILE}"
+        echo "    Shuffle uebersprungen."
+    fi
+else
+    echo "==> Map-Shuffle: Deaktiviert (SHUFFLE_MAPLIST=false)."
+fi
+
 # Bestimme Server-Modus (Standard: internet)
 SERVER_MODE="${SERVER_MODE:-internet}"
 
@@ -807,10 +900,22 @@ if [ "$XMLRPC_READY" = "true" ]; then
         cd /opt/tmserver/xaseco
         php aseco.php TMN </dev/null >>aseco.log 2>&1 &
         XASECO_PID=$!
+        echo "$XASECO_PID" > /tmp/xaseco.pid
         echo "    XAseco gestartet (PID: ${XASECO_PID})"
         cd /opt/tmserver
+
+        # XAseco Healthcheck / Watchdog starten
+        XASECO_HEALTHCHECK="${XASECO_HEALTHCHECK:-true}"
+        if [ "$XASECO_HEALTHCHECK" = "true" ] && [ -f "/opt/tmserver/XAsecoHealthcheck.sh" ]; then
+            echo "==> Starte XAseco-Healthcheck (Watchdog)..."
+            /opt/tmserver/XAsecoHealthcheck.sh &
+            HEALTHCHECK_PID=$!
+            echo "    XAseco-Healthcheck gestartet (PID: ${HEALTHCHECK_PID})"
+        elif [ "$XASECO_HEALTHCHECK" != "true" ]; then
+            echo "==> XAseco-Healthcheck ist deaktiviert (XASECO_HEALTHCHECK=${XASECO_HEALTHCHECK})."
+        fi
     elif [ "${XASECO_ENABLED:-true}" != "true" ]; then
-        echo "==> XAseco ist deaktiviert (XASECO_ENABLED=${XASECO_ENABLED})."
+        echo "==> XAseco ist deaktiviert (XASECO_ENABLED=${XASECO_ENABLED})." 
     fi
 else
     echo "    WARNUNG: XMLRPC nicht erreichbar - XAseco und Forced Mods wurden NICHT gestartet."
@@ -995,6 +1100,294 @@ if [ "$XMLRPC_READY" = "true" ] && [ "$HAS_MODS" = "true" ]; then
 elif [ "$XMLRPC_READY" = "true" ]; then
     echo "==> Forced Mods: Keine FORCE_MOD_*-Variablen gesetzt. Ueberspringe."
 fi
+
+# ============================================================
+# Log-Rotation: Hintergrundprozess starten
+# ============================================================
+# logrotate wird stuendlich ausgefuehrt, um Apache-, PHP- und
+# XAseco-Logs groessenbasiert zu rotieren (max. 10 MB pro Datei,
+# 5 rotierte Dateien). Da im Container kein cron laeuft, wird
+# ein einfacher Background-Loop verwendet.
+# ============================================================
+echo "==> Starte Log-Rotation (stuendlich, groessenbasiert 10 MB)..."
+(
+    while true; do
+        sleep 3600
+        /usr/sbin/logrotate /etc/logrotate.d/tmserver --state /tmp/logrotate.state
+    done
+) &
+LOGROTATE_PID=$!
+echo "    Log-Rotation gestartet (PID: ${LOGROTATE_PID})"
+
+# ============================================================
+# Graceful Shutdown: Signal-Handler
+# ============================================================
+# Faengt TERM/INT ab und beendet alle Dienste sauber in
+# der richtigen Reihenfolge:
+#   1. XAseco-Healthcheck (verhindert Neustart waehrend Shutdown)
+#   2. XAseco (schliesst DB-Connections ordentlich)
+#   3. TrackmaniaServer
+#   4. Apache (AdminServ/RemoteCP)
+#   5. Log-Rotation
+# Verhindert Datenbank-Korruption beim Container-Stop.
+# ============================================================
+graceful_shutdown() {
+    echo ""
+    echo "============================================================"
+    echo "==> Graceful Shutdown eingeleitet (Signal empfangen)..."
+    echo "============================================================"
+
+    # 1. XAseco-Healthcheck beenden (verhindert Neustart waehrend Shutdown)
+    if [ -n "${HEALTHCHECK_PID:-}" ] && kill -0 "$HEALTHCHECK_PID" 2>/dev/null; then
+        echo "    Beende XAseco-Healthcheck (PID: ${HEALTHCHECK_PID})..."
+        kill "$HEALTHCHECK_PID" 2>/dev/null
+        wait "$HEALTHCHECK_PID" 2>/dev/null
+        echo "    XAseco-Healthcheck beendet."
+    fi
+
+    # 2. XAseco beenden (schliesst DB-Connections ordentlich)
+    XASECO_PID_CURRENT=""
+    if [ -f "/tmp/xaseco.pid" ]; then
+        XASECO_PID_CURRENT=$(cat /tmp/xaseco.pid 2>/dev/null)
+    fi
+    if [ -n "$XASECO_PID_CURRENT" ] && kill -0 "$XASECO_PID_CURRENT" 2>/dev/null; then
+        echo "    Beende XAseco (PID: ${XASECO_PID_CURRENT})..."
+        kill "$XASECO_PID_CURRENT" 2>/dev/null
+        # Warte max. 10 Sekunden auf sauberes Beenden
+        WAIT_COUNT=0
+        while kill -0 "$XASECO_PID_CURRENT" 2>/dev/null && [ $WAIT_COUNT -lt 10 ]; do
+            sleep 1
+            WAIT_COUNT=$((WAIT_COUNT + 1))
+        done
+        if kill -0 "$XASECO_PID_CURRENT" 2>/dev/null; then
+            echo "    XAseco reagiert nicht, sende SIGKILL..."
+            kill -9 "$XASECO_PID_CURRENT" 2>/dev/null
+        fi
+        echo "    XAseco beendet."
+        rm -f /tmp/xaseco.pid
+    fi
+
+    # 3. TrackmaniaServer beenden
+    if [ -n "${TM_PID:-}" ] && kill -0 "$TM_PID" 2>/dev/null; then
+        echo "    Beende TrackmaniaServer (PID: ${TM_PID})..."
+        kill "$TM_PID" 2>/dev/null
+        # Warte max. 10 Sekunden auf sauberes Beenden
+        WAIT_COUNT=0
+        while kill -0 "$TM_PID" 2>/dev/null && [ $WAIT_COUNT -lt 10 ]; do
+            sleep 1
+            WAIT_COUNT=$((WAIT_COUNT + 1))
+        done
+        if kill -0 "$TM_PID" 2>/dev/null; then
+            echo "    TrackmaniaServer reagiert nicht, sende SIGKILL..."
+            kill -9 "$TM_PID" 2>/dev/null
+        fi
+        echo "    TrackmaniaServer beendet."
+    fi
+
+    # 4. Apache beenden (AdminServ/RemoteCP)
+    echo "    Beende Apache..."
+    service apache2 stop 2>/dev/null
+    echo "    Apache beendet."
+
+    # 5. Log-Rotation beenden
+    if [ -n "${LOGROTATE_PID:-}" ] && kill -0 "$LOGROTATE_PID" 2>/dev/null; then
+        echo "    Beende Log-Rotation (PID: ${LOGROTATE_PID})..."
+        kill "$LOGROTATE_PID" 2>/dev/null
+        wait "$LOGROTATE_PID" 2>/dev/null
+        echo "    Log-Rotation beendet."
+    fi
+
+    echo "============================================================"
+    echo "==> Graceful Shutdown abgeschlossen."
+    echo "============================================================"
+    exit 0
+}
+
+trap graceful_shutdown TERM INT
+echo "==> Signal-Handler registriert (TERM/INT -> Graceful Shutdown)"
+
+# ============================================================
+# Startup-Zusammenfassung
+# ============================================================
+# Gibt am Ende des Startprozesses eine uebersichtliche Box mit
+# allen wichtigen Server-Informationen aus. Die Box-Breite passt
+# sich automatisch an den laengsten Inhalt an.
+# Bei bestehenden Installationen ist dieses Feature nach einem
+# Image-Update automatisch aktiv (keine manuellen Schritte noetig).
+# ============================================================
+print_startup_summary() {
+    _SUMMARY_TMP=$(mktemp /tmp/startup_summary.XXXXXX)
+
+    # Map-Anzahl aus aktiver MatchSettings-Datei zaehlen
+    _ACTIVE_MS_FULL="$GAMEDATA_DIR/Tracks/${GAME_SETTINGS_PATH}"
+    _MAP_COUNT="0"
+    if [ -f "$_ACTIVE_MS_FULL" ]; then
+        _MAP_COUNT=$(grep -c '<challenge>' "$_ACTIVE_MS_FULL" 2>/dev/null)
+        _MAP_COUNT=${_MAP_COUNT:-0}
+    fi
+
+    # MatchSettings-Dateiname extrahieren
+    _MS_FILENAME=$(basename "$GAME_SETTINGS_PATH")
+
+    # XAseco-Status ermitteln
+    if [ "${XASECO_ENABLED:-true}" != "true" ]; then
+        _XASECO_STATUS="Deaktiviert"
+    elif [ -n "${XASECO_PID:-}" ] && kill -0 "$XASECO_PID" 2>/dev/null; then
+        _XASECO_STATUS="Aktiv (PID ${XASECO_PID})"
+    else
+        _XASECO_STATUS="Nicht gestartet"
+    fi
+
+    # Healthcheck-Status ermitteln
+    if [ "${XASECO_ENABLED:-true}" != "true" ]; then
+        _HC_STATUS="—"
+    elif [ "${XASECO_HEALTHCHECK:-true}" = "true" ] && [ -n "${HEALTHCHECK_PID:-}" ]; then
+        _HC_STATUS="Aktiv (PID ${HEALTHCHECK_PID})"
+    elif [ "${XASECO_HEALTHCHECK:-true}" != "true" ]; then
+        _HC_STATUS="Deaktiviert"
+    else
+        _HC_STATUS="Nicht gestartet"
+    fi
+
+    # Forced Mods zaehlen
+    _MOD_COUNT=0
+    for _ENV_NAME in FORCE_MOD_STADIUM FORCE_MOD_ISLAND FORCE_MOD_BAY FORCE_MOD_COAST FORCE_MOD_SPEED FORCE_MOD_ALPINE FORCE_MOD_RALLY; do
+        eval "_MOD_VAL=\${$_ENV_NAME:-}"
+        [ -n "$_MOD_VAL" ] && _MOD_COUNT=$((_MOD_COUNT + 1))
+    done
+    if [ "$_MOD_COUNT" -gt 0 ]; then
+        _MODS_STATUS="${_MOD_COUNT} Mod(s) aktiv"
+    else
+        _MODS_STATUS="Keine"
+    fi
+
+    # Shuffle-Status
+    if [ "${SHUFFLE_MAPLIST:-false}" = "true" ]; then
+        _SHUFFLE_STATUS="Aktiviert"
+    else
+        _SHUFFLE_STATUS="Deaktiviert"
+    fi
+
+    # Server-Modus-Anzeige
+    case "${SERVER_MODE:-internet}" in
+        internet) _MODE_DISPLAY="Internet" ;;
+        lan)      _MODE_DISPLAY="LAN" ;;
+        *)        _MODE_DISPLAY="${SERVER_MODE}" ;;
+    esac
+
+    # PHP-Debug-Status
+    if [ "${PHP_DISPLAY_ERRORS:-false}" = "true" ]; then
+        _PHP_DEBUG="Aktiviert"
+    else
+        _PHP_DEBUG="Deaktiviert"
+    fi
+
+    # Servername aus dedicated_cfg.txt lesen (nicht aus Env-Variable, da diese
+    # nach AdminServ-Aenderungen oder manuellen Edits veraltet sein kann)
+    _SERVER_NAME=""
+    if [ -f "$CONFIG" ]; then
+        # Nur <name> innerhalb von <server_options> lesen (nicht aus <authorization_levels>)
+        _SERVER_NAME=$(php -r '
+            $cfg = file_get_contents($argv[1]);
+            if (preg_match("/<server_options>.*?<name>([^<]*)<\/name>/s", $cfg, $m)) {
+                echo trim($m[1]);
+            }
+        ' "$CONFIG" 2>/dev/null)
+    fi
+    _SERVER_NAME=${_SERVER_NAME:-${SERVER_NAME:-Trackmania Server}}
+
+    # Ladder-Modus aus dedicated_cfg.txt lesen
+    _LADDER_MODE=""
+    if [ -f "$CONFIG" ]; then
+        _LADDER_MODE=$(grep -oP '(?<=<ladder_mode>)[^<]+' "$CONFIG" 2>/dev/null | head -1)
+    fi
+    _LADDER_MODE=${_LADDER_MODE:-${SERVER_LADDER_MODE:-forced}}
+
+    # Max-Players und Max-Spectators aus Config lesen (falls verfuegbar)
+    _MAX_PLAYERS=""
+    _MAX_SPECS=""
+    if [ -f "$CONFIG" ]; then
+        _MAX_PLAYERS=$(grep -oP '(?<=<max_players>)[^<]+' "$CONFIG" 2>/dev/null | head -1)
+        _MAX_SPECS=$(grep -oP '(?<=<max_spectators>)[^<]+' "$CONFIG" 2>/dev/null | head -1)
+    fi
+    _MAX_PLAYERS=${_MAX_PLAYERS:-${SERVER_MAX_PLAYERS:-32}}
+    _MAX_SPECS=${_MAX_SPECS:-${SERVER_MAX_SPECTATORS:-32}}
+
+    # --- Zeilen in Temp-Datei schreiben ('---' = Trennlinie) ---
+    cat > "$_SUMMARY_TMP" <<EOSUMMARY
+TrackMania Nations Forever - Server gestartet
+---
+Servername:     ${_SERVER_NAME}
+Modus:          ${_MODE_DISPLAY} (Ladder: ${_LADDER_MODE})
+Spieler:        max. ${_MAX_PLAYERS} Spieler / ${_MAX_SPECS} Zuschauer
+Server-Port:    ${SERVER_PORT:-2350} (TCP/UDP) | P2P: ${SERVER_P2P_PORT:-3450} (TCP)
+XMLRPC-Port:    ${SERVER_XMLRPC_PORT:-5000}
+---
+MatchSettings:  ${_MS_FILENAME}
+Maps:           ${_MAP_COUNT} Maps geladen
+Map-Shuffle:    ${_SHUFFLE_STATUS}
+---
+XAseco:         ${_XASECO_STATUS}
+Healthcheck:    ${_HC_STATUS}
+Forced Mods:    ${_MODS_STATUS}
+---
+AdminServ:      http://<host-ip>/
+RemoteCP:       http://<host-ip>/remotecp/
+---
+Log-Rotation:   Aktiv (stuendlich, max. 10 MB)
+PHP-Debug:      ${_PHP_DEBUG}
+TM-Server:      PID ${TM_PID}
+EOSUMMARY
+
+    # --- Maximale Zeilenlaenge ermitteln ---
+    _MAX_LEN=0
+    while IFS= read -r _line; do
+        if [ "$_line" != "---" ]; then
+            _cur_len=${#_line}
+            [ "$_cur_len" -gt "$_MAX_LEN" ] && _MAX_LEN=$_cur_len
+        fi
+    done < "$_SUMMARY_TMP"
+
+    # Box-Breite: Inhalt + je 2 Zeichen Padding (links/rechts)
+    _BOX_INNER=$((_MAX_LEN + 4))
+
+    # --- Horizontale Linie erzeugen ---
+    _HLINE=""
+    _i=0
+    while [ "$_i" -lt "$_BOX_INNER" ]; do
+        _HLINE="${_HLINE}═"
+        _i=$((_i + 1))
+    done
+
+    # --- Box ausgeben ---
+    echo ""
+    printf '╔%s╗\n' "$_HLINE"
+
+    _is_title=true
+    while IFS= read -r _line; do
+        if [ "$_line" = "---" ]; then
+            printf '╠%s╣\n' "$_HLINE"
+        elif [ "$_is_title" = "true" ]; then
+            # Titelzeile zentriert ausgeben
+            _title_len=${#_line}
+            _pad_total=$((_MAX_LEN - _title_len))
+            _pad_left=$((_pad_total / 2))
+            _pad_right=$((_pad_total - _pad_left))
+            printf '║  %*s%s%*s  ║\n' "$_pad_left" "" "$_line" "$_pad_right" ""
+            _is_title=false
+        else
+            printf '║  %-*s  ║\n' "$_MAX_LEN" "$_line"
+        fi
+    done < "$_SUMMARY_TMP"
+
+    printf '╚%s╝\n' "$_HLINE"
+    echo ""
+
+    # Aufraeumen
+    rm -f "$_SUMMARY_TMP"
+}
+
+print_startup_summary
 
 # Auf TrackmaniaServer warten (Hauptprozess)
 wait $TM_PID

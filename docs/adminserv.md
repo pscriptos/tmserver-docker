@@ -59,6 +59,8 @@ Alternativ können die PHP-Logs eingesehen werden:
 docker exec tmserver cat /var/log/php_errors.log
 ```
 
+> **Hinweis:** Alle Logs (Apache, PHP, AdminServ) werden automatisch per logrotate rotiert (max. 10 MB pro Datei, 5 rotierte Dateien). Siehe [Konfiguration – Log-Rotation](konfiguration.md#log-rotation).
+
 ### AdminServ komplett zurücksetzen
 
 Falls AdminServ in einen inkonsistenten Zustand geraten ist:

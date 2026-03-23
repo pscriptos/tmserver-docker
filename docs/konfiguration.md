@@ -106,6 +106,105 @@ Der Ordner `GameData/Config/` enthält:
 | `Default.SystemConfig.Gbx` | System-Konfiguration |
 | `AdminServ/ServerOptions/` | Von AdminServ exportierte Server-Einstellungen |
 
+## Graceful Shutdown
+
+Beim Stoppen des Containers (`docker compose stop`, `docker compose down` oder `docker stop`) werden alle Dienste **sauber und in der richtigen Reihenfolge** heruntergefahren:
+
+1. **XAseco-Healthcheck** – wird zuerst beendet, damit XAseco nicht während des Shutdowns neu gestartet wird
+2. **XAseco** – beendet sich ordentlich und schließt alle Datenbank-Connections (verhindert DB-Korruption)
+3. **TrackmaniaServer** – der Spielserver wird sauber gestoppt
+4. **Apache** – AdminServ und RemoteCP werden beendet
+5. **Log-Rotation** – Hintergrundprozess wird gestoppt
+
+Jeder Dienst hat maximal 10 Sekunden Zeit, sich sauber zu beenden. Falls ein Prozess nicht reagiert, wird er zwangsweise beendet (SIGKILL). Die `stop_grace_period` in der `docker-compose.yml` ist auf 30 Sekunden gesetzt, um genügend Zeit für den gesamten Shutdown-Prozess zu geben.
+
+Der Shutdown-Fortschritt wird in der Konsole protokolliert und kann mit `docker logs tmserver` nachvollzogen werden.
+
+> **Hinweis:** Der Graceful Shutdown ist nach einem Image-Update automatisch aktiv – auch bei bestehenden Installationen. Es sind keine manuellen Schritte nötig.
+
+## Log-Rotation
+
+Alle Log-Dateien im Container werden automatisch per `logrotate` rotiert, damit sie nicht unbegrenzt wachsen. Die Rotation läuft **größenbasiert** als Hintergrundprozess (stündliche Prüfung, kein Cron nötig).
+
+### Einstellungen
+
+| Parameter | Wert |
+|-----------|------|
+| Maximale Dateigröße | 10 MB |
+| Rotierte Dateien behalten | 5 |
+| Komprimierung | Ja (gzip, verzögert) |
+| Leere Logs überspringen | Ja |
+
+### Rotierte Log-Dateien
+
+| Log | Pfad im Container | Persistenz |
+|-----|--------------------|------------|
+| Apache Access | `/var/log/apache2/access.log` | Nur im Container |
+| Apache Error | `/var/log/apache2/error.log` | Nur im Container |
+| PHP Errors | `/var/log/php_errors.log` | Nur im Container |
+| XAseco | `/opt/tmserver/xaseco/aseco.log` | Volume (`./data/xaseco/`) |
+| AdminServ | `/var/www/html/logs/*.log` | Volume (`./data/controlpanel/logs/`) |
+
+Rotierte Dateien werden als `*.1` (vorherige), `*.2.gz`, `*.3.gz` usw. aufbewahrt.
+
+### Konfigurationsdatei
+
+Die logrotate-Konfiguration liegt im Image unter `/etc/logrotate.d/tmserver` (Quelle: `assets/config/logrotate.conf`). Sie wird beim Bau des Images fest eingebettet und erfordert keine manuelle Anpassung.
+
+> **Hinweis:** Die Log-Rotation ist nach einem Image-Update automatisch aktiv – auch bei bestehenden Installationen. Es sind keine manuellen Schritte nötig.
+
+## Startup-Zusammenfassung
+
+Nach Abschluss des gesamten Startprozesses wird automatisch eine übersichtliche Zusammenfassung aller wichtigen Server-Informationen als formatierte Box in der Konsole ausgegeben. Die Box-Breite passt sich dynamisch an den längsten Inhalt an.
+
+Alle angezeigten Werte (Servername, Spielerzahl, Ladder-Modus etc.) werden direkt aus der `dedicated_cfg.txt` gelesen – nicht aus den Umgebungsvariablen. So werden auch nachträgliche Änderungen (z.B. über AdminServ oder manuelles Editieren) korrekt angezeigt.
+
+**Angezeigte Informationen:**
+
+| Bereich | Details | Quelle |
+|---------|---------|--------|
+| **Server** | Servername, Modus (Internet/LAN), Ladder, Spieler-/Zuschauerlimit | `dedicated_cfg.txt` |
+| **Netzwerk** | Server-Port, P2P-Port, XMLRPC-Port | Umgebungsvariablen |
+| **Maps** | Aktive MatchSettings-Datei, Anzahl geladener Maps, Shuffle-Status | MatchSettings-XML |
+| **Dienste** | XAseco-Status (mit PID), Healthcheck, Forced Mods | Laufzeit-PIDs |
+| **Web-Interfaces** | AdminServ- und RemoteCP-URLs | Platzhalter |
+| **System** | Log-Rotation, PHP-Debug-Modus, TM-Server-PID | Laufzeit |
+
+**Beispielausgabe:**
+
+```
+╔════════════════════════════════════════════════════════════════════╗
+║       TrackMania Nations Forever - Server gestartet               ║
+╠════════════════════════════════════════════════════════════════════╣
+║  Servername:     Mein Trackmania Server                           ║
+║  Modus:          Internet (Ladder: forced)                        ║
+║  Spieler:        max. 32 Spieler / 32 Zuschauer                   ║
+║  Server-Port:    2350 (TCP/UDP) | P2P: 3450 (TCP)                 ║
+║  XMLRPC-Port:    5000                                              ║
+╠════════════════════════════════════════════════════════════════════╣
+║  MatchSettings:  custom_game_settings.txt                          ║
+║  Maps:           24 Maps geladen                                   ║
+║  Map-Shuffle:    Deaktiviert                                       ║
+╠════════════════════════════════════════════════════════════════════╣
+║  XAseco:         Aktiv (PID 1234)                                  ║
+║  Healthcheck:    Aktiv (PID 5678)                                  ║
+║  Forced Mods:    Keine                                             ║
+╠════════════════════════════════════════════════════════════════════╣
+║  AdminServ:      http://<host-ip>/                                 ║
+║  RemoteCP:       http://<host-ip>/remotecp/                        ║
+╠════════════════════════════════════════════════════════════════════╣
+║  Log-Rotation:   Aktiv (stuendlich, max. 10 MB)                   ║
+║  PHP-Debug:      Deaktiviert                                       ║
+║  TM-Server:      PID 42                                            ║
+╚════════════════════════════════════════════════════════════════════╝
+```
+
+Die Zusammenfassung kann jederzeit mit `docker logs tmserver` erneut eingesehen werden.
+
+> **Hinweis:** `<host-ip>` ist ein Platzhalter – ersetze ihn durch die tatsächliche IP oder Domain deines Hosts (z.B. `http://192.168.1.100/`).
+
+> **Hinweis:** Die Startup-Zusammenfassung ist nach einem Image-Update automatisch aktiv – auch bei bestehenden Installationen. Es sind keine manuellen Schritte nötig.
+
 ## AdminServ ServerOptions-Import
 
 Wenn über AdminServ Änderungen an den Server-Optionen vorgenommen und als Export gespeichert werden (z.B. Servername, Beschreibung, Spielerzahl), werden diese beim nächsten Container-Start **automatisch** in die `dedicated_cfg.txt` übernommen.
