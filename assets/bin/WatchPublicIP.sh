@@ -25,6 +25,8 @@ while true; do
             echo "[ip-watcher] Initiale öffentliche IP: ${CURRENT_IP}"
         fi
         LAST_IP="$CURRENT_IP"
+    else
+        echo "[ip-watcher] IP-Prüfung OK: ${CURRENT_IP} (unverändert). Nächste Prüfung in ${INTERVAL}s."
     fi
 
     sleep "$INTERVAL"
