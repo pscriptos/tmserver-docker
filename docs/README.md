@@ -47,6 +47,9 @@
 │   │       └── teamspeak3.xml                   # TeamSpeak3-Konfiguration fuer XAseco
 │   └── db/
 │       └── init-xaseco-db.sh                    # MariaDB Init-Script fuer XAseco-DB
+├── .gitea/
+│   └── workflows/
+│       └── docker-publish.yml                  # CI/CD: Docker Image Build & Push bei neuem Release-Tag
 ├── docs/                                        # Dokumentation
 ├── docker-compose.yml                           # Docker Compose Konfiguration
 ├── Dockerfile                                   # Docker Build-Definition
