@@ -96,7 +96,7 @@ Dann Container neu starten. Danach unbedingt wieder auf `false` setzen, damit ma
 
 ### Welches Image-Tag wird verwendet?
 
-In der `docker-compose.yml` ist das Image-Tag angegeben (z.B. `1.3.1` oder `latest`). Du kannst auf `latest` umstellen, um immer automatisch das neueste Image zu bekommen:
+In der `docker-compose.yml` ist das Image-Tag angegeben (z.B. `1.3.2` oder `latest`). Du kannst auf `latest` umstellen, um immer automatisch das neueste Image zu bekommen:
 
 ```yaml
 image: git.techniverse.net/scriptos/trackmania-server:latest
