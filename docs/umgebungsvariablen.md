@@ -188,6 +188,14 @@ XAseco ist ein Server-Controller für Rekorde, Karma, Jukebox und mehr. Siehe [X
 
 > **Hinweis:** Die Server-Zugangsdaten (`SERVER_SA_PASSWORD`, `SERVER_XMLRPC_PORT`) und Dedimania-Daten (`SERVER_LOGIN`, `SERVER_LOGIN_PASSWORD`) werden automatisch aus der bestehenden Konfiguration übernommen.
 
+## IP-Watcher
+
+| Variable | Beschreibung | Standard |
+|----------|-------------|----------|
+| `IP_WATCHER_INTERVAL` | Prüfintervall in Sekunden, in dem die öffentliche IP geprüft wird | `300` |
+
+> **Hinweis:** Der IP-Watcher verwendet den Docker-Socket (`/var/run/docker.sock`), um `tmserver` bei einer IP-Änderung automatisch neu zu starten. Weitere Details unter [IP-Watcher](ip-watcher.md).
+
 ## Debugging
 
 | Variable | Beschreibung | Standard |

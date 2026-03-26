@@ -1,6 +1,6 @@
 services:
   tmserver:
-    image: git.techniverse.net/scriptos/trackmania-server:1.3.0
+    image: git.techniverse.net/scriptos/trackmania-server:1.3.1
     build:
       context: .
     container_name: tmserver
@@ -52,6 +52,22 @@ services:
     networks:
       tmserver_net:
         ipv4_address: 172.20.60.11
+
+  ip-watcher:
+    image: alpine:3.21
+    container_name: tmserver-ip-watcher
+    restart: unless-stopped
+    depends_on:
+      - tmserver
+    command: ["/bin/sh", "/opt/WatchPublicIP.sh"]
+    env_file:
+      - .env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./assets/bin/WatchPublicIP.sh:/opt/WatchPublicIP.sh:ro
+    networks:
+      tmserver_net:
+        ipv4_address: 172.20.60.12
 
 networks:
   tmserver_net:

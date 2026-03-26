@@ -1,0 +1,41 @@
+name: Build & Push Docker Image
+
+# Wird ausgeloest, wenn ein Tag wie "v1.3.0" gepusht wird
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # "v1.3.0" -> "1.3.0" (fuehrendes "v" entfernen)
+      - name: Version aus Tag extrahieren
+        id: version
+        run: |
+          VERSION=$(echo "${{ gitea.ref_name }}" | sed 's/^v//')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Bei Gitea Registry einloggen
+        run: |
+          echo "${{ secrets.REGISTRY_TOKEN }}" | \
+            docker login git.techniverse.net \
+              --username "${{ secrets.REGISTRY_USER }}" \
+              --password-stdin
+
+      - name: Docker Image bauen
+        run: |
+          docker build \
+            -t git.techniverse.net/scriptos/trackmania-server:${{ steps.version.outputs.VERSION }} \
+            -t git.techniverse.net/scriptos/trackmania-server:latest \
+            .
+
+      - name: Docker Image pushen
+        run: |
+          docker push git.techniverse.net/scriptos/trackmania-server:${{ steps.version.outputs.VERSION }}
+          docker push git.techniverse.net/scriptos/trackmania-server:latest

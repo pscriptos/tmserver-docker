@@ -15,6 +15,7 @@
 | [AdminServ](adminserv.md) | Einrichtung der Server-Verwaltungsoberfläche |
 | [RemoteCP](remotecp.md) | Alternative Server-Verwaltungsoberfläche (inkl. Mods/Skins) |
 | [XAseco](xaseco.md) | Server-Controller für Rekorde, Karma und Jukebox |
+| [IP-Watcher](ip-watcher.md) | Automatischer Neustart bei IP-Wechsel |
 | [Ports](ports.md) | Freigegebene Ports und deren Verwendung |
 
 ## Projektstruktur
@@ -26,6 +27,7 @@
 │   │   ├── remoteCP_v4.0.3.5.zip                # RemoteCP Web-UI
 │   │   ├── RunTrackmaniaServer.sh               # Container-Startscript
 │   │   ├── TrackmaniaServer_2011-02-21.zip      # Trackmania Server Binary
+│   │   ├── WatchPublicIP.sh                     # IP-Watcher-Script
 │   │   └── xaseco_v1.16.zip                     # XAseco Server-Controller
 │   ├── config/
 │   │   ├── adminserv/                           # AdminServ-Konfiguration
@@ -45,6 +47,9 @@
 │   │       └── teamspeak3.xml                   # TeamSpeak3-Konfiguration fuer XAseco
 │   └── db/
 │       └── init-xaseco-db.sh                    # MariaDB Init-Script fuer XAseco-DB
+├── .gitea/
+│   └── workflows/
+│       └── docker-publish.yml                  # CI/CD: Docker Image Build & Push bei neuem Release-Tag
 ├── docs/                                        # Dokumentation
 ├── docker-compose.yml                           # Docker Compose Konfiguration
 ├── Dockerfile                                   # Docker Build-Definition
