@@ -39,7 +39,7 @@ DEFAULT_CONTROLPANEL="/opt/tmserver/default-controlpanel"
 if [ ! -f "$ADMINSERV_DIR/index.php" ]; then
     echo "==> Erster Start erkannt: Kopiere AdminServ-Dateien ins Volume..."
     cp -a "$DEFAULT_CONTROLPANEL"/* "$ADMINSERV_DIR/"
-    chmod -R 777 "$ADMINSERV_DIR/logs/"
+    chmod 755 "$ADMINSERV_DIR/logs/"
     chmod 666 "$ADMINSERV_DIR/config/adminlevel.cfg.php"
     chmod 666 "$ADMINSERV_DIR/config/servers.cfg.php"
     chmod 666 "$ADMINSERV_DIR/config/adminserv.cfg.php"
@@ -490,6 +490,25 @@ if [ -f "$ADMINSERV_CFG_VOL" ] && grep -q "0b28a5799a32c687dad2c5183718ceac" "$A
     sed -i "s|const PASSWORD = '0b28a5799a32c687dad2c5183718ceac';|const PASSWORD = '${RANDOM_HASH}';|" "$ADMINSERV_CFG_VOL"
     echo "    Standard-Hash durch zufaelligen Hash ersetzt."
     echo "    Die /config-Seite ist jetzt abgesichert."
+fi
+
+# ============================================================
+# AdminServ: Logs-Verzeichnis-Berechtigungen korrigieren (fuer bestehende Volumes)
+# ============================================================
+# In aelteren Versionen wurde /var/www/html/logs/ mit chmod 777
+# (world-writable) angelegt. logrotate verweigert die Rotation von
+# Log-Dateien in world-writable Verzeichnissen aus Sicherheitsgruenden.
+# Die korrekte Berechtigung ist 755: www-data (Owner) behaelt
+# Schreibzugriff, anderen Nutzern wird Write entzogen.
+# ============================================================
+ADMINSERV_LOGS_DIR="/var/www/html/logs"
+if [ -d "$ADMINSERV_LOGS_DIR" ]; then
+    CURRENT_PERMS=$(stat -c '%a' "$ADMINSERV_LOGS_DIR")
+    if [ "$CURRENT_PERMS" != "755" ]; then
+        echo "==> Korrigiere Berechtigungen fuer AdminServ-Logs-Verzeichnis (${CURRENT_PERMS} -> 755)..."
+        chmod 755 "$ADMINSERV_LOGS_DIR"
+        echo "    Berechtigungen erfolgreich korrigiert."
+    fi
 fi
 
 echo "Starting apache server"

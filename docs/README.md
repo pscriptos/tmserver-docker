@@ -17,6 +17,7 @@
 | [XAseco](xaseco.md) | Server-Controller für Rekorde, Karma und Jukebox |
 | [IP-Watcher](ip-watcher.md) | Automatischer Neustart bei IP-Wechsel |
 | [Ports](ports.md) | Freigegebene Ports und deren Verwendung |
+| [Update](update.md) | Bestehende Installation aktualisieren |
 
 ## Projektstruktur
 
@@ -50,7 +51,8 @@
 ├── .gitea/
 │   └── workflows/
 │       └── docker-publish.yml                  # CI/CD: Docker Image Build & Push bei neuem Release-Tag
-├── docs/                                        # Dokumentation
+├── docs/                                        # Dokumentation (siehe Tabelle oben)
+│   └── update.md                                    # Update-Anleitung
 ├── docker-compose.yml                           # Docker Compose Konfiguration
 ├── Dockerfile                                   # Docker Build-Definition
 ├── .dockerignore                                # Docker-Ignore-Regeln
