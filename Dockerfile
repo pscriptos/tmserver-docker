@@ -57,7 +57,7 @@ RUN unzip /var/www/html/AdminServ_v2.1.1.zip -d /var/www/html \
     && rm -f /var/www/html/AdminServ_v2.1.1.zip \
     && rm -f /var/www/html/index.html \
     && mkdir -p /var/www/html/logs \
-    && chmod -R 777 /var/www/html/logs \
+    && chmod 755 /var/www/html/logs \
     && chmod 666 /var/www/html/config/adminlevel.cfg.php \
     && chmod 666 /var/www/html/config/servers.cfg.php \
     && chmod 666 /var/www/html/config/adminserv.cfg.php \
