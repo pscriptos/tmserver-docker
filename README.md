@@ -59,6 +59,7 @@ Die vollständige Dokumentation befindet sich im Ordner [`docs/`](docs/README.md
 - [AdminServ](docs/adminserv.md) – Einrichtung der Server-Verwaltungsoberfläche
 - [RemoteCP](docs/remotecp.md) – Alternative Server-Verwaltungsoberfläche
 - [XAseco](docs/xaseco.md) – Server-Controller für Rekorde, Karma und Jukebox
+- [IP-Watcher](docs/ip-watcher.md) – Automatischer Neustart bei IP-Wechsel
 - [Ports](docs/ports.md) – Freigegebene Ports und deren Verwendung
 
 ## Danksagung
