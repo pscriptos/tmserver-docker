@@ -61,6 +61,7 @@ Die vollständige Dokumentation befindet sich im Ordner [`docs/`](docs/README.md
 - [XAseco](docs/xaseco.md) – Server-Controller für Rekorde, Karma und Jukebox
 - [IP-Watcher](docs/ip-watcher.md) – Automatischer Neustart bei IP-Wechsel
 - [Ports](docs/ports.md) – Freigegebene Ports und deren Verwendung
+- [Update](docs/update.md) – Bestehende Installation aktualisieren
 
 ## Danksagung
 
