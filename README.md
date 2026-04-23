@@ -7,7 +7,7 @@
 <h1 align="center">TM-Server Docker</h1>
 
 <h4 align="center">
-  Ein vollständiges Docker-Setup für einen **TrackMania Nations Forever**-Server – inklusive Web-Verwaltung und Server-Controller
+  Ein vollständiges Docker-Setup für einen TrackMania Nations Forever-Server – inklusive Web-Verwaltung und Server-Controller
 </h4>
 
 <h6 align="center">
