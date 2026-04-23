@@ -1,6 +1,27 @@
-# tmserver-docker
+<p align="center">
+  <a href="https://techniverse.net">
+    <img src="https://assets.techniverse.net/f1/git/graphics/repo-techniverse-logo.png" alt="Techniverse Community" height="70" />
+  </a>
+</p>
 
-Ein vollständiges Docker-Setup für einen **TrackMania Nations Forever**-Server – inklusive Web-Verwaltung und Server-Controller:
+<h1 align="center">TM-Server Docker</h1>
+
+<h4 align="center">
+  Ein vollständiges Docker-Setup für einen **TrackMania Nations Forever**-Server – inklusive Web-Verwaltung und Server-Controller
+</h4>
+
+<h6 align="center">
+  <a href="https://www.cleveradmin.de">🏰 Website</a>
+  ·
+  <a href="https://techniverse.net">📰 Community</a>
+  ·
+  <a href="https://social.techniverse.net/@donnerwolke">🐘 Mastodon</a>
+  ·
+  <a href="https://matrix.to/#/#support:techniverse.net">💬 Support</a>
+</h6>
+<br><br>
+
+## ✨ Übersicht
 
 - **TrackMania Dedicated Server** – der eigentliche Spielserver für Internet- oder LAN-Betrieb
 - **[XAseco](docs/xaseco.md)** – Server-Controller, der lokale Rekorde, Dedimania-Weltrekorde, Karma/Votes und eine Track-Jukebox direkt im Spielchat verwaltet
@@ -13,7 +34,7 @@ Alle Komponenten laufen in einem einzigen Container und werden über Umgebungsva
 
 Der Server unterstützt sowohl den **Internet-Dedicated-Modus** (Standard) als auch den **LAN-Dedicated-Modus**.
 
-## Schnellstart
+## 🚀 Schnellstart
 
 ### 1. Umgebungsvariablen einrichten
 
@@ -48,7 +69,7 @@ git.techniverse.net/scriptos/trackmania-server:latest
 
 > **Hinweis:** Für den Internet-Modus müssen `SERVER_LOGIN` und `SERVER_VALIDATION_KEY` in der `.env`-Datei gesetzt sein. Einen Server-Account kannst du auf [players.trackmaniaforever.com](https://players.trackmaniaforever.com) erstellen. Für den LAN-Modus setze `SERVER_MODE=lan`.
 
-## Dokumentation
+## 📚 Dokumentation
 
 Die vollständige Dokumentation befindet sich im Ordner [`docs/`](docs/README.md):
 
@@ -63,27 +84,25 @@ Die vollständige Dokumentation befindet sich im Ordner [`docs/`](docs/README.md
 - [Ports](docs/ports.md) – Freigegebene Ports und deren Verwendung
 - [Update](docs/update.md) – Bestehende Installation aktualisieren
 
-## Danksagung
+## 🙏 Danksagung
 
 Ein herzliches Dankeschön an **[Thomas](https://retronerd.at)** – für seine tatkräftige Unterstützung, sein wertvolles Wissen und seine Mitwirkung an diesem Projekt. Ohne ihn wäre dieses Projekt nicht das, was es heute ist!
 
-## Spiegelung
+## 🔄 Spiegelung
 
 Dieses Repository wird von **Gitea** auf **GitHub** gespiegelt. Das Master-Repository befindet sich auf Gitea:
 
 - **Gitea (Master):** [git.techniverse.net/scriptos/tmserver-docker](https://git.techniverse.net/scriptos/tmserver-docker.git)
 - **GitHub (Spiegel):** [github.com/pscriptos/tmserver-docker](https://github.com/pscriptos/tmserver-docker.git)
 
----
 
-📝 **Blog:** [www.cleveradmin.de](https://www.cleveradmin.de)  
-🌐 **Webseite:** [www.patrick-asmus.de](https://www.patrick-asmus.de)  
-📧 **E-Mail:** [support@techniverse.net](mailto:support@techniverse.net)  
-
+<br><br>
 <p align="center">
   <img src="https://assets.techniverse.net/f1/git/graphics/gray0-catonline.svg" alt="">
 </p>
 
 <p align="center">
-<img src="https://assets.techniverse.net/f1/logos/small/license.png" alt="License" width="15" height="15"> <a href="./LICENSE">License</a> | <img src="https://assets.techniverse.net/f1/logos/small/matrix2.svg" alt="Matrix" width="15" height="15"> <a href="https://matrix.to/#/#community:techniverse.net">Matrix</a> | <img src="https://assets.techniverse.net/f1/logos/small/mastodon2.svg" alt="Mastodon" width="15" height="15"> <a href="https://social.techniverse.net/@donnerwolke">Mastodon</a>
+  <sub>
+     © Patrick Asmus · Techniverse Network · <a href="./LICENSE">Lizenz</a>
+  </sub>
 </p>
