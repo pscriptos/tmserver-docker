@@ -5,3 +5,6 @@
 data/
 
 .ki-workspace/
+backups/
+dockernet-inspector.v1.sh
+script.sh
