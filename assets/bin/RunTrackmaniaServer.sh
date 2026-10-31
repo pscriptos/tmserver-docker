@@ -39,7 +39,7 @@ DEFAULT_CONTROLPANEL="/opt/tmserver/default-controlpanel"
 if [ ! -f "$ADMINSERV_DIR/index.php" ]; then
     echo "==> Erster Start erkannt: Kopiere AdminServ-Dateien ins Volume..."
     cp -a "$DEFAULT_CONTROLPANEL"/* "$ADMINSERV_DIR/"
-    chmod 755 "$ADMINSERV_DIR/logs/"
+    chmod 777 "$ADMINSERV_DIR/logs/"
     chmod 666 "$ADMINSERV_DIR/config/adminlevel.cfg.php"
     chmod 666 "$ADMINSERV_DIR/config/servers.cfg.php"
     chmod 666 "$ADMINSERV_DIR/config/adminserv.cfg.php"
@@ -493,22 +493,21 @@ if [ -f "$ADMINSERV_CFG_VOL" ] && grep -q "0b28a5799a32c687dad2c5183718ceac" "$A
 fi
 
 # ============================================================
-# AdminServ: Logs-Verzeichnis-Berechtigungen korrigieren (fuer bestehende Volumes)
+# AdminServ: Berechtigungen fuer Logs und Configs sicherstellen
 # ============================================================
-# In aelteren Versionen wurde /var/www/html/logs/ mit chmod 777
-# (world-writable) angelegt. logrotate verweigert die Rotation von
-# Log-Dateien in world-writable Verzeichnissen aus Sicherheitsgruenden.
-# Die korrekte Berechtigung ist 755: www-data (Owner) behaelt
-# Schreibzugriff, anderen Nutzern wird Write entzogen.
+# AdminServ verlangt Schreibrechte (777 fuer ./logs/ und 666 fuer Configs).
+# Beim Containerstart stellen wir sicher, dass das Verzeichnis existiert,
+# www-data gehoert und die noetigen Berechtigungen gesetzt sind.
 # ============================================================
 ADMINSERV_LOGS_DIR="/var/www/html/logs"
-if [ -d "$ADMINSERV_LOGS_DIR" ]; then
-    CURRENT_PERMS=$(stat -c '%a' "$ADMINSERV_LOGS_DIR")
-    if [ "$CURRENT_PERMS" != "755" ]; then
-        echo "==> Korrigiere Berechtigungen fuer AdminServ-Logs-Verzeichnis (${CURRENT_PERMS} -> 755)..."
-        chmod 755 "$ADMINSERV_LOGS_DIR"
-        echo "    Berechtigungen erfolgreich korrigiert."
-    fi
+mkdir -p "$ADMINSERV_LOGS_DIR"
+chmod 777 "$ADMINSERV_LOGS_DIR"
+chown -R www-data:www-data "$ADMINSERV_LOGS_DIR" 2>/dev/null || true
+
+ADMINSERV_CONFIG_DIR="/var/www/html/config"
+if [ -d "$ADMINSERV_CONFIG_DIR" ]; then
+    chmod 666 "$ADMINSERV_CONFIG_DIR"/*.cfg.php 2>/dev/null || true
+    chown -R www-data:www-data "$ADMINSERV_CONFIG_DIR" 2>/dev/null || true
 fi
 
 echo "Starting apache server"
