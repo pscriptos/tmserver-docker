@@ -245,6 +245,50 @@ else
 fi
 
 # ============================================================
+# RemoteCP: PHP-7.4-Kompatibilitaet & Fehleranzeige (bei jedem Start)
+# ============================================================
+# RemoteCP 4.0.3.5 nutzt veraltete Syntax ($str{0}, PHP4-Konstruktor), die
+# unter PHP 7.4 Deprecation-Meldungen im Browser erzeugt (unter PHP 8 fatal).
+# Ausserdem erzwingt core.functions.php display_errors=1 per ini_set() und
+# ignoriert damit PHP_DISPLAY_ERRORS. Die Patches sind idempotent und greifen
+# auch bei bestehenden Volumes.
+RCP_INC="$ADMINSERV_DIR/remotecp/includes"
+if [ -d "$RCP_INC" ]; then
+    echo "==> Patche RemoteCP fuer PHP 7.4..."
+
+    # Geschweifte Klammern fuer String-Offsets -> eckige Klammern
+    [ -f "$RCP_INC/core/rcp_textparser.class.php" ] && sed -i -E \
+        -e 's/\$hex\{([0-9])\}/$hex[\1]/g' \
+        -e 's/function TMFColorParser\(/function __construct(/' \
+        "$RCP_INC/core/rcp_textparser.class.php"
+    [ -f "$RCP_INC/core/GbxRemote.inc.php" ] && sed -i -E \
+        -e 's/\$f_v\{([0-9])\}/$f_v[\1]/g' \
+        "$RCP_INC/core/GbxRemote.inc.php"
+
+    # display_errors an PHP_DISPLAY_ERRORS koppeln
+    if [ -f "$RCP_INC/core.functions.php" ]; then
+        sed -i -E \
+            -e "s/^ini_set\('display_errors', 1\);/ini_set('display_errors', getenv('PHP_DISPLAY_ERRORS') === 'true' ? 1 : 0);/" \
+            -e "s/^ini_set\('display_startup_errors', 1\);/ini_set('display_startup_errors', getenv('PHP_DISPLAY_ERRORS') === 'true' ? 1 : 0);/" \
+            "$RCP_INC/core.functions.php"
+        # PHP-Warnings ohne Debug-Modus nur loggen, nicht im Browser anzeigen
+        if ! grep -q 'tmserver-docker: PHP_DISPLAY_ERRORS' "$RCP_INC/core.functions.php"; then
+            sed -i "/if(error_reporting() == 0) return;/a\\
+\\
+\\t//tmserver-docker: PHP_DISPLAY_ERRORS - PHP-Warnings ohne Debug-Modus nur loggen\\
+\\tif(\$errno == E_WARNING \&\& !ini_get('display_errors')) {\\
+\\t\\twriteLog('errors', \"[\".date('c').\"] [PHP Warning] \$errstr on line \$errline in file \$errfile\");\\
+\\t\\treturn true;\\
+\\t}" "$RCP_INC/core.functions.php"
+        fi
+    fi
+
+    # sed -i legt neue Dateien als root an -> Besitzer wiederherstellen
+    chown www-data:www-data "$RCP_INC/core.functions.php" \
+        "$RCP_INC/core/rcp_textparser.class.php" "$RCP_INC/core/GbxRemote.inc.php" 2>/dev/null
+fi
+
+# ============================================================
 # XAseco: First-Run-Logik
 # ============================================================
 # Beim ersten Start (leeres Volume) werden die XAseco-Dateien
