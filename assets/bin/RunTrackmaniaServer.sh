@@ -426,6 +426,22 @@ if [ -f "$XASECO_MODERNIZER" ] && ! grep -q 'mysqli_report' "$XASECO_MODERNIZER"
     echo "    modernizer.inc.php: mysqli_report(MYSQLI_REPORT_OFF) ergaenzt."
 fi
 
+# XAseco: Webaccess initialisiert Antworten als '' statt array(). Schreib- und
+# Lesezugriffe wie $response['Code'] waren unter PHP 7 nur Warnings
+# ("Illegal string offset"), unter PHP 8 beenden sie XAseco (TypeError).
+XASECO_WEBACCESS="/opt/tmserver/xaseco/includes/web_access.inc.php"
+if [ -f "$XASECO_WEBACCESS" ] && grep -q "\['Response'\] = '';" "$XASECO_WEBACCESS"; then
+    sed -i "s/\['Response'\] = '';/['Response'] = array();/" "$XASECO_WEBACCESS"
+    echo "    web_access.inc.php: Response als array() initialisiert."
+fi
+
+# XAseco TeamSpeak3-Plugin: count() auf null ist unter PHP 8 ein TypeError
+XASECO_TS3="/opt/tmserver/xaseco/plugins/plugin.teamspeak3.php"
+if [ -f "$XASECO_TS3" ] && grep -qF "if ( count(\$info['players']) > 0 ) {" "$XASECO_TS3"; then
+    sed -i "s/if ( count(\$info\['players'\]) > 0 ) {/if ( !empty(\$info['players']) \&\& is_array(\$info['players']) ) {/" "$XASECO_TS3"
+    echo "    plugin.teamspeak3.php: count()-Pruefung entschaerft."
+fi
+
 # ============================================================
 # XAseco: TeamSpeak3-Plugin Gateway aktualisieren (fuer bestehende Volumes)
 # ============================================================
