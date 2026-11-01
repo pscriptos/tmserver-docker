@@ -271,13 +271,17 @@ if [ -d "$RCP_INC" ]; then
             -e "s/^ini_set\('display_errors', 1\);/ini_set('display_errors', getenv('PHP_DISPLAY_ERRORS') === 'true' ? 1 : 0);/" \
             -e "s/^ini_set\('display_startup_errors', 1\);/ini_set('display_startup_errors', getenv('PHP_DISPLAY_ERRORS') === 'true' ? 1 : 0);/" \
             "$RCP_INC/core.functions.php"
-        # PHP-Warnings ohne Debug-Modus nur loggen, nicht im Browser anzeigen
-        if ! grep -q 'tmserver-docker: PHP_DISPLAY_ERRORS' "$RCP_INC/core.functions.php"; then
+        # PHP-Warnings ohne Debug-Modus nur loggen, nicht im Browser anzeigen.
+        # v2: Unter PHP 8 sind viele fruehere Notices (Undefined array key, ...)
+        # Warnings; die werden wie unter PHP 7 ignoriert, sonst waechst das Log
+        # um mehrere MB pro Tag. Alte v1-Variante wird ersetzt.
+        if ! grep -q 'tmserver-docker: PHP_DISPLAY_ERRORS v2' "$RCP_INC/core.functions.php"; then
+            sed -i '/tmserver-docker: PHP_DISPLAY_ERRORS - /,/^\t}$/d' "$RCP_INC/core.functions.php"
             sed -i "/if(error_reporting() == 0) return;/a\\
-\\
-\\t//tmserver-docker: PHP_DISPLAY_ERRORS - PHP-Warnings ohne Debug-Modus nur loggen\\
+\\t//tmserver-docker: PHP_DISPLAY_ERRORS v2 - PHP-Warnings ohne Debug-Modus nur loggen\\
 \\tif(\$errno == E_WARNING \&\& !ini_get('display_errors')) {\\
-\\t\\twriteLog('errors', \"[\".date('c').\"] [PHP Warning] \$errstr on line \$errline in file \$errfile\");\\
+\\t\\tif(preg_match('/^(Undefined (array key|variable|property|offset)|Attempt to read property|Trying to access array offset|Constant .* already defined|Array to string conversion)/', \$errstr)) return true;\\
+\\t\\twriteLog('errors', \"[PHP Warning] \$errstr on line \$errline in file \$errfile\");\\
 \\t\\treturn true;\\
 \\t}" "$RCP_INC/core.functions.php"
         fi
