@@ -446,6 +446,15 @@ if [ -f "$XASECO_TS3" ] && grep -qF "if ( count(\$info['players']) > 0 ) {" "$XA
     echo "    plugin.teamspeak3.php: count()-Pruefung entschaerft."
 fi
 
+# XAseco TeamSpeak3-Plugin: Antwortet der TS3-Query-Port nicht korrekt, wirft
+# tsstatus.php eine Exception, die niemand faengt -> XAseco stirbt (auch unter
+# PHP 7). Wie bei den uebrigen, bereits auskommentierten throws: leer zurueck.
+XASECO_TSSTATUS="/opt/tmserver/xaseco/includes/tsstatus.php"
+if [ -f "$XASECO_TSSTATUS" ] && grep -qF 'if(!$isTs3) throw new Exception("Not a Teamspeak 3 server/bad query port");' "$XASECO_TSSTATUS"; then
+    sed -i 's|if(!\$isTs3) throw new Exception("Not a Teamspeak 3 server/bad query port");|if(!$isTs3) { $this->disconnect(); return ""; } // tmserver-docker: kein Absturz|' "$XASECO_TSSTATUS"
+    echo "    tsstatus.php: Exception bei fehlerhaftem TS3-Query entschaerft."
+fi
+
 # AdminServ: stat() liefert bei Dateinamen mit Sonderzeichen false (AdminServ
 # wandelt sie vorher per utf8_encode um). @array_slice(false) war unter PHP 7
 # still, unter PHP 8 ein TypeError -> "MatchSettings erstellen" brach ab.

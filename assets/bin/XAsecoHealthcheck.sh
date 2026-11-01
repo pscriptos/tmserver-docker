@@ -94,8 +94,12 @@ check_xaseco_log() {
     if [ ! -f "$LOG_FILE" ]; then
         return 0
     fi
-    # Letzte 20 Zeilen auf fatale Fehler / Verbindungsabbrueche pruefen
-    LAST_LINES=$(tail -20 "$LOG_FILE" 2>/dev/null)
+    # Letzte 20 Zeilen auf fatale Fehler / Verbindungsabbrueche pruefen.
+    # Fehlschlaege externer Webdienste (Dedimania, ManiaKarma, ...) laufen ueber
+    # Webaccess/fsockopen und betreffen nicht die Verbindung zum TM-Server.
+    # Ohne Filter loeste das nicht erreichbare dedimania.net alle ~30 Minuten
+    # einen XAseco-Neustart aus.
+    LAST_LINES=$(tail -20 "$LOG_FILE" 2>/dev/null | grep -v -i "webaccess\|fsockopen\|dedimania")
     # Typische Fehlermeldungen bei XAseco-Verbindungsverlust
     if echo "$LAST_LINES" | grep -qi "connection refused\|broken pipe\|server not responding\|transport error\|socket error\|fatal error"; then
         return 1
