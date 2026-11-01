@@ -446,6 +446,24 @@ if [ -f "$XASECO_TS3" ] && grep -qF "if ( count(\$info['players']) > 0 ) {" "$XA
     echo "    plugin.teamspeak3.php: count()-Pruefung entschaerft."
 fi
 
+# AdminServ: stat() liefert bei Dateinamen mit Sonderzeichen false (AdminServ
+# wandelt sie vorher per utf8_encode um). @array_slice(false) war unter PHP 7
+# still, unter PHP 8 ein TypeError -> "MatchSettings erstellen" brach ab.
+ADMINSERV_FOLDER="$ADMINSERV_DIR/resources/class/folder.class.php"
+if [ -f "$ADMINSERV_FOLDER" ] && grep -qF '@array_slice(@stat($pathToEntry), 20, 3)' "$ADMINSERV_FOLDER"; then
+    sed -i 's/@array_slice(@stat(\$pathToEntry), 20, 3)/((\$st = @stat(\$pathToEntry)) ? array_slice(\$st, 20, 3) : array())/' "$ADMINSERV_FOLDER"
+    echo "    folder.class.php: stat()-Fehler abgefangen."
+fi
+
+# AdminServ: Felder wie LapsTimeLimit werden in ms angezeigt, beim Speichern
+# aber nochmals mit 1000 multipliziert. Beim Maximalwert 2147483647 lehnt der
+# Server den Aufruf ab (Numerical result out of range) -> auf int32 begrenzen.
+ADMINSERV_TIMEDATE="$ADMINSERV_DIR/resources/class/timedate.class.php"
+if [ -f "$ADMINSERV_TIMEDATE" ] && grep -qF 'if($millisec > 0){ return $millisec; }' "$ADMINSERV_TIMEDATE"; then
+    sed -i 's/if(\$millisec > 0){ return \$millisec; }/if($millisec > 0){ return min($millisec, 2147483647); }/' "$ADMINSERV_TIMEDATE"
+    echo "    timedate.class.php: secToMillisec() auf int32 begrenzt."
+fi
+
 # ============================================================
 # XAseco: TeamSpeak3-Plugin Gateway aktualisieren (fuer bestehende Volumes)
 # ============================================================
