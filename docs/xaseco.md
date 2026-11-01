@@ -2,7 +2,7 @@
 
 XAseco ist ein Server-Controller für TrackMania Nations Forever. Er verwaltet lokale Rekorde, Dedimania-Weltrekorde, Karma/Votes, eine Track-Jukebox und vieles mehr direkt im Spielchat.
 
-Im Container wird die modifizierte Version **XAseco 1.16** verwendet, die für PHP 7.x angepasst wurde (Patches von Bueddel, Xymph, undef.de und reaby).
+Im Container wird die modifizierte Version **XAseco 1.16** verwendet, die für PHP 7.x angepasst wurde (Patches von Bueddel, Xymph, undef.de und reaby). Ab v1.4.0 wird sie beim Containerstart zusätzlich automatisch für PHP 8.4 gepatcht (siehe README).
 
 ## Funktionsweise
 

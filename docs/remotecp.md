@@ -165,6 +165,6 @@ Falls RemoteCP nicht erreichbar ist oder Fehler anzeigt:
 
 ### Bekannte Hinweise
 
-- RemoteCP ist ein älteres Tool (Version 4.0.3.5) und wurde für PHP 5.x entwickelt, läuft aber mit PHP 7.4
+- RemoteCP ist ein älteres Tool (Version 4.0.3.5) und wurde für PHP 5.x entwickelt. Ab v1.4.0 läuft es dank automatischer Kompatibilitäts-Patches beim Containerstart unter PHP 8.4 (siehe README)
 - Die Live-Funktionen (`remoteCP[Live]`) benötigen eine laufende Serververbindung
 - **Sicherheitshinweis:** Die Registrierung neuer Benutzer ist standardmäßig aktiviert. Aus Sicherheitsgründen sollte diese deaktiviert werden, damit sich keine unbefugten Nutzer einen Zugang anlegen können. Dazu in der Datei `data/controlpanel/remotecp/xml/settings/settings.xml` den Wert `<register>false</register>` setzen

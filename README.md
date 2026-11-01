@@ -34,6 +34,19 @@ Alle Komponenten laufen in einem einzigen Container und werden über Umgebungsva
 
 Der Server unterstützt sowohl den **Internet-Dedicated-Modus** (Standard) als auch den **LAN-Dedicated-Modus**.
 
+## ⚠️ PHP 8 – bitte lesen (ab v1.4.0)
+
+Seit **v1.4.0** basiert das Image auf **Debian 13 (Trixie) mit PHP 8.4**. PHP 7.4 ist seit 2022 ohne Sicherheitsupdates und von kritischen Lücken wie *PHP2Shell* (CVE-2026-109618, CVE-2026-109619) betroffen – deshalb habe ich den Umstieg vorgenommen.
+
+AdminServ, RemoteCP und XAseco stammen allerdings aus PHP-5-Zeiten. Damit sie unter PHP 8 laufen, patcht der Container sie beim Start automatisch (PHP-4-Konstruktoren, veraltete Syntax, statische Aufrufe und einige bekannte Laufzeitfehler). Die Anpassungen sind idempotent und greifen auch bei bestehenden Volumes.
+
+Ich habe die gängigen Funktionen getestet, aber **es kann durchaus noch zu Fehlern kommen** – vor allem in selten genutzten Plugins oder Menüs. Wenn dir etwas auffällt (weiße Seite, HTTP 500, XAseco-Absturz, Funktion ohne Wirkung), eröffne bitte ein [Issue](https://git.techniverse.net/scriptos/tmserver-docker/issues) und gib möglichst an:
+
+- was du gemacht hast (Seite/Plugin/Chat-Befehl) und ungefähr wann,
+- die passende Meldung aus `docker logs tmserver`, dem Apache-Log (`docker exec tmserver tail -n 50 /var/log/apache2/error.log`), `data/xaseco/aseco.log` oder `data/controlpanel/remotecp/cache/errors.log`.
+
+Ich schaue mir das dann an. Wer PHP 7.4 behalten möchte, bleibt vorerst beim Image-Tag `1.3.3`.
+
 ## 🚀 Schnellstart
 
 ### 1. Umgebungsvariablen einrichten
