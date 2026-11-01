@@ -410,6 +410,23 @@ if [ "$XASECO_ENABLED" = "true" ]; then
 fi
 
 # ============================================================
+# PHP-8-Kompatibilitaet (bei jedem Start, auch fuer bestehende Volumes)
+# ============================================================
+# AdminServ, RemoteCP und XAseco stammen aus PHP-5-Zeiten. Php8Compat.php
+# ergaenzt __construct() fuer PHP-4-Konstruktoren und stellt String-Offsets
+# mit geschweiften Klammern ($str{0}) auf eckige Klammern um. Idempotent.
+echo "==> Pruefe PHP-8-Kompatibilitaet..."
+php /opt/tmserver/Php8Compat.php "$ADMINSERV_DIR" /opt/tmserver/xaseco | tail -n 1
+
+# XAseco: mysql_*-Shim (modernizer.inc.php) erwartet false bei SQL-Fehlern.
+# Seit PHP 8.1 wirft mysqli standardmaessig Exceptions -> abschalten.
+XASECO_MODERNIZER="/opt/tmserver/xaseco/includes/modernizer.inc.php"
+if [ -f "$XASECO_MODERNIZER" ] && ! grep -q 'mysqli_report' "$XASECO_MODERNIZER"; then
+    sed -i '0,/^<?php/s//<?php\nmysqli_report(MYSQLI_REPORT_OFF); \/\/ tmserver-docker: PHP 8.1+/' "$XASECO_MODERNIZER"
+    echo "    modernizer.inc.php: mysqli_report(MYSQLI_REPORT_OFF) ergaenzt."
+fi
+
+# ============================================================
 # XAseco: TeamSpeak3-Plugin Gateway aktualisieren (fuer bestehende Volumes)
 # ============================================================
 # Das Original-TS3-Gateway ist nicht mehr verfuegbar. Falls die

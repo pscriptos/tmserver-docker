@@ -1,15 +1,11 @@
-FROM debian:bullseye-slim
+# Debian 13 Trixie liefert PHP 8.4 mit regulaeren Security-Updates
+FROM debian:trixie-slim
 
 RUN mkdir /opt/tmserver
 
 WORKDIR /opt/tmserver
 
 # Alle benoetigten Pakete in einem Layer installieren und Cache aufraeumen
-# Debian Bullseye Archive-Repositories konfigurieren (Bullseye ist archiviert)
-RUN echo "deb http://archive.debian.org/debian bullseye main" > /etc/apt/sources.list \
-    && echo "deb http://archive.debian.org/debian-security bullseye-security main" >> /etc/apt/sources.list \
-    && echo "Acquire::Check-Valid-Until false;" > /etc/apt/apt.conf.d/99no-check-valid-until
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     apache2 \
@@ -52,6 +48,10 @@ RUN cp -a /opt/tmserver/GameData /opt/tmserver/default-gamedata
 COPY assets/bin/RunTrackmaniaServer.sh /opt/tmserver/
 RUN sed -i 's/\r$//' /opt/tmserver/RunTrackmaniaServer.sh \
     && chmod +x /opt/tmserver/RunTrackmaniaServer.sh
+
+# PHP-8-Kompatibilitaet: ergaenzt __construct() fuer PHP-4-Konstruktoren
+# (wird bei jedem Start auf die Volumes angewendet)
+COPY assets/bin/Php8Compat.php /opt/tmserver/
 
 COPY assets/bin/XAsecoHealthcheck.sh /opt/tmserver/
 RUN sed -i 's/\r$//' /opt/tmserver/XAsecoHealthcheck.sh \
