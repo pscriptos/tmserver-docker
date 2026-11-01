@@ -28,14 +28,22 @@ jobs:
               --username "${{ secrets.REGISTRY_USER }}" \
               --password-stdin
 
-      - name: Docker Image bauen
+      # Der TM-Dedicated-Server ist ein x86-Binary -> Image immer fuer
+      # linux/amd64 bauen, auch wenn der Job auf einem arm64-Runner landet
+      # (v1.4.0 wurde versehentlich als arm64 gebaut: "exec format error").
+      - name: QEMU einrichten
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: amd64
+
+      - name: Buildx einrichten
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker Image bauen und pushen (linux/amd64)
         run: |
-          docker build \
+          docker buildx build \
+            --platform linux/amd64 \
             -t git.techniverse.net/scriptos/trackmania-server:${{ steps.version.outputs.VERSION }} \
             -t git.techniverse.net/scriptos/trackmania-server:latest \
+            --push \
             .
-
-      - name: Docker Image pushen
-        run: |
-          docker push git.techniverse.net/scriptos/trackmania-server:${{ steps.version.outputs.VERSION }}
-          docker push git.techniverse.net/scriptos/trackmania-server:latest
